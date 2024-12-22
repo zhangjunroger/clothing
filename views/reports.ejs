@@ -1,0 +1,46 @@
+<!DOCTYPE html>  
+<html lang="zh-CN">  
+<head>  
+  <meta charset="zh-CN">  
+  <title>统计报表</title>  
+  <link rel="stylesheet" href="/css/style.css">  
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>  
+</head>  
+<body>  
+  <div class="container">  
+    <h1>统计报表</h1>  
+    <canvas id="inventoryChart" width="800" height="400"></canvas>  
+  </div>  
+  <script>  
+    // 获取统计数据并绘制图表  
+    fetch('/reports/data')  
+      .then(response => response.json())  
+      .then(data => {  
+        const labels = data.map(item => item.itemName);  
+        const quantities = data.map(item => item.quantity);  
+
+        const ctx = document.getElementById('inventoryChart').getContext('2d');  
+        const inventoryChart = new Chart(ctx, {  
+          type: 'bar',  
+          data: {  
+            labels: labels,  
+            datasets: [{  
+              label: '库存数量',  
+              data: quantities,  
+              backgroundColor: 'rgba(54, 162, 235, 0.6)'  
+            }]  
+          },  
+          options: {  
+            scales: {  
+              y: {  
+                beginAtZero: true,  
+                precision: 0  
+              }  
+            }  
+          }  
+        });  
+      })  
+      .catch(err => console.error(err));  
+  </script>  
+</body>  
+</html>

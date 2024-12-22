@@ -1,0 +1,803 @@
+<!DOCTYPE html>  
+<html lang="zh-CN">  
+<head>  
+  <meta charset="UTF-8">  
+  <title>消防员信息管理</title>  
+  <style>  
+    .container {  
+      width: 90%;  
+      margin: 0 auto;  
+    }  
+    h1, h2 {  
+      text-align: center;  
+    }  
+    table {  
+      width: 100%;  
+      border-collapse: collapse;  
+      margin-top: 20px;  
+    }  
+    table, th, td {  
+      border: 1px solid #ccc;  
+    }  
+    th, td {  
+      padding: 8px;  
+      text-align: center;  
+    }  
+    .modal {  
+      display: none; /* 隐藏模态窗口 */  
+      position: fixed;  
+      z-index: 1;  
+      left: 0;  
+      top: 0;  
+      width: 100%;  
+      height: 100%;  
+      overflow: auto;  
+      background-color: rgba(0,0,0,0.5); /* 半透明背景 */  
+    }  
+    .modal-content {  
+      background-color: #fff;  
+      margin: 5% auto;  
+      padding: 20px;  
+      width: 80%;  
+      max-height: 90%;  
+      overflow-y: auto;  
+    }  
+    .modal-header, .modal-footer {  
+      text-align: right;  
+    }  
+    .modal-body {  
+      max-height: 500px;  
+      overflow-y: auto;  
+    }  
+    .button {  
+      padding: 6px 12px;  
+      margin: 5px;  
+    }  
+    /* 错误提示样式 */  
+    .error {  
+      border-color: red;  
+    }  
+    .error-message {  
+      color: red;  
+      font-size: 12px;  
+    }  
+    /* 搜索表单样式 */  
+    .search-form input,  
+    .search-form select {  
+      padding: 6px;  
+      margin-right: 10px;  
+    }  
+    /* 表格内容超出时自动换行 */  
+    td {  
+      word-wrap: break-word;  
+      word-break: break-all;  
+    }  
+  </style>  
+</head>  
+<body>  
+  <div class="container">  
+    <h1>消防员信息管理</h1>  
+
+    <!-- Excel模板下载 + 导入 -->  
+    <section>  
+      <a href="/firefighters/template/firefighters_template.xlsx" class="button">下载Excel模板</a>  
+      <form id="importForm" style="margin-top: 10px;">  
+        <label for="excelFile">上传Excel文件：</label>  
+        <input type="file" id="excelFile" name="excelFile" accept=".xlsx" required>  
+        <button type="submit">导入</button>  
+      </form>  
+    </section>  
+
+    <hr>  
+
+    <!-- 搜索功能 -->  
+    <section>  
+      <h2>搜索消防员信息</h2>  
+      <form id="searchForm" class="search-form">  
+        <input type="text" id="searchNumber" placeholder="编号">  
+        <input type="text" id="searchName" placeholder="姓名">  
+        <select id="searchGender">  
+          <option value="">性别</option>  
+          <option value="男">男</option>  
+          <option value="女">女</option>  
+        </select>  
+        <input type="number" id="searchAgeMin" placeholder="年龄最小值">  
+        <input type="number" id="searchAgeMax" placeholder="年龄最大值">  
+        <input type="text" id="searchPosition" placeholder="职务">  
+        <input type="text" id="searchTeam" placeholder="中队">  
+        <input type="text" id="searchRank" placeholder="警衔">  
+        <!-- 可以继续添加搜索条件 -->  
+        <button type="button" onclick="searchFirefighters()">搜索</button>  
+        <button type="button" onclick="resetSearch()">重置</button>  
+      </form>  
+    </section>  
+
+    <hr>  
+
+    <!-- 消防员信息表格展示 -->  
+    <section>  
+      <h2>消防员信息列表</h2>  
+      <button onclick="showAddFirefighterModal()" class="button">添加消防员</button>  
+      <table id="firefightersTable">  
+        <thead>  
+          <tr>  
+            <th>编号</th>  
+            <th>姓名</th>  
+            <th>性别</th>  
+            <th>出生年月</th>  
+            <th>年龄</th>  
+            <th>职务</th>  
+            <th>中队</th>  
+            <th>警衔</th>  
+            <th>气候区</th>  
+            <th>帽类号</th>  
+            <th>服装号</th>  
+            <th>鞋类号</th>  
+            <th>作训冬帽号</th>  
+            <th>毛衣冬服号</th>  
+            <th>大衣冬鞋号</th>  
+            <th>衬衣号</th>  
+            <th>肩章号</th>  
+            <th>雨衣体服号</th>  
+            <th>礼服</th>  
+            <th>常服</th>  
+            <th>裤裙</th>  
+            <th>身高</th>  
+            <th>胸围</th>  
+            <th>腰围</th>  
+            <th>头围</th>  
+            <th>领围</th>  
+            <th>脚长</th>  
+            <th>趾围</th>  
+            <th>入伍日期</th>  
+            <th>一级士官</th>  
+            <th>二级士官</th>  
+            <th>提干日期</th>  
+            <th>现职日期</th>  
+            <th>现衔日期</th>  
+            <th>职级</th>  
+            <th>形类</th>  
+            <th>备注</th>  
+            <th>操作</th>  
+          </tr>  
+        </thead>  
+        <tbody>  
+          <!-- 数据将通过AJAX动态加载 -->  
+        </tbody>  
+      </table>  
+    </section>  
+  </div>  
+
+  <!-- 模态窗口（用于添加和修改消防员信息） -->  
+  <div id="firefighterModal" class="modal">  
+    <div class="modal-content">  
+      <div class="modal-header">  
+        <h2 id="modalTitle">添加消防员</h2>  
+        <span id="closeModal" style="cursor:pointer;">&times;</span>  
+      </div>  
+      <div class="modal-body">  
+        <form id="firefighterForm">  
+          <input type="hidden" id="firefighterId" name="id">  
+          <!-- 编号 -->  
+          <div class="mb-3">  
+            <label for="modalNumber" class="form-label">编号</label>  
+            <input type="text" class="form-control" id="modalNumber" name="number" readonly required>  
+          </div>  
+          <!-- 姓名 -->  
+          <div class="mb-3">  
+            <label for="modalName" class="form-label">姓名</label>  
+            <input type="text" class="form-control" id="modalName" name="name" required>  
+          </div>  
+          <!-- 性别 -->  
+          <div class="mb-3">  
+            <label for="modalGender" class="form-label">性别</label>  
+            <select class="form-select" id="modalGender" name="gender">  
+              <option value="">请选择性别</option>  
+              <option value="男">男</option>  
+              <option value="女">女</option>  
+            </select>  
+          </div>  
+          <!-- 出生年月 -->  
+          <div class="mb-3">  
+            <label for="modalBirthDate" class="form-label">出生年月</label>  
+            <input type="date" class="form-control" id="modalBirthDate" name="birthDate">  
+          </div>  
+          <!-- 年龄 -->  
+          <div class="mb-3">  
+            <label for="modalAge" class="form-label">年龄</label>  
+            <input type="number" class="form-control" id="modalAge" name="age">  
+          </div>  
+          <!-- 职务 -->  
+          <div class="mb-3">  
+            <label for="modalPosition" class="form-label">职务</label>  
+            <input type="text" class="form-control" id="modalPosition" name="position">  
+          </div>  
+          <!-- 中队 -->  
+          <div class="mb-3">  
+            <label for="modalTeam" class="form-label">中队</label>  
+            <input type="text" class="form-control" id="modalTeam" name="team">  
+          </div>  
+          <!-- 警衔 -->  
+          <div class="mb-3">  
+            <label for="modalRank" class="form-label">警衔</label>  
+            <input type="text" class="form-control" id="modalRank" name="rank">  
+          </div>  
+          <!-- 气候区 -->  
+          <div class="mb-3">  
+            <label for="modalClimateZone" class="form-label">气候区</label>  
+            <input type="text" class="form-control" id="modalClimateZone" name="climateZone">  
+          </div>  
+          <!-- 帽类号 -->  
+          <div class="mb-3">  
+            <label for="modalMaoleihao" class="form-label">帽类号</label>  
+            <input type="text" class="form-control" id="modalMaoleihao" name="maoleihao">  
+          </div>  
+          <!-- 服装号 -->  
+          <div class="mb-3">  
+            <label for="modalFuzhuanghao" class="form-label">服装号</label>  
+            <input type="text" class="form-control" id="modalFuzhuanghao" name="fuzhuanghao">  
+          </div>  
+          <!-- 鞋类号 -->  
+          <div class="mb-3">  
+            <label for="modalXieleihao" class="form-label">鞋类号</label>  
+            <input type="text" class="form-control" id="modalXieleihao" name="xieleihao">  
+          </div>  
+          <!-- 作训冬帽号 -->  
+          <div class="mb-3">  
+            <label for="modalZuoxundongmaohao" class="form-label">作训冬帽号</label>  
+            <input type="text" class="form-control" id="modalZuoxundongmaohao" name="zuoxundongmaohao">  
+          </div>  
+          <!-- 毛衣冬服号 -->  
+          <div class="mb-3">  
+            <label for="modalMaoyidongfuhao" class="form-label">毛衣冬服号</label>  
+            <input type="text" class="form-control" id="modalMaoyidongfuhao" name="maoyidongfuhao">  
+          </div>  
+          <!-- 大衣冬鞋号 -->  
+          <div class="mb-3">  
+            <label for="modalDayidongxiehao" class="form-label">大衣冬鞋号</label>  
+            <input type="text" class="form-control" id="modalDayidongxiehao" name="dayidongxiehao">  
+          </div>  
+          <!-- 衬衣号 -->  
+          <div class="mb-3">  
+            <label for="modalChenyihao" class="form-label">衬衣号</label>  
+            <input type="text" class="form-control" id="modalChenyihao" name="chenyihao">  
+          </div>  
+          <!-- 肩章号 -->  
+          <div class="mb-3">  
+            <label for="modalJianzhanghao" class="form-label">肩章号</label>  
+            <input type="text" class="form-control" id="modalJianzhanghao" name="jianzhanghao">  
+          </div>  
+          <!-- 雨衣体服号 -->  
+          <div class="mb-3">  
+            <label for="modalYuyitifuhao" class="form-label">雨衣体服号</label>  
+            <input type="text" class="form-control" id="modalYuyitifuhao" name="yuyitifuhao">  
+          </div>  
+          <!-- 礼服 -->  
+          <div class="mb-3">  
+            <label for="modalLiufu" class="form-label">礼服</label>  
+            <input type="text" class="form-control" id="modalLifu" name="lifu">  
+          </div>  
+          <!-- 常服 -->  
+          <div class="mb-3">  
+            <label for="modalChangfu" class="form-label">常服</label>  
+            <input type="text" class="form-control" id="modalChangfu" name="changfu">  
+          </div>  
+          <!-- 裤裙 -->  
+          <div class="mb-3">  
+            <label for="modalKuku" class="form-label">裤裙</label>  
+            <input type="text" class="form-control" id="modalKuqun" name="kuqun">  
+          </div>  
+          <!-- 身高 -->  
+          <div class="mb-3">  
+            <label for="modalShengao" class="form-label">身高</label>  
+            <input type="number" class="form-control" id="modalShengao" name="shengao">  
+          </div>  
+          <!-- 胸围 -->  
+          <div class="mb-3">  
+            <label for="modalXiongwei" class="form-label">胸围</label>  
+            <input type="number" class="form-control" id="modalXiongwei" name="xiongwei">  
+          </div>  
+          <!-- 腰围 -->  
+          <div class="mb-3">  
+            <label for="modalYaowei" class="form-label">腰围</label>  
+            <input type="number" class="form-control" id="modalYaowei" name="yaowei">  
+          </div>  
+          <!-- 头围 -->  
+          <div class="mb-3">  
+            <label for="modalTouwwei" class="form-label">头围</label>  
+            <input type="number" class="form-control" id="modalTouwei" name="touwei">  
+          </div>  
+          <!-- 领围 -->  
+          <div class="mb-3">  
+            <label for="modalLingwei" class="form-label">领围</label>  
+            <input type="number" class="form-control" id="modalLingwei" name="lingwei">  
+          </div>  
+          <!-- 脚长 -->  
+          <div class="mb-3">  
+            <label for="modalJiaochang" class="form-label">脚长</label>  
+            <input type="number" class="form-control" id="modalJiaochang" name="jiaochang">  
+          </div>  
+          <!-- 趾围 -->  
+          <div class="mb-3">  
+            <label for="modalZhiwei" class="form-label">趾围</label>  
+            <input type="number" class="form-control" id="modalZhiwei" name="zhiwei">  
+          </div>  
+          <!-- 入伍日期 -->  
+          <div class="mb-3">  
+            <label for="modalRuwuriqi" class="form-label">入伍日期</label>  
+            <input type="date" class="form-control" id="modalRuwuriqi" name="ruwuriqi">  
+          </div>  
+          <!-- 一级士官 -->  
+          <div class="mb-3">  
+            <label for="modalYijishiguan" class="form-label">一级士官</label>  
+            <input type="date" class="form-control" id="modalYijishiguan" name="yijishiguan">  
+          </div>  
+          <!-- 二级士官 -->  
+          <div class="mb-3">  
+            <label for="modalErjishiguan" class="form-label">二级士官</label>  
+            <input type="date" class="form-control" id="modalErjishiguan" name="erjishiguan">  
+          </div>  
+          <!-- 提干日期 -->  
+          <div class="mb-3">  
+            <label for="modalTiganriqi" class="form-label">提干日期</label>  
+            <input type="date" class="form-control" id="modalTiganriqi" name="tiganriqi">  
+          </div>  
+          <!-- 现职日期 -->  
+          <div class="mb-3">  
+            <label for="modalXianzhiriqi" class="form-label">现职日期</label>  
+            <input type="date" class="form-control" id="modalXianzhiriqi" name="xianzhiriqi">  
+          </div>  
+          <!-- 现衔日期 -->  
+          <div class="mb-3">  
+            <label for="modalXianxianriqi" class="form-label">现衔日期</label>  
+            <input type="date" class="form-control" id="modalXianxianriqi" name="xianxianriqi">  
+          </div>  
+          <!-- 职级 -->  
+          <div class="mb-3">  
+            <label for="modalZhiji" class="form-label">职级</label>  
+            <input type="text" class="form-control" id="modalZhiji" name="zhiji">  
+          </div>  
+          <!-- 性类 -->  
+          <div class="mb-3">  
+            <label for="modalXinglei" class="form-label">形类</label>  
+            <input type="text" class="form-control" id="modalXinglei" name="xinglei">  
+          </div>  
+          <!-- 备注 -->  
+          <div class="mb-3">  
+            <label for="modalRemarks" class="form-label">备注</label>  
+            <textarea class="form-control" id="modalRemarks" name="remarks" rows="3"></textarea>  
+          </div>  
+        </form>
+      </div>  
+      <div class="modal-footer">  
+        <button id="cancelModal" class="button">取消</button>  
+        <button id="saveFirefighter" class="button">确认添加</button>  
+      </div>  
+    </div>  
+  </div>  
+
+  <!-- 模态窗口（用于展示导入的Excel数据） -->  
+  <div id="importModal" class="modal">  
+    <div class="modal-content">  
+      <div class="modal-header">  
+        <h2>预览导入的数据</h2>  
+        <span id="closeImportModal" style="cursor:pointer;">&times;</span>  
+      </div>  
+      <div class="modal-body">  
+        <table id="importPreviewTable">  
+          <!-- 动态生成表格 -->  
+        </table>  
+      </div>  
+      <div class="modal-footer">  
+        <button id="confirmImport" class="button">确认导入</button>  
+        <button id="cancelImport" class="button">取消</button>  
+      </div>  
+    </div>  
+  </div>  
+
+  <script>  
+    // 页面加载时获取消防员列表  
+    document.addEventListener('DOMContentLoaded', function() {  
+      loadFirefighters();  
+    });  
+
+    // 加载消防员数据并填充表格  
+    function loadFirefighters(queryParams = {}) {  
+      const queryString = new URLSearchParams(queryParams).toString();  
+      fetch('/firefighters/list?' + queryString)  
+        .then(response => response.json())  
+        .then(data => {  
+          const tbody = document.querySelector('#firefightersTable tbody');  
+          tbody.innerHTML = ''; // 清空当前表格内容  
+          data.forEach(item => {  
+            const tr = document.createElement('tr');  
+            tr.innerHTML = generateTableRow(item);  
+            tbody.appendChild(tr);  
+          });  
+        })  
+        .catch(err => console.error(err));  
+    }  
+
+    // 生成表格行的HTML  
+    function generateTableRow(item) {  
+      return `  
+        <td>${item.number}</td>  
+        <td>${item.name}</td>  
+        <td>${item.gender}</td>  
+        <td>${item.birthDate || ''}</td>  
+        <td>${item.age || ''}</td>  
+        <td>${item.position || ''}</td>  
+        <td>${item.team || ''}</td>  
+        <td>${item.rank || ''}</td>  
+        <td>${item.climateZone || ''}</td>  
+        <td>${item.maoleihao || ''}</td>  
+        <td>${item.fuzhuanghao || ''}</td>  
+        <td>${item.xieleihao || ''}</td>  
+        <td>${item.zuoxundongmaohao || ''}</td>  
+        <td>${item.maoyidongfuhao || ''}</td>  
+        <td>${item.dayidongxiehao || ''}</td>  
+        <td>${item.chenyihao || ''}</td>  
+        <td>${item.jianzhanghao || ''}</td>  
+        <td>${item.yuyitifuhao || ''}</td>  
+        <td>${item.lifu || ''}</td>  
+        <td>${item.changfu || ''}</td>  
+        <td>${item.kuqun || ''}</td>  
+        <td>${item.shengao || ''}</td>  
+        <td>${item.xiongwei || ''}</td>  
+        <td>${item.yaowei || ''}</td>  
+        <td>${item.touwei || ''}</td>  
+        <td>${item.lingwei || ''}</td>  
+        <td>${item.jiaochang || ''}</td>  
+        <td>${item.zhiwei || ''}</td>  
+        <td>${item.ruwuriqi || ''}</td>  
+        <td>${item.yijishiguan || ''}</td>  
+        <td>${item.erjishiguan || ''}</td>  
+        <td>${item.tiganriqi || ''}</td>  
+        <td>${item.xianzhiriqi || ''}</td>  
+        <td>${item.xianxianriqi || ''}</td>  
+        <td>${item.zhiji || ''}</td>  
+        <td>${item.xinglei || ''}</td>  
+        <td>${item.remarks || ''}</td>  
+        <td>  
+          <button onclick="showEditFirefighterModal('${item.id}')">修改</button>  
+          <button onclick="deleteFirefighter('${item.id}')">删除</button>  
+        </td>  
+      `;  
+    }  
+
+    // 删除消防员信息  
+    function deleteFirefighter(id) {  
+      if (!confirm('确定要删除该消防员信息吗？')) return;  
+
+      fetch(`/firefighters/delete/${id}`, { method: 'DELETE' })  
+        .then(response => response.json())  
+        .then(result => {  
+          if (result.success) {  
+            alert('删除成功'); 
+            console.log(`${id} 删除成功`);  
+            loadFirefighters(); // 刷新表格  
+          } else {  
+            alert('删除失败：' + result.error);  
+          }  
+        })  
+        .catch(err => console.error(err));  
+    }  
+
+    // 显示添加消防员的模态窗口  
+    function showAddFirefighterModal() {  
+      document.getElementById('modalTitle').innerText = '添加消防员';  
+      clearModalForm();  
+      document.getElementById('firefighterId').value = ''; // 清空ID 
+      document.getElementById('saveFirefighter').innerText = '确认添加'; // 设置按钮文字 
+      const numberInput = document.getElementById('modalNumber'); // 获取 DOM 元素
+      numberInput.removeAttribute('readonly'); // 移除 'readonly' 属性  
+      document.getElementById('firefighterModal').style.display = 'block';  
+    }  
+
+    // 显示修改消防员的模态窗口  
+    function showEditFirefighterModal(id) {  
+      fetch(`/firefighters/get/${id}`)  
+        .then(response => response.json())  
+        .then(item => {
+            console.log(item);  
+            document.getElementById('modalTitle').innerText = '修改消防员信息';
+            document.getElementById('saveFirefighter').innerText = '确认修改'; // 设置按钮文字
+            const numberInput = document.getElementById('modalNumber'); // 获取 DOM 元素
+            numberInput.setAttribute('readonly', true); // 确保编号框不可编辑 
+            fillModalForm(item);  
+            document.getElementById('firefighterModal').style.display = 'block';  
+        }) 
+        .catch(err => console.error(err));  
+
+      }      
+    // 填充模态窗口表单数据  
+  function fillModalForm(item) {
+  document.getElementById('firefighterId').value = item.objectId || '';
+  document.getElementById('modalNumber').value = item.number || '';
+  document.getElementById('modalName').value = item.name || '';
+  document.getElementById('modalGender').value = item.gender || '';
+  document.getElementById('modalBirthDate').value = item.birthDate || '';
+  document.getElementById('modalAge').value = item.age || '';
+  document.getElementById('modalPosition').value = item.position || '';
+  document.getElementById('modalTeam').value = item.team || '';
+  document.getElementById('modalRank').value = item.rank || '';
+  document.getElementById('modalClimateZone').value = item.climateZone || '';
+  document.getElementById('modalMaoleihao').value = item.maoleihao || '';
+  document.getElementById('modalFuzhuanghao').value = item.fuzhuanghao || '';
+  document.getElementById('modalXieleihao').value = item.xieleihao || '';
+  document.getElementById('modalZuoxundongmaohao').value = item.zuoxundongmaohao || '';
+  document.getElementById('modalMaoyidongfuhao').value = item.maoyidongfuhao || '';
+  document.getElementById('modalDayidongxiehao').value = item.dayidongxiehao || '';
+  document.getElementById('modalChenyihao').value = item.chenyihao || '';
+  document.getElementById('modalJianzhanghao').value = item.jianzhanghao || '';
+  document.getElementById('modalYuyitifuhao').value = item.yuyitifuhao || '';
+  document.getElementById('modalLifu').value = item.lifu || '';
+  document.getElementById('modalChangfu').value = item.changfu || '';
+  document.getElementById('modalKuqun').value = item.kuqun || '';
+  document.getElementById('modalShengao').value = item.shengao || '';
+  document.getElementById('modalXiongwei').value = item.xiongwei || '';
+  document.getElementById('modalYaowei').value = item.yaowei || '';
+  document.getElementById('modalTouwei').value = item.touwei || '';
+  document.getElementById('modalLingwei').value = item.lingwei || '';
+  document.getElementById('modalJiaochang').value = item.jiaochang || '';
+  document.getElementById('modalZhiwei').value = item.zhiwei || '';
+  document.getElementById('modalRuwuriqi').value = item.ruwuriqi || '';
+  document.getElementById('modalYijishiguan').value = item.yijishiguan || '';
+  document.getElementById('modalErjishiguan').value = item.erjishiguan || '';
+  document.getElementById('modalTiganriqi').value = item.tiganriqi || '';
+  document.getElementById('modalXianzhiriqi').value = item.xianzhiriqi || '';
+  document.getElementById('modalXianxianriqi').value = item.xianxianriqi || '';
+  document.getElementById('modalZhiji').value = item.zhiji || '';
+  document.getElementById('modalXinglei').value = item.xinglei || '';
+  document.getElementById('modalRemarks').value = item.remarks || '';
+}
+
+    // 清空模态窗口表单数据  
+    function clearModalForm() {  
+      document.getElementById('firefighterForm').reset();  
+      // 清除错误提示  
+      clearErrorMessages();  
+    }  
+
+    // 关闭模态窗口  
+    document.getElementById('closeModal').onclick = function() {  
+      document.getElementById('firefighterModal').style.display = 'none';  
+    };  
+    document.getElementById('cancelModal').onclick = function() {  
+      document.getElementById('firefighterModal').style.display = 'none';  
+    };  
+
+    // 保存消防员（添加或修改）  
+    document.getElementById('saveFirefighter').onclick = function() {  
+      const id = document.getElementById('firefighterId').value; 
+      console.log('保存或修改消防员信息时的id为：', id); 
+      const form = document.getElementById('firefighterForm');  
+      const formData = {};  
+      const inputs = form.querySelectorAll('input, select');  
+      let valid = true;  
+
+      // 清理之前的错误提示  
+      clearErrorMessages();  
+
+      // 1. 提取表单数据并验证  
+      inputs.forEach(input => {  
+        if (input.required && input.value.trim() === '') {  
+          displayErrorMessage(input, `字段 "${input.previousElementSibling.innerText}" 是必填项！`);  
+          valid = false;  
+        } else {  
+          formData[input.name] = input.value.trim();  
+        }  
+      });  
+
+      if (!valid) return;  
+
+      let url, method;  
+      if (id) {  
+        // 更新  
+        url = `/firefighters/update/${id}`;  
+        method = 'PUT';  
+      } else {  
+        // 添加  
+        url = '/firefighters/add';  
+        method = 'POST';  
+      }  
+
+      fetch(url, {  
+        method: method,  
+        headers: {  
+          'Content-Type': 'application/json',  
+        },  
+        body: JSON.stringify(formData),  
+      })  
+        .then(response => response.json())  
+        .then(result => {  
+          if (result.success) {  
+            alert('保存成功');  
+            document.getElementById('firefighterModal').style.display = 'none';  
+            loadFirefighters();  
+          } else {  
+            // 处理编号重复的错误  
+            if (result.error.includes('编号')) {  
+              displayErrorMessage(document.getElementById('modalNumber'), result.error);  
+            } else {  
+              alert('保存失败：' + result.error);  
+            }  
+          }  
+        })  
+        .catch(err => console.error(err));  
+    };  
+
+    // 显示字段错误信息  
+    function displayErrorMessage(input, message) {  
+      input.classList.add('error'); // 给输入框加错误样式  
+      const errorSpan = document.createElement('span');  
+      errorSpan.className = 'error-message';  
+      errorSpan.textContent = message;  
+      input.parentNode.appendChild(errorSpan); // 在输入框父容器中添加错误提示  
+    }  
+
+    // 清理所有错误提示  
+    function clearErrorMessages() {  
+      const errorMessages = document.querySelectorAll('.error-message');  
+      errorMessages.forEach(msg => msg.remove()); // 删除错误信息  
+      const errorInputs = document.querySelectorAll('.error');  
+      errorInputs.forEach(input => input.classList.remove('error')); // 移除错误标识  
+    }  
+
+    // 搜索功能  
+    function searchFirefighters() {  
+      const queryParams = {  
+        number: document.getElementById('searchNumber').value.trim(),  
+        name: document.getElementById('searchName').value.trim(),  
+        gender: document.getElementById('searchGender').value,  
+        ageMin: document.getElementById('searchAgeMin').value,  
+        ageMax: document.getElementById('searchAgeMax').value,  
+        position: document.getElementById('searchPosition').value.trim(),  
+        team: document.getElementById('searchTeam').value.trim(),  
+        rank: document.getElementById('searchRank').value.trim(),  
+        // 可以继续添加其他搜索条件  
+      };  
+      loadFirefighters(queryParams);  
+    }  
+
+    // 重置搜索条件  
+    function resetSearch() {  
+      document.getElementById('searchForm').reset();  
+      loadFirefighters();  
+    }  
+
+    // 导入Excel文件表单提交  
+    document.getElementById('importForm').addEventListener('submit', function(event) {  
+      event.preventDefault();  
+
+      const fileInput = document.getElementById('excelFile');  
+      const file = fileInput.files[0];  
+      if (!file) {  
+        alert('请选择Excel文件');  
+        return;  
+      }  
+
+      const formData = new FormData();  
+      formData.append('excelFile', file);  
+
+      fetch('/firefighters/import-preview', {  
+        method: 'POST',  
+        body: formData  
+      })  
+      .then(response => response.json())  
+      .then(data => {  
+        if (data.success) {  
+          // 显示模态窗口并展示预览数据  
+          showImportModal(data.previewData);  
+        } else {  
+          alert('预览失败：' + data.error);  
+        }  
+      })  
+      .catch(err => console.error(err));  
+    });  
+
+    // 显示导入模态窗口  
+    function showImportModal(previewData) {  
+      const modal = document.getElementById('importModal');  
+      const closeModalBtn = document.getElementById('closeImportModal');  
+      const confirmBtn = document.getElementById('confirmImport');  
+      const cancelBtn = document.getElementById('cancelImport');  
+      const previewTable = document.getElementById('importPreviewTable');  
+
+      // 清空预览表格内容  
+      previewTable.innerHTML = '';  
+
+      if (previewData.length === 0) {  
+        previewTable.innerHTML = '<p>没有可预览的数据。</p>';  
+        return;  
+      }  
+
+      // 动态生成表格头  
+      const headers = Object.keys(previewData[0]);  
+      const thead = document.createElement('thead');  
+      const headerRow = document.createElement('tr');  
+      headers.forEach(header => {  
+        const th = document.createElement('th');  
+        th.textContent = header;  
+        headerRow.appendChild(th);  
+      });  
+      thead.appendChild(headerRow);  
+      previewTable.appendChild(thead);  
+
+      // 动态生成表格体  
+      const tbody = document.createElement('tbody');  
+      previewData.forEach(item => {  
+        const tr = document.createElement('tr');  
+        headers.forEach(header => {  
+          const td = document.createElement('td');  
+          td.textContent = item[header] !== undefined ? item[header] : '';  
+          tr.appendChild(td);  
+        });  
+        tbody.appendChild(tr);  
+      });  
+      previewTable.appendChild(tbody);  
+
+      // 显示模态窗口  
+      modal.style.display = 'block';  
+
+      // 关闭模态窗口事件  
+      closeModalBtn.onclick = () => {  
+        modal.style.display = 'none';  
+      };  
+      cancelBtn.onclick = () => {  
+        modal.style.display = 'none';  
+      };  
+
+      // 确认导入事件  
+      confirmBtn.onclick = () => {  
+        fetch('/firefighters/import-confirm', {  
+          method: 'POST',  
+          headers: { 'Content-Type': 'application/json' },  
+          body: JSON.stringify({ data: previewData })  
+        })  
+          .then(response => response.json())  
+          .then(result => {  
+            if (result.success) {  
+              // 构建详细反馈信息  
+              const message = `  
+                导入完成：  
+                成功导入：${result.saved} 条记录。  
+                跳过：${result.skipped} 条记录。  
+              `;  
+
+              // 显示跳过记录详情  
+              if (result.skipped > 0) {  
+                const skippedDetails = result.details.skipped.map(item => {  
+                  return `编号: ${item.data.number || '未知'}, 原因: ${item.reason}`;  
+                }).join('\n');  
+
+                alert(`${message}\n跳过详情：\n${skippedDetails}`);  
+              } else {  
+                alert(message);  
+              }  
+
+              // 隐藏模态窗口，重新加载列表  
+              modal.style.display = 'none';  
+              loadFirefighters(); // 调用现有的列表加载逻辑  
+            } else {  
+              alert('导入失败：' + result.error);  
+            }  
+          })  
+          .catch(err => console.error('导入请求失败：', err));  
+      };  
+    }  
+
+    // 点击模态窗口外部关闭模态窗口  
+    window.onclick = function(event) {  
+      const firefighterModal = document.getElementById('firefighterModal');  
+      const importModal = document.getElementById('importModal');  
+      if (event.target == firefighterModal) {  
+        firefighterModal.style.display = 'none';  
+      }  
+      if (event.target == importModal) {  
+        importModal.style.display = 'none';  
+      }  
+    };  
+  </script>  
+</body>  
+</html>

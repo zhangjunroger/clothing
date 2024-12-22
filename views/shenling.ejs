@@ -1,0 +1,259 @@
+<!DOCTYPE html>  
+<html lang="zh-CN">  
+<head>  
+  <meta charset="UTF-8">  
+  <title>物品申领</title>
+  <script>  
+    const currentUser = <%- JSON.stringify(user || {}) %>; // 在页面顶部定义  
+    console.log('当前用户:', currentUser); // 测试输出  
+  </script>  
+  <style>  
+    /* 基本样式 */  
+    .container {  
+      width: 90%;  
+      margin: 0 auto;  
+    }  
+    table {  
+      width: 100%;  
+      border-collapse: collapse;  
+    }  
+    table, th, td {  
+      border: 1px solid #ccc;  
+    }  
+    th, td {  
+      padding: 8px;  
+      text-align: center;  
+    }  
+    .modal {  
+      display: none; /* 隐藏模态窗口 */  
+      position: fixed;  
+      z-index: 1;  
+      left: 0;  
+      top: 0;  
+      width: 100%;  
+      height: 100%;  
+      overflow: auto;  
+      background-color: rgba(0,0,0,0.5); /* 半透明背景 */  
+    }  
+    .modal-content {  
+      background-color: #fff;  
+      margin: 10% auto;  
+      padding: 20px;  
+      width: 80%;  
+    }  
+    .modal-header, .modal-footer {  
+      text-align: right;  
+    }  
+    .modal-body {  
+      max-height: 400px;  
+      overflow-y: auto;  
+    }  
+    .button {  
+      padding: 6px 12px;  
+      margin: 5px;  
+    }  
+    /* 错误消息样式 */  
+    .error {  
+      border-color: red;  
+    }  
+    .error-message {  
+      color: red;  
+      font-size: 12px;  
+    }  
+  </style>
+</head>  
+<body>  
+
+    <!-- 服装信息表格展示 -->  
+    <section>  
+      <h2>物品信息列表</h2>  
+      <table id="clothingTable">  
+        <thead>  
+          <tr>  
+            <th>物品编号</th>  
+            <th>物品名称</th>  
+            <th>规格</th>  
+            <th>数量</th>  
+            <th>类别</th>  
+            <th>仓库位置</th>  
+            <th>备注</th> 
+            <th>申领个数</th>              
+            <th>操作</th>  
+          </tr>  
+        </thead>  
+        <tbody>  
+          <!-- 数据将通过AJAX动态加载 -->  
+        </tbody>  
+      </table>  
+    </section>  
+
+
+    <!-- 服装信息表格展示 -->  
+    <section>  
+      <h2>申领信息列表</h2>  
+      <table id="ShenlingTable">  
+        <thead>  
+          <tr>  
+            <th>用户编号</th>
+            <th>物品编号</th>  
+            <th>物品名称</th>  
+            <th>规格</th>  
+            <th>类别</th>  
+            <th>申领个数</th>              
+            <th>审核状态</th>  
+          </tr>  
+        </thead>  
+        <tbody>  
+          <!-- 数据将通过AJAX动态加载 -->  
+        </tbody>  
+      </table>  
+    </section>  
+
+  <script>
+      
+      // 页面加载时获取物品列表  
+      document.addEventListener('DOMContentLoaded', function() {  
+        loadClothing();
+        loadShenling();    
+    });  
+
+// 加载服装数据并填充表格  
+function loadClothing() {  
+    fetch('/clothing/list') // 获取物品数据的 API  
+        .then(response => response.json())  
+        .then(data => {  
+            const tbody = document.querySelector('#clothingTable tbody');  
+            tbody.innerHTML = ''; // 清空当前表格内容  
+
+            // 当前登录用户信息来源：前端变量  
+            const userId = currentUser.username; // 假设已从后端传递到全局变量  
+
+            // 遍历物品数据，生成每行表格  
+            data.forEach(item => {  
+                const tr = document.createElement('tr');  
+                tr.innerHTML = generateTableRow(item, userId); // 传递 userId  
+                tbody.appendChild(tr);  
+            });  
+        })  
+        .catch(err => console.error(err));  
+}  
+
+
+// 生成表格行的 HTML  
+function generateTableRow(item, userId) {  
+ 
+  return `  
+        <td>${item.itemNumber}</td>  
+        <td>${item.itemName}</td>  
+        <td>${item.specification || ''}</td>  
+        <td>${item.quantity || ''}</td>  
+        <td>${item.category || ''}</td>  
+        <td>${item.warehouseLocation || ''}</td>  
+        <td>${item.remarks || ''}</td>  
+        <td>  
+          <input type="number" id="quantity-${item.itemNumber}" min="1" placeholder="输入数量">  
+        </td>  
+        <td>  
+          <!-- 将整个 item 对象编码为 JSON 存储在按钮的 data-item 属性中 -->  
+          <button onclick="shenling('${item.itemNumber}', '${userId}', this)"   
+                  data-item='${JSON.stringify(item)}'>  
+            申领  
+          </button>  
+        </td> 
+    `;  
+}  
+
+
+// 加载申领数据并填充表格  
+function loadShenling() {  
+    fetch('/shenling/list') // 获取物品数据的 API  
+        .then(response => response.json())  
+        .then(data => {  
+            const tbody = document.querySelector('#ShenlingTable tbody');  
+            tbody.innerHTML = ''; // 清空当前表格内容  
+
+            // 遍历物品数据，生成每行表格  
+            data.forEach(item => {  
+                const tr = document.createElement('tr');  
+                tr.innerHTML = generateTableRowShenling(item);
+                tbody.appendChild(tr);  
+            });  
+        })  
+        .catch(err => console.error(err));  
+}  
+
+// 生成表格行的 HTML  
+function generateTableRowShenling(item) {  
+ 
+  return `  
+        <td>${item.userId}</td> 
+        <td>${item.itemNumber}</td>  
+        <td>${item.itemName}</td>  
+        <td>${item.specification || ''}</td>  
+        <td>${item.category || ''}</td>  
+        <td>${item.quantity || ''}</td>  
+        <td>${item.shenhezhuangtai || ''}</td>  
+    `;  
+}  
+
+// 申领按钮操作  
+function shenling(itemNumber, userId, buttonElement) {  
+    // 获取按钮的 data-item 属性并解析为对象  
+    const item = JSON.parse(buttonElement.getAttribute('data-item'));  
+    
+    console.log(item);
+    if (!item) {  
+        console.error(`无法找到此物品的数据: ${itemNumber}`);  
+        return;  
+    }   
+    // 从输入框获取申领数量  
+    const quantityInput = document.getElementById(`quantity-${item.itemNumber}`);  
+    const quantity = String(quantityInput.value);  
+    
+    // 验证数量是否有效  
+    if (!quantity || quantity <= 0 || quantity > item.quantity) {  
+        alert('请输入有效的申领数量！');  
+        return;  
+    }  
+    
+    const itemnum = item.itemNumber;
+    const itemname = item.itemName;
+    const itemspec = item.specification;
+    const itemcategory = item.category;
+
+
+      // 收集表单数据  
+  const shenlingData = {  
+    userId: userId,
+    itemNumber: itemnum, 
+    itemName: itemname, 
+    specification: itemspec,  
+    category: itemcategory,
+    quantity: quantity,
+    shenhezhuangtai: "未审核" 
+  };  
+
+  console.log(shenlingData);
+
+    // 提交申领操作到后端  
+    fetch('/shenling/save', {  
+        method: 'POST',  
+        headers: { 'Content-Type': 'application/json' },  
+        body: JSON.stringify(shenlingData) // 传递物品 ID、用户 ID 和申领数量  
+    })  
+        .then(response => {  
+            if (response.ok) {  
+                alert('申领成功！');  
+                loadClothing(); // 刷新物品列表  
+            } else {  
+                return response.json().then(err => { throw new Error(err.error); });  
+            }  
+        })  
+        .catch(error => {  
+            console.error('申领失败:', error);  
+            alert(`申领失败: ${error.message}`);  
+        });  
+}  
+  </script>
+</body>
+</html>

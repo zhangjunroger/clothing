@@ -1,0 +1,161 @@
+<!-- views/admin/users.ejs -->  
+
+<!DOCTYPE html>  
+<html lang="zh-CN">  
+<head>  
+    <meta charset="UTF-8">  
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">  
+    <title>用户管理 - 服装管理系统</title>  
+    <link rel="stylesheet" href="/css/style.css">  
+</head>  
+<body>  
+    <div class="container">  
+        <h1>用户管理（管理员 Admin 权限）</h1>  
+
+        <!-- 用户列表 -->  
+        <div id="usersList">  
+            <p>正在加载用户列表...</p>  
+        </div>  
+
+        <!-- 注册新用户 -->  
+        <div class="register-form">  
+            <h2>注册新用户</h2>  
+            <form id="registerForm">  
+                <input type="text" id="username" placeholder="用户名" required>  
+                <input type="password" id="password" placeholder="密码" required>  
+                <input type="email" id="email" placeholder="邮箱" required>
+                <label for="role">角色：</label>  
+                <select id="role" name="role" required>  
+                    <option value="user">普通用户</option>  
+                    <option value="admin">管理员</option>  
+                </select>  
+                <button class="btn-regist" type="submit">注册</button>  
+            </form>  
+        </div>  
+    </div>  
+    <script>  
+        console.log('EJS 模板已正确渲染');  
+    </script>  
+    <script>  
+    async function loadUsers() { 
+        console.log('loadUsers 函数已被调用');  
+        try {  
+            const response = await fetch('/admin/users-list');  
+            
+            if (!response.ok) {  
+                const errorData = await response.json();  
+                throw new Error(errorData.error || 'Failed to load users');  
+            }  
+            
+            const users = await response.json();  
+            displayUsers(users);  
+        } catch (error) {  
+            console.error('加载用户列表失败:', error);  
+            const usersListDiv = document.getElementById('usersList');  
+            usersListDiv.innerHTML = `<p>加载用户列表失败: ${error.message}</p>`;  
+        }  
+    }  
+
+    // 动态展示用户列表  
+    function displayUsers(users) {  
+        const usersListDiv = document.getElementById('usersList');  
+
+        if (users.length === 0) {  
+            usersListDiv.innerHTML = '<p>目前没有用户。</p>';  
+            return;  
+        }  
+
+        usersListDiv.innerHTML = '';  
+
+        const table = document.createElement('table');  
+        table.className = 'users-table';  
+
+        const thead = document.createElement('thead');  
+        thead.innerHTML = `  
+            <tr>  
+                <th>用户名</th>  
+                <th>邮箱</th> 
+                <th>权限</th>
+                <th>注册时间</th>  
+                <th>操作</th>  
+            </tr>  
+        `;  
+        table.appendChild(thead);  
+
+        const tbody = document.createElement('tbody');  
+        users.forEach(user => {  
+            const tr = document.createElement('tr');  
+            tr.innerHTML = `  
+                <td>${user.username}</td>  
+                <td>${user.email}</td>
+                <td>${user.role}</td>  
+                <td>${new Date(user.createdAt).toLocaleString()}</td>  
+                <td>  
+                    <button class="btn-delete" onclick="deleteUser('${user.id}')">删除</button>  
+                </td>  
+            `;  
+            tbody.appendChild(tr);  
+        });  
+        table.appendChild(tbody);  
+
+        usersListDiv.appendChild(table);  
+    }  
+
+    // 删除用户功能  
+    async function deleteUser(userId) {  
+        if (!confirm('确定要删除这个用户吗？')) return;  
+
+        try {  
+            const response = await fetch(`/admin/users/${userId}`, {  
+                method: 'DELETE'  
+            });  
+            
+            if (response.ok) {  
+                alert('用户删除成功');  
+                loadUsers();  
+            } else {  
+                const error = await response.json();  
+                throw new Error(error.error);  
+            }  
+        } catch (error) {  
+            console.error('删除用户失败:', error);  
+            alert(`删除用户失败: ${error.message}`);  
+        }  
+    }  
+
+    // 注册新用户功能  
+    document.getElementById('registerForm').addEventListener('submit', async (e) => {  
+        e.preventDefault();  
+
+        const username = document.getElementById('username').value;  
+        const password = document.getElementById('password').value;  
+        const email = document.getElementById('email').value;
+        const role = document.getElementById('role').value;
+        console.log('role:', role); // 调试日志   
+        console.log(JSON.stringify({ username, password, email, role })); // 调试日志 
+        try {  
+            const response = await fetch('/admin/users', {  
+                method: 'POST',  
+                headers: { 'Content-Type': 'application/json' },  
+                body: JSON.stringify({username, password, email, role})  
+            });  
+
+            if (response.ok) {  
+                alert('用户注册成功');  
+                document.getElementById('registerForm').reset();  
+                loadUsers();  
+            } else {  
+                const error = await response.json();  
+                throw new Error(error.error);  
+            }  
+        } catch (error) {  
+            console.error('注册用户失败:', error);  
+            alert(`注册用户失败: ${error.message}`);  
+        }  
+    });  
+
+    // 页面加载后加载用户列表  
+    document.addEventListener('DOMContentLoaded', loadUsers);  
+    </script>  
+</body>  
+</html>

@@ -1,0 +1,526 @@
+<!DOCTYPE html>  
+<html lang="zh-CN">  
+<head>  
+    <meta charset="UTF-8">  
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">  
+    <title>服装管理系统</title>  
+    <link rel="stylesheet" href="/css/style.css">  
+</head>  
+
+<style>  
+    /* 重置默认样式 */  
+    * {  
+      margin: 0;  
+      padding: 0;  
+      box-sizing: border-box;  
+    }  
+
+    body {  
+      font-family: Arial, sans-serif;  
+      background-color: #f2f2f2;  
+      padding: 20px;  
+    }  
+
+    /* 按钮样式 */  
+    .open-modal-btn {  
+      display: inline-block;  
+      padding: 10px 20px;  
+      background-color: #007bff;  
+      color: white;  
+      text-decoration: none;  
+      border-radius: 4px;  
+      cursor: pointer;  
+      transition: background-color 0.3s;  
+    }  
+
+    .open-modal-btn:hover {  
+      background-color: #0056b3;  
+    }  
+
+    /* 模态框背景遮罩 */  
+    .modal-backdrop {  
+      display: none; /* 默认隐藏 */  
+      position: fixed;  
+      top: 0;  
+      left: 0;  
+      width: 100%;  
+      height: 100%;  
+      background-color: rgba(0, 0, 0, 0.5);  
+      z-index: 999;  
+    }  
+
+    /* 模态框样式 */  
+    .modal {  
+      display: none; /* 默认隐藏 */  
+      position: fixed;  
+      top: 50%;  
+      left: 50%;  
+      transform: translate(-50%, -50%);  
+      background-color: #fff;  
+      padding: 20px;  
+      border-radius: 8px;  
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);  
+      width: 80%;  
+      max-width: 600px;  
+      max-height: 90vh; /* 最大高度为视口高度的90% */  
+      overflow-y: auto; /* 内容超出时显示滚动条 */  
+      z-index: 1000;  
+    }  
+
+    /* 模态框头部 */  
+    .modal-header {  
+      display: flex;  
+      justify-content: space-between;  
+      align-items: center;  
+      margin-bottom: 20px;  
+    }  
+
+    .modal-header h2 {  
+      font-size: 1.5rem;  
+      color: #333;  
+    }  
+
+    .modal-close {  
+      background: none;  
+      border: none;  
+      font-size: 1.5rem;  
+      cursor: pointer;  
+      color: #aaa;  
+      transition: color 0.3s;  
+    }  
+
+    .modal-close:hover {  
+      color: #000;  
+    }  
+
+    /* 模态框主体 */  
+    .modal-body {  
+      margin-bottom: 20px;  
+    }  
+
+    /* 表单样式 */  
+    .form-group {  
+      margin-bottom: 15px;  
+    }  
+
+    .form-label {  
+      display: block;  
+      margin-bottom: 5px;  
+      font-weight: bold;  
+      color: #555;  
+    }  
+
+    .form-control {  
+      width: 100%;  
+      padding: 8px 12px;  
+      border: 1px solid #ddd;  
+      border-radius: 4px;  
+      font-size: 14px;  
+      transition: border-color 0.2s;  
+    }  
+
+    .form-control:focus {  
+      border-color: #007bff;  
+      outline: none;  
+    }  
+
+    /* 模态框底部 */  
+    .modal-footer {  
+      display: flex;  
+      justify-content: flex-end;  
+      gap: 10px;  
+    }  
+
+    /* 按钮样式 */  
+    .button {  
+      padding: 8px 16px;  
+      border: none;  
+      border-radius: 4px;  
+      cursor: pointer;  
+      font-size: 14px;  
+      transition: background-color 0.3s;  
+    }  
+
+    .button-primary {  
+      background-color: #28a745;  
+      color: white;  
+    }  
+
+    .button-primary:hover {  
+      background-color: #218838;  
+    }  
+
+    .button-secondary {  
+      background-color: #6c757d;  
+      color: white;  
+    }  
+
+    .button-secondary:hover {  
+      background-color: #5a6268;  
+    }  
+
+    /* 响应式设计 */  
+    @media screen and (max-width: 768px) {  
+      .modal {  
+        width: 95%;  
+        padding: 15px;  
+        max-height: 85vh; /* 适当减少最大高度以适应移动设备 */  
+      }  
+
+      .modal-header h2 {  
+        font-size: 1.2rem;  
+      }  
+
+      .button {  
+        padding: 6px 12px;  
+        font-size: 12px;  
+      }  
+    }  
+  </style>  
+  
+
+
+<body>
+      <!-- 添加背景遮罩 -->  
+  <div id="modalBackdrop" class="modal-backdrop"></div>    
+    <div class="container">  
+        <h1>欢迎, <%= user.username %></h1>  
+        <div class="dashboard-content">  
+            <p>角色: <%= user.role %></p>  
+            <nav class="dashboard-nav">  
+                <!-- 管理员入口 -->  
+                <% if (user.role === 'admin') { %>  
+                    <a href="/admin/users" class="nav-item">用户管理</a>
+                    <a href="/firefighters" class="nav-item">消防员管理</a>  
+                    <a href="/clothing" class="nav-item">物品管理</a>  
+                    <a href="/inventory" class="nav-item">库存管理</a> 
+                    <a href="/shenhe" class="nav-item">物品申领审核管理</a>                  
+                <% } %>  
+                <a href="/gerenxinxiguanli" id="personalInfoLink" class="nav-item">个人信息管理</a>   
+                <a href="/shenling" class="nav-item">物品申领</a>                  
+            </nav>  
+            <div class="action-buttons">  
+                <a href="/logout" class="btn-logout">退出登录</a>  
+            </div>  
+        </div>  
+    </div>  
+
+
+  <!-- 模态窗口（用于保存消防员信息） -->  
+  <div id="gerenxinxiguanliModal" class="modal">  
+    <div class="modal-content">  
+      <div class="modal-header">  
+        <h2 id="modalTitle">个人信息管理</h2>  
+        <span id="closeModal" style="cursor:pointer;">&times;</span>  
+      </div>  
+      <div class="modal-body">  
+        <form id="gerenxinxiguanliForm">  
+          <input type="hidden" id="gerenxinxiguanliId" name="id">  
+          <!-- 编号 -->  
+          <div class="mb-3">  
+            <label for="modalNumber" class="form-label">编号</label>  
+            <input type="text" class="form-control" id="modalNumber" name="number" required>  
+          </div>  
+          <!-- 姓名 -->  
+          <div class="mb-3">  
+            <label for="modalName" class="form-label">姓名</label>  
+            <input type="text" class="form-control" id="modalName" name="name" required>  
+          </div>  
+          <!-- 性别 -->  
+          <div class="mb-3">  
+            <label for="modalGender" class="form-label">性别</label>  
+            <select class="form-select" id="modalGender" name="gender">  
+              <option value="">请选择性别</option>  
+              <option value="男">男</option>  
+              <option value="女">女</option>  
+            </select>  
+          </div>  
+          <!-- 出生年月 -->  
+          <div class="mb-3">  
+            <label for="modalBirthDate" class="form-label">出生年月</label>  
+            <input type="date" class="form-control" id="modalBirthDate" name="birthDate">  
+          </div>  
+          <!-- 年龄 -->  
+          <div class="mb-3">  
+            <label for="modalAge" class="form-label">年龄</label>  
+            <input type="number" class="form-control" id="modalAge" name="age">  
+          </div>  
+          <!-- 职务 -->  
+          <div class="mb-3">  
+            <label for="modalPosition" class="form-label">职务</label>  
+            <input type="text" class="form-control" id="modalPosition" name="position">  
+          </div>  
+          <!-- 中队 -->  
+          <div class="mb-3">  
+            <label for="modalTeam" class="form-label">中队</label>  
+            <input type="text" class="form-control" id="modalTeam" name="team">  
+          </div>  
+          <!-- 警衔 -->  
+          <div class="mb-3">  
+            <label for="modalRank" class="form-label">警衔</label>  
+            <input type="text" class="form-control" id="modalRank" name="rank">  
+          </div>  
+          <!-- 气候区 -->  
+          <div class="mb-3">  
+            <label for="modalClimateZone" class="form-label">气候区</label>  
+            <input type="text" class="form-control" id="modalClimateZone" name="climateZone">  
+          </div>  
+          <!-- 帽类号 -->  
+          <div class="mb-3">  
+            <label for="modalMaoleihao" class="form-label">帽类号</label>  
+            <input type="text" class="form-control" id="modalMaoleihao" name="maoleihao">  
+          </div>  
+          <!-- 服装号 -->  
+          <div class="mb-3">  
+            <label for="modalFuzhuanghao" class="form-label">服装号</label>  
+            <input type="text" class="form-control" id="modalFuzhuanghao" name="fuzhuanghao">  
+          </div>  
+          <!-- 鞋类号 -->  
+          <div class="mb-3">  
+            <label for="modalXieleihao" class="form-label">鞋类号</label>  
+            <input type="text" class="form-control" id="modalXieleihao" name="xieleihao">  
+          </div>  
+          <!-- 作训冬帽号 -->  
+          <div class="mb-3">  
+            <label for="modalZuoxundongmaohao" class="form-label">作训冬帽号</label>  
+            <input type="text" class="form-control" id="modalZuoxundongmaohao" name="zuoxundongmaohao">  
+          </div>  
+          <!-- 毛衣冬服号 -->  
+          <div class="mb-3">  
+            <label for="modalMaoyidongfuhao" class="form-label">毛衣冬服号</label>  
+            <input type="text" class="form-control" id="modalMaoyidongfuhao" name="maoyidongfuhao">  
+          </div>  
+          <!-- 大衣冬鞋号 -->  
+          <div class="mb-3">  
+            <label for="modalDayidongxiehao" class="form-label">大衣冬鞋号</label>  
+            <input type="text" class="form-control" id="modalDayidongxiehao" name="dayidongxiehao">  
+          </div>  
+          <!-- 衬衣号 -->  
+          <div class="mb-3">  
+            <label for="modalChenyihao" class="form-label">衬衣号</label>  
+            <input type="text" class="form-control" id="modalChenyihao" name="chenyihao">  
+          </div>  
+          <!-- 肩章号 -->  
+          <div class="mb-3">  
+            <label for="modalJianzhanghao" class="form-label">肩章号</label>  
+            <input type="text" class="form-control" id="modalJianzhanghao" name="jianzhanghao">  
+          </div>  
+          <!-- 雨衣体服号 -->  
+          <div class="mb-3">  
+            <label for="modalYuyitifuhao" class="form-label">雨衣体服号</label>  
+            <input type="text" class="form-control" id="modalYuyitifuhao" name="yuyitifuhao">  
+          </div>  
+          <!-- 礼服 -->  
+          <div class="mb-3">  
+            <label for="modalLiufu" class="form-label">礼服</label>  
+            <input type="text" class="form-control" id="modalLifu" name="lifu">  
+          </div>  
+          <!-- 常服 -->  
+          <div class="mb-3">  
+            <label for="modalChangfu" class="form-label">常服</label>  
+            <input type="text" class="form-control" id="modalChangfu" name="changfu">  
+          </div>  
+          <!-- 裤裙 -->  
+          <div class="mb-3">  
+            <label for="modalKuku" class="form-label">裤裙</label>  
+            <input type="text" class="form-control" id="modalKuqun" name="kuqun">  
+          </div>  
+          <!-- 身高 -->  
+          <div class="mb-3">  
+            <label for="modalShengao" class="form-label">身高</label>  
+            <input type="number" class="form-control" id="modalShengao" name="shengao">  
+          </div>  
+          <!-- 胸围 -->  
+          <div class="mb-3">  
+            <label for="modalXiongwei" class="form-label">胸围</label>  
+            <input type="number" class="form-control" id="modalXiongwei" name="xiongwei">  
+          </div>  
+          <!-- 腰围 -->  
+          <div class="mb-3">  
+            <label for="modalYaowei" class="form-label">腰围</label>  
+            <input type="number" class="form-control" id="modalYaowei" name="yaowei">  
+          </div>  
+          <!-- 头围 -->  
+          <div class="mb-3">  
+            <label for="modalTouwwei" class="form-label">头围</label>  
+            <input type="number" class="form-control" id="modalTouwei" name="touwei">  
+          </div>  
+          <!-- 领围 -->  
+          <div class="mb-3">  
+            <label for="modalLingwei" class="form-label">领围</label>  
+            <input type="number" class="form-control" id="modalLingwei" name="lingwei">  
+          </div>  
+          <!-- 脚长 -->  
+          <div class="mb-3">  
+            <label for="modalJiaochang" class="form-label">脚长</label>  
+            <input type="number" class="form-control" id="modalJiaochang" name="jiaochang">  
+          </div>  
+          <!-- 趾围 -->  
+          <div class="mb-3">  
+            <label for="modalZhiwei" class="form-label">趾围</label>  
+            <input type="number" class="form-control" id="modalZhiwei" name="zhiwei">  
+          </div>  
+          <!-- 入伍日期 -->  
+          <div class="mb-3">  
+            <label for="modalRuwuriqi" class="form-label">入伍日期</label>  
+            <input type="date" class="form-control" id="modalRuwuriqi" name="ruwuriqi">  
+          </div>  
+          <!-- 一级士官 -->  
+          <div class="mb-3">  
+            <label for="modalYijishiguan" class="form-label">一级士官</label>  
+            <input type="date" class="form-control" id="modalYijishiguan" name="yijishiguan">  
+          </div>  
+          <!-- 二级士官 -->  
+          <div class="mb-3">  
+            <label for="modalErjishiguan" class="form-label">二级士官</label>  
+            <input type="date" class="form-control" id="modalErjishiguan" name="erjishiguan">  
+          </div>  
+          <!-- 提干日期 -->  
+          <div class="mb-3">  
+            <label for="modalTiganriqi" class="form-label">提干日期</label>  
+            <input type="date" class="form-control" id="modalTiganriqi" name="tiganriqi">  
+          </div>  
+          <!-- 现职日期 -->  
+          <div class="mb-3">  
+            <label for="modalXianzhiriqi" class="form-label">现职日期</label>  
+            <input type="date" class="form-control" id="modalXianzhiriqi" name="xianzhiriqi">  
+          </div>  
+          <!-- 现衔日期 -->  
+          <div class="mb-3">  
+            <label for="modalXianxianriqi" class="form-label">现衔日期</label>  
+            <input type="date" class="form-control" id="modalXianxianriqi" name="xianxianriqi">  
+          </div>  
+          <!-- 职级 -->  
+          <div class="mb-3">  
+            <label for="modalZhiji" class="form-label">职级</label>  
+            <input type="text" class="form-control" id="modalZhiji" name="zhiji">  
+          </div>  
+          <!-- 性类 -->  
+          <div class="mb-3">  
+            <label for="modalXinglei" class="form-label">形类</label>  
+            <input type="text" class="form-control" id="modalXinglei" name="xinglei">  
+          </div>  
+          <!-- 备注 -->  
+          <div class="mb-3">  
+            <label for="modalRemarks" class="form-label">备注</label>  
+            <textarea class="form-control" id="modalRemarks" name="remarks" rows="3"></textarea>  
+          </div>  
+        </form>
+      </div>  
+      <div class="modal-footer">  
+        <button id="cancelModal" class="button">取消</button>  
+        <button id="savegerenxinxiguanli" class="button">保存</button>  
+      </div>  
+    </div>  
+  </div>  
+
+  <script>  
+ 
+ personalInfoLink.addEventListener('click', (e) => {  
+  e.preventDefault();  
+  // 填充用户信息到表单  
+  document.getElementById('gerenxinxiguanliModal').style.display = 'block';  
+});
+        
+    // 清空模态窗口表单数据  
+    function clearModalForm() {  
+      document.getElementById('gerenxinxiguanliForm').reset();  
+      // 清除错误提示  
+      clearErrorMessages();  
+    }  
+
+    // 关闭模态窗口  
+    document.getElementById('closeModal').onclick = function() {  
+      document.getElementById('gerenxinxiguanliModal').style.display = 'none';  
+    };  
+    document.getElementById('cancelModal').onclick = function() {  
+      document.getElementById('gerenxinxiguanliModal').style.display = 'none';  
+    };  
+
+    // 保存消防员信息 
+    document.getElementById('savegerenxinxiguanli').onclick = function() {  
+      const form = document.getElementById('gerenxinxiguanliForm');  
+      const formData = {};  
+      const inputs = form.querySelectorAll('input, select');  
+      let valid = true;  
+
+      // 清理之前的错误提示  
+      clearErrorMessages();  
+
+      // 1. 提取表单数据并验证  
+      inputs.forEach(input => {  
+        if (input.required && input.value.trim() === '') {  
+            alert(`字段 "${input.previousElementSibling.innerText}" 是必填项！`);  
+          valid = false;  
+        } else {  
+          formData[input.name] = input.value.trim();  
+        }  
+      });  
+
+      if (!valid) return;  
+
+      let url, method;  
+      // 添加  
+      url = '/gerenxinxiguanli/add';  
+      method = 'POST';  
+    
+
+      fetch(url, {  
+        method: method,  
+        headers: {  
+          'Content-Type': 'application/json',  
+        },  
+        body: JSON.stringify(formData),  
+      })  
+        .then(response => response.json())  
+        .then(result => {  
+          if (result.success) {  
+            alert('保存成功');  
+            document.getElementById('gerenxinxiguanliModal').style.display = 'none';  
+            loadFirefighters();  
+          } else {  
+            // 处理编号重复的错误  
+            if (result.error.includes('编号')) {  
+                alert(result.error);  
+            } else {  
+              alert('保存失败：' + result.error);  
+            }  
+          }  
+        })  
+        .catch(err => console.error(err));  
+    };  
+
+    // 显示字段错误信息  
+    function displayErrorMessage(input, message) {  
+      input.classList.add('error'); // 给输入框加错误样式  
+      const errorSpan = document.createElement('span');  
+      errorSpan.className = 'error-message';  
+      errorSpan.textContent = message;  
+      input.parentNode.appendChild(errorSpan); // 在输入框父容器中添加错误提示  
+    }  
+
+    // 清理所有错误提示  
+    function clearErrorMessages() {  
+      const errorMessages = document.querySelectorAll('.error-message');  
+      errorMessages.forEach(msg => msg.remove()); // 删除错误信息  
+      const errorInputs = document.querySelectorAll('.error');  
+      errorInputs.forEach(input => input.classList.remove('error')); // 移除错误标识  
+    }  
+
+
+    // 点击模态窗口外部关闭模态窗口  
+    window.onclick = function(event) {  
+      const firefighterModal = document.getElementById('firefighterModal');  
+      const importModal = document.getElementById('importModal');  
+      if (event.target == firefighterModal) {  
+        firefighterModal.style.display = 'none';  
+      }  
+      if (event.target == importModal) {  
+        importModal.style.display = 'none';  
+      }  
+    };  
+  </script>  
+
+
+</body>  
+</html>

@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>库存管理</title>
+  <style>
+    /* 基本样式 */
+    .container {
+      width: 90%;
+      margin: 0 auto;
+    }
+    h1 {
+      text-align: center;
+    }
+    .search-bar {
+      margin-bottom: 20px;
+    }
+    .search-bar input {
+      margin-right: 10px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    table, th, td {
+      border: 1px solid #ccc;
+    }
+    th, td {
+      padding: 8px;
+      text-align: center;
+    }
+    .button {
+      padding: 6px 12px;
+      margin: 5px;
+    }
+    /* 模态窗口样式 */
+    .modal {
+      display: none; /* 隐藏模态窗口 */
+      position: fixed;
+      z-index: 1;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.5); /* 半透明背景 */
+    }
+    .modal-content {
+      background-color: #fff;
+      margin: 10% auto;
+      padding: 20px;
+      width: 50%;
+    }
+    .modal-header, .modal-footer {
+      text-align: right;
+    }
+    .modal-body {
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    /* 错误消息样式 */
+    .error {
+      border-color: red;
+    }
+    .error-message {
+      color: red;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>库存管理</h1>
+
+    <!-- 搜索栏 -->
+    <section class="search-bar">
+      <input type="text" id="itemNumber" placeholder="物品编号">
+      <input type="text" id="itemName" placeholder="物品名称">
+      <input type="text" id="specification" placeholder="规格">
+      <input type="number" id="quantity" placeholder="数量">
+      <input type="text" id="category" placeholder="类别">
+      <input type="text" id="warehouseLocation" placeholder="仓库位置">
+      <button id="searchButton">搜索</button>
+      <button id="resetButton">重置</button>
+    </section>
+
+    <!-- 库存信息表格展示 -->
+    <section>
+      <table id="inventoryTable">
+        <thead>
+          <tr>
+            <th>物品编号</th>
+            <th>物品名称</th>
+            <th>规格</th>
+            <th>数量</th>
+            <th>类别</th>
+            <th>仓库位置</th>
+            <th>备注</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- 数据将通过AJAX动态加载 -->
+        </tbody>
+      </table>
+    </section>
+  </div>
+
+  <!-- 修改模态窗口 -->
+  <div id="editModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <span id="closeEditModal" style="cursor:pointer;">&times;</span>
+      </div>
+      <div class="modal-body">
+        <h2>修改库存信息</h2>
+        <form id="editForm">
+          <!-- 表单字段 -->
+          <div>
+            <label for="editItemNumber">物品编号：</label>
+            <input type="text" id="editItemNumber" name="itemNumber" required>
+          </div>
+          <div>
+            <label for="editItemName">物品名称：</label>
+            <input type="text" id="editItemName" name="itemName" required>
+          </div>
+          <div>
+            <label for="editSpecification">规格：</label>
+            <input type="text" id="editSpecification" name="specification">
+          </div>
+          <div>
+            <label for="editQuantity">数量：</label>
+            <input type="number" id="editQuantity" name="quantity" required>
+          </div>
+          <div>
+            <label for="editCategory">类别：</label>
+            <input type="text" id="editCategory" name="category">
+          </div>
+          <div>
+            <label for="editWarehouseLocation">仓库位置：</label>
+            <input type="text" id="editWarehouseLocation" name="warehouseLocation">
+          </div>
+          <div>
+            <label for="editRemarks">备注：</label>
+            <input type="text" id="editRemarks" name="remarks">
+          </div>
+          <div>
+            <button type="submit">确认修改</button>
+            <button type="button" id="cancelEdit">取消</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let editingItemId = null; // 当前正在编辑的项目ID
+
+    // 加载库存数据并填充表格
+    function loadInventory(filters = {}) {
+      fetch('/inventory/list', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(filters)
+      })
+        .then(response => response.json())
+        .then(data => {
+          const tbody = document.querySelector('#inventoryTable tbody');
+          tbody.innerHTML = ''; // 清空当前表格内容
+          data.forEach(item => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = generateTableRow(item);
+            tbody.appendChild(tr);
+          });
+        })
+        .catch(err => console.error(err));
+    }
+
+    // 生成表格行的HTML
+    function generateTableRow(item) {
+      return `
+        <td>${item.itemNumber}</td>
+        <td>${item.itemName}</td>
+        <td>${item.specification || ''}</td>
+        <td>${item.quantity || ''}</td>
+        <td>${item.category || ''}</td>
+        <td>${item.warehouseLocation || ''}</td>
+        <td>${item.remarks || ''}</td>
+        <td>
+          <button onclick="showEditModal('${item.id}')">修改</button>
+          <button onclick="deleteItem('${item.id}')">删除</button>
+        </td>
+      `;
+    }
+
+    // 删除库存信息
+    function deleteItem(id) {
+      if (!confirm('确定要删除该库存信息吗？')) return;
+
+      fetch(`/inventory/delete/${id}`, { method: 'DELETE' })
+        .then(response => response.json())
+        .then(result => {
+          if (result.success) {
+            alert('删除成功');
+            loadInventory(); // 刷新表格
+          } else {
+            alert('删除失败：' + result.error);
+          }
+        })
+        .catch(err => console.error(err));
+    }
+
+    // 显示修改模态窗口并填充数据
+    function showEditModal(id) {
+      editingItemId = id;
+
+      fetch(`/inventory/get/${id}`)
+        .then(response => response.json())
+        .then(item => {
+          // 填充表单数据
+          document.getElementById('editItemNumber').value = item.itemNumber;
+          document.getElementById('editItemName').value = item.itemName;
+          document.getElementById('editSpecification').value = item.specification || '';
+          document.getElementById('editQuantity').value = item.quantity || '';
+          document.getElementById('editCategory').value = item.category || '';
+          document.getElementById('editWarehouseLocation').value = item.warehouseLocation || '';
+          document.getElementById('editRemarks').value = item.remarks || '';
+
+          // 显示模态窗口
+          document.getElementById('editModal').style.display = 'block';
+        })
+        .catch(err => console.error(err));
+    }
+
+    // 关闭修改模态窗口
+    function closeEditModal() {
+      document.getElementById('editModal').style.display = 'none';
+      editingItemId = null;
+      document.getElementById('editForm').reset();
+      clearErrorMessages();
+    }
+
+    // 提交修改表单
+    document.getElementById('editForm').addEventListener('submit', function(event) {
+      event.preventDefault(); // 阻止默认提交行为
+
+      if (!editingItemId) return;
+
+      const form = this;
+      const formData = {};
+      const inputs = form.querySelectorAll('input');
+      let valid = true; // 表单验证标识
+
+      // 清理之前的错误提示
+      clearErrorMessages();
+
+      // 提取表单数据并验证
+      inputs.forEach(input => {
+        if (input.required && input.value.trim() === '') {
+          // 验证必填字段
+          displayErrorMessage(input, `字段 "${input.previousElementSibling.textContent}" 是必填项！`);
+          valid = false;
+        } else {
+          formData[input.name] = input.value.trim(); // 去掉多余空格
+        }
+      });
+
+      if (!valid) return; // 不通过验证则退出
+
+      // 提交数据到后端
+      fetch(`/inventory/update/${editingItemId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+      })
+        .then(response => response.json())
+        .then(result => {
+          if (result.success) {
+            alert('修改成功！');
+            closeEditModal();
+            loadInventory(); // 刷新表格
+          } else {
+            if (result.error.includes("物品编号已存在")) {
+              const numberInput = form.querySelector('[name="itemNumber"]');
+              displayErrorMessage(numberInput, result.error);
+            } else {
+              alert('修改失败：' + result.error);
+            }
+          }
+        })
+        .catch(err => console.error(err));
+    });
+
+    // 取消修改
+    document.getElementById('cancelEdit').addEventListener('click', closeEditModal);
+    document.getElementById('closeEditModal').addEventListener('click', closeEditModal);
+
+    // 显示字段错误信息
+    function displayErrorMessage(input, message) {
+      input.classList.add('error'); // 给输入框加错误样式
+      const errorSpan = document.createElement('span');
+      errorSpan.className = 'error-message';
+      errorSpan.textContent = message;
+      input.parentNode.appendChild(errorSpan); // 在输入框父容器中添加错误提示
+    }
+
+    // 清理所有错误提示
+    function clearErrorMessages() {
+      const errorMessages = document.querySelectorAll('.error-message');
+      errorMessages.forEach(msg => msg.remove()); // 删除错误信息
+      const errorInputs = document.querySelectorAll('.error');
+      errorInputs.forEach(input => input.classList.remove('error')); // 移除错误标识
+    }
+
+    // 搜索功能
+    document.getElementById('searchButton').addEventListener('click', function() {
+      const filters = {
+        itemNumber: document.getElementById('itemNumber').value.trim(),
+        itemName: document.getElementById('itemName').value.trim(),
+        specification: document.getElementById('specification').value.trim(),
+        quantity: document.getElementById('quantity').value.trim(),
+        category: document.getElementById('category').value.trim(),
+        warehouseLocation: document.getElementById('warehouseLocation').value.trim()
+      };
+      loadInventory(filters);
+    });
+
+    // 重置搜索
+    document.getElementById('resetButton').addEventListener('click', function() {
+      document.getElementById('itemNumber').value = '';
+      document.getElementById('itemName').value = '';
+      document.getElementById('specification').value = '';
+      document.getElementById('quantity').value = '';
+      document.getElementById('category').value = '';
+      document.getElementById('warehouseLocation').value = '';
+      loadInventory();
+    });
+
+    // 页面加载时获取库存列表
+    document.addEventListener('DOMContentLoaded', function() {
+      loadInventory();
+    });
+
+    // 点击模态窗口外部关闭模态窗口
+    window.onclick = function(event) {
+      const modal = document.getElementById('editModal');
+      if (event.target == modal) {
+        closeEditModal();
+      }
+    };
+  </script>
+</body>
+</html>

@@ -1,0 +1,219 @@
+<!DOCTYPE html>  
+<html lang="zh-CN">  
+<head>  
+  <meta charset="UTF-8">  
+  <title>物品申领审核</title>
+  <script>  
+    const currentUser = <%- JSON.stringify(user || {}) %>; // 在页面顶部定义  
+    console.log('当前用户:', currentUser); // 测试输出  
+  </script>  
+  <style>  
+    /* 基本样式 */  
+    .container {  
+      width: 90%;  
+      margin: 0 auto;  
+    }  
+    table {  
+      width: 100%;  
+      border-collapse: collapse;  
+    }  
+    table, th, td {  
+      border: 1px solid #ccc;  
+    }  
+    th, td {  
+      padding: 8px;  
+      text-align: center;  
+    }  
+    .modal {  
+      display: none; /* 隐藏模态窗口 */  
+      position: fixed;  
+      z-index: 1;  
+      left: 0;  
+      top: 0;  
+      width: 100%;  
+      height: 100%;  
+      overflow: auto;  
+      background-color: rgba(0,0,0,0.5); /* 半透明背景 */  
+    }  
+    .modal-content {  
+      background-color: #fff;  
+      margin: 10% auto;  
+      padding: 20px;  
+      width: 80%;  
+    }  
+    .modal-header, .modal-footer {  
+      text-align: right;  
+    }  
+    .modal-body {  
+      max-height: 400px;  
+      overflow-y: auto;  
+    }  
+    .button {  
+      padding: 6px 12px;  
+      margin: 5px;  
+    }  
+    /* 错误消息样式 */  
+    .error {  
+      border-color: red;  
+    }  
+    .error-message {  
+      color: red;  
+      font-size: 12px;  
+    }  
+  </style>
+</head>  
+<body>  
+
+    <!-- 服装信息表格展示 -->  
+    <section>  
+      <h2>申领信息列表</h2>  
+      <table id="ShenheTable">  
+        <thead>  
+          <tr>  
+            <th>用户编号</th>
+            <th>物品编号</th>  
+            <th>物品名称</th>  
+            <th>规格</th>  
+            <th>类别</th>  
+            <th>申领个数</th>              
+            <th>审核状态</th> 
+            <th>操作</th>              
+          </tr>  
+        </thead>  
+        <tbody>  
+          <!-- 数据将通过AJAX动态加载 -->  
+        </tbody>  
+      </table>  
+    </section>  
+
+  <script>
+      
+      // 页面加载时获取物品列表  
+      document.addEventListener('DOMContentLoaded', function() {  
+        loadShenhe();    
+    });  
+
+
+// 加载申领数据并填充表格  
+function loadShenhe() {  
+    fetch('/shenhe/list') // 获取物品数据的 API  
+        .then(response => response.json())  
+        .then(data => {  
+            const tbody = document.querySelector('#ShenheTable tbody');  
+            tbody.innerHTML = ''; // 清空当前表格内容 
+            
+            // 遍历物品数据，生成每行表格  
+            data.forEach(item => {  
+                const tr = document.createElement('tr');  
+                tr.innerHTML = generateTableRowShenhe(item);
+                tbody.appendChild(tr);  
+            });  
+        })  
+        .catch(err => console.error(err));  
+}  
+
+// 生成表格行的 HTML  
+function generateTableRowShenhe(item) {  
+ 
+  return `  
+        <td>${item.userId}</td> 
+        <td>${item.itemNumber}</td>  
+        <td>${item.itemName}</td>  
+        <td>${item.specification || ''}</td>  
+        <td>${item.category || ''}</td>  
+        <td>${item.quantity || ''}</td>  
+        <td>${item.shenhezhuangtai || ''}</td>
+                <td>  
+          <!-- 将整个 item 对象编码为 JSON 存储在按钮的 data-item 属性中 -->  
+          <button onclick="Shenhe('${item.itemNumber}', '${item.userId}', this)"   
+                  data-item='${JSON.stringify(item)}'>  
+            审核  
+          </button>  
+        </td> 
+    `;  
+}  
+
+
+// 审核按钮操作  
+function Shenhe(itemNumber, userId, buttonElement) {  
+    // 获取按钮的 data-item 属性并解析为对象  
+    const item = JSON.parse(buttonElement.getAttribute('data-item'));  
+    
+    console.log(item);
+    if (!item) {  
+        console.error(`无法找到此物品的数据: ${itemNumber}`);  
+        return;  
+    }   
+
+    const itemnum = item.itemNumber;
+    const itemname = item.itemName;
+    const itemspec = item.specification;
+    const itemcategory = item.category;
+    const itemquantity = item.quantity;
+
+      // 收集表单数据  
+  const shenheData = {  
+    userId: userId,
+    itemNumber: itemnum, 
+    itemName: itemname, 
+    specification: itemspec,  
+    category: itemcategory,
+    quantity: itemquantity,
+    shenhezhuangtai: "已审核" 
+  };
+  
+  const tongbukuchun = {
+    itemNumber: itemnum, 
+    quantity_shenling: itemquantity
+  };
+
+  console.log(shenheData);
+
+  const id = item.objectId;
+  console.log(id);
+
+    // 提交审核操作到后端  
+    fetch(`/shenhe/update/${id}`, {  
+        method: 'PUT',  
+        headers: { 'Content-Type': 'application/json' },  
+        body: JSON.stringify(shenheData) // 传递物品 ID、用户 ID 和申领数量  
+    })  
+        .then(response => {  
+            if (response.ok) {  
+                alert('审核成功！');  
+                loadShenhe(); // 刷新物品列表  
+            } else {  
+                return response.json().then(err => { throw new Error(err.error); });  
+            }  
+        })  
+        .catch(error => {  
+            console.error('审核失败:', error);  
+            alert(`审核失败: ${error.message}`);  
+        }); 
+        
+    // 提交审核操作到后端  
+    fetch(`/shenhe/update_kuchun/`, {  
+        method: 'PUT',  
+        headers: { 'Content-Type': 'application/json' },  
+        body: JSON.stringify(tongbukuchun) // 传递物品 ID、用户 ID 和申领数量  
+    })  
+        .then(response => {  
+            if (response.ok) {  
+                alert('同步更新库存成功！');  
+                loadShenhe(); // 刷新物品列表  
+            } else {  
+                return response.json().then(err => { throw new Error(err.error); });  
+            }  
+        })  
+        .catch(error => {  
+            console.error('同步更新库存失败:', error);  
+            alert(`同步更新库存失败: ${error.message}`);  
+        });         
+
+
+} 
+
+
+  </script>
+</body>
+</html>
