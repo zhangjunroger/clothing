@@ -66,18 +66,17 @@
 
     <!-- 服装信息表格展示 -->  
     <section>  
-      <h2>申领信息列表</h2>  
+      <h2>申领信息列表（未审核）</h2>  
       <table id="ShenheTable">  
         <thead>  
-          <tr>  
+          <tr>
+            <th>选择</th>  
             <th>用户编号</th>
-            <th>物品编号</th>  
-            <th>物品名称</th>  
-            <th>规格</th>  
-            <th>类别</th>  
-            <th>申领个数</th>              
-            <th>审核状态</th> 
-            <th>操作</th>              
+            <th>订单编号</th>
+            <th>订单信息</th>
+            <th>订单金额</th>
+            <th>订单时间</th>
+            <th>审核状态</th>        
           </tr>  
         </thead>  
         <tbody>  
@@ -86,15 +85,58 @@
       </table>  
     </section>  
 
+
+    <section>  
+      <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: center;">  
+        <button id="checkoutBtn">审核通过已选订单</button>  
+        <button id="approveAllBtn">审核通过所有订单</button>
+        <button id="rejectSelectedBtn">审核不通过已选订单</button>  
+        <button id="rejectAllBtn">审核不通过所有订单</button>    
+      </div>  
+    </section>
+
+    <!-- 服装信息表格展示 -->  
+    <section>  
+      <h2>申领信息列表（已审核）</h2>  
+      <table id="YiShenheTable">  
+        <thead>  
+          <tr>
+            <th>用户编号</th>
+            <th>订单编号</th>
+            <th>订单信息</th>
+            <th>订单金额</th>
+            <th>订单时间</th>
+            <th>审核状态</th>          
+          </tr>  
+        </thead>  
+        <tbody>  
+          <!-- 数据将通过AJAX动态加载 -->  
+        </tbody>  
+      </table>  
+    </section>  
+
+    <div id="rejectReasonModal" class="modal">  
+      <div class="modal-content">  
+        <h3>请输入不通过原因</h3>  
+        <textarea id="rejectReasonInput" rows="5" style="width: 100%;" placeholder="请输入原因..."></textarea>  
+        <div class="modal-footer">  
+          <button id="confirmRejectBtn" class="button">确定</button>  
+          <button id="cancelRejectBtn" class="button">取消</button>  
+        </div>  
+      </div>  
+    </div>
+
+
   <script>
       
       // 页面加载时获取物品列表  
       document.addEventListener('DOMContentLoaded', function() {  
-        loadShenhe();    
+        loadShenhe();
+        loadYiShenhe();            
     });  
 
 
-// 加载申领数据并填充表格  
+// 加载未审核申领数据并填充表格  
 function loadShenhe() {  
     fetch('/shenhe/list') // 获取物品数据的 API  
         .then(response => response.json())  
@@ -114,105 +156,230 @@ function loadShenhe() {
 
 // 生成表格行的 HTML  
 function generateTableRowShenhe(item) {  
- 
+
+      // 从字符串解析为对象数组  
+      const items = JSON.parse(item.Info);
+      // 使用数组 `map` 构建每个商品的信息，并通过 `join` 连接成一个完整的字符串  
+      const itemsString = items.map((item, index) => {
+        return `第 ${index + 1} 件物品:<br>  
+编号: ${item.itemNumber}<br>  
+名称: ${item.itemName}<br>  
+尺码: ${item.specification}<br>  
+单价: ${item.price.toFixed(2)} 元<br>  
+数量: ${item.quantity}`;
+      }).join('<br><br>'); // 用两个换行符分隔每件物品的信息  
+
   return `  
-        <td>${item.userId}</td> 
-        <td>${item.itemNumber}</td>  
-        <td>${item.itemName}</td>  
-        <td>${item.specification || ''}</td>  
-        <td>${item.category || ''}</td>  
-        <td>${item.quantity || ''}</td>  
-        <td>${item.shenhezhuangtai || ''}</td>
-                <td>  
-          <!-- 将整个 item 对象编码为 JSON 存储在按钮的 data-item 属性中 -->  
-          <button onclick="Shenhe('${item.itemNumber}', '${item.userId}', this)"   
-                  data-item='${JSON.stringify(item)}'>  
-            审核  
-          </button>  
-        </td> 
-    `;  
+    <tr>  
+      <td>  
+        <input   
+          type="checkbox"   
+          class="item-checkbox"  
+          data-userId="${item.userId}"  
+          data-Number="${item.Number}"  
+          data-Info="${itemsString}"   
+          data-Cost="${item.Cost}"  
+          data-Time="${item.Time}"   
+          data-shenhezhuangtai="${item.shenhezhuangtai}"   
+        />  
+      </td>  
+      <td>${item.userId}</td>  
+      <td>${item.Number}</td>  
+      <td>${itemsString}</td>  
+      <td>${item.Cost}</td>  
+      <td>${item.Time}</td>  
+      <td>${item.shenhezhuangtai}</td>  
+    </tr>  
+  `;
 }  
 
 
-// 审核按钮操作  
-function Shenhe(itemNumber, userId, buttonElement) {  
-    // 获取按钮的 data-item 属性并解析为对象  
-    const item = JSON.parse(buttonElement.getAttribute('data-item'));  
-    
-    console.log(item);
-    if (!item) {  
-        console.error(`无法找到此物品的数据: ${itemNumber}`);  
-        return;  
-    }   
 
-    const itemnum = item.itemNumber;
-    const itemname = item.itemName;
-    const itemspec = item.specification;
-    const itemcategory = item.category;
-    const itemquantity = item.quantity;
-
-      // 收集表单数据  
-  const shenheData = {  
-    userId: userId,
-    itemNumber: itemnum, 
-    itemName: itemname, 
-    specification: itemspec,  
-    category: itemcategory,
-    quantity: itemquantity,
-    shenhezhuangtai: "已审核" 
-  };
-  
-  const tongbukuchun = {
-    itemNumber: itemnum, 
-    quantity_shenling: itemquantity
-  };
-
-  console.log(shenheData);
-
-  const id = item.objectId;
-  console.log(id);
-
-    // 提交审核操作到后端  
-    fetch(`/shenhe/update/${id}`, {  
-        method: 'PUT',  
-        headers: { 'Content-Type': 'application/json' },  
-        body: JSON.stringify(shenheData) // 传递物品 ID、用户 ID 和申领数量  
-    })  
-        .then(response => {  
-            if (response.ok) {  
-                alert('审核成功！');  
-                loadShenhe(); // 刷新物品列表  
-            } else {  
-                return response.json().then(err => { throw new Error(err.error); });  
-            }  
+// 加载已审核申领数据并填充表格  
+function loadYiShenhe() {  
+    fetch('/shenhe/Yilist') // 获取物品数据的 API  
+        .then(response => response.json())  
+        .then(data => {  
+            const tbody = document.querySelector('#YiShenheTable tbody');  
+            tbody.innerHTML = ''; // 清空当前表格内容 
+            
+            // 遍历物品数据，生成每行表格  
+            data.forEach(item => {  
+                const tr = document.createElement('tr');  
+                tr.innerHTML = generateTableRowYiShenhe(item);
+                tbody.appendChild(tr);  
+            });  
         })  
-        .catch(error => {  
-            console.error('审核失败:', error);  
-            alert(`审核失败: ${error.message}`);  
-        }); 
-        
-    // 提交审核操作到后端  
-    fetch(`/shenhe/update_kuchun/`, {  
-        method: 'PUT',  
-        headers: { 'Content-Type': 'application/json' },  
-        body: JSON.stringify(tongbukuchun) // 传递物品 ID、用户 ID 和申领数量  
+        .catch(err => console.error(err));  
+}  
+
+// 生成表格行的 HTML  
+function generateTableRowYiShenhe(item) {  
+
+      // 从字符串解析为对象数组  
+      const items = JSON.parse(item.Info);
+      // 使用数组 `map` 构建每个商品的信息，并通过 `join` 连接成一个完整的字符串  
+      const itemsString = items.map((item, index) => {
+        return `第 ${index + 1} 件物品:<br>  
+编号: ${item.itemNumber}<br>  
+名称: ${item.itemName}<br>  
+尺码: ${item.specification}<br>  
+单价: ${item.price.toFixed(2)} 元<br>  
+数量: ${item.quantity}`;
+      }).join('<br><br>'); // 用两个换行符分隔每件物品的信息  
+
+  return `  
+    <tr>  
+      <td>${item.userId}</td>  
+      <td>${item.Number}</td>  
+      <td>${itemsString}</td>  
+      <td>${item.Cost}</td>  
+      <td>${item.Time}</td>  
+      <td>${item.shenhezhuangtai}</td>  
+    </tr>  
+  `;
+}  
+
+document.getElementById('checkoutBtn').addEventListener('click', approveSelectedOrders);  
+document.getElementById('approveAllBtn').addEventListener('click', approveAllOrders);  
+
+document.getElementById('rejectSelectedBtn').addEventListener('click', rejectSelectedOrders);  
+document.getElementById('rejectAllBtn').addEventListener('click', rejectAllOrders);  
+
+let rejectOrderIds = []; // 保存要拒绝的订单编号  
+
+// 审核通过已选订单  
+function approveSelectedOrders() {  
+  const selectedCheckboxes = document.querySelectorAll('.item-checkbox:checked');  
+  if (selectedCheckboxes.length === 0) {  
+    alert('请选择要审核的订单！');  
+    return;  
+  }  
+
+  const selectedOrders = Array.from(selectedCheckboxes).map(checkbox => checkbox.dataset.number);
+
+  // 发送请求  
+  fetch('/shenhe/approve', {  
+    method: 'POST',  
+    headers: { 'Content-Type': 'application/json' },  
+    body: JSON.stringify({ orders: selectedOrders, status: '已审核' }) // 审核通过  
+  })  
+    .then(response => response.json())  
+    .then(result => {  
+      if (result.success) {  
+        alert('选中订单已审核通过！');  
+        loadShenhe(); // 刷新未审核列表  
+        loadYiShenhe(); // 刷新已审核列表  
+      } else {  
+        alert('审核失败：' + result.error);  
+      }  
     })  
-        .then(response => {  
-            if (response.ok) {  
-                alert('同步更新库存成功！');  
-                loadShenhe(); // 刷新物品列表  
-            } else {  
-                return response.json().then(err => { throw new Error(err.error); });  
-            }  
-        })  
-        .catch(error => {  
-            console.error('同步更新库存失败:', error);  
-            alert(`同步更新库存失败: ${error.message}`);  
-        });         
+    .catch(err => {  
+      console.error(err);  
+      alert('审核请求失败！');  
+    });  
+}  
 
+// 审核通过所有订单  
+function approveAllOrders() {  
+  if (!confirm('确定要审核通过所有订单吗？')) return;  
 
-} 
+  fetch('/shenhe/approveAll', {  
+    method: 'POST',  
+    headers: { 'Content-Type': 'application/json' },  
+    body: JSON.stringify({ status: '已审核' }) // 审核通过  
+  })  
+    .then(response => response.json())  
+    .then(result => {  
+      if (result.success) {  
+        alert('所有订单已审核通过！');  
+        loadShenhe();  
+        loadYiShenhe();  
+      } else {  
+        alert('审核失败：' + result.error);  
+      }  
+    })  
+    .catch(err => {  
+      console.error(err);  
+      alert('审核请求失败！');  
+    });  
+}  
 
+// 审核不通过已选订单  
+function rejectSelectedOrders() {  
+  const selectedCheckboxes = document.querySelectorAll('.item-checkbox:checked');  
+  if (selectedCheckboxes.length === 0) {  
+    alert('请选择要拒绝的订单！');  
+    return;  
+  }  
+
+  rejectOrderIds = Array.from(selectedCheckboxes).map(checkbox => checkbox.dataset.number);  
+
+  // 显示输入原因弹框  
+  openRejectReasonModal();  
+}  
+
+// 审核不通过所有订单  
+function rejectAllOrders() {  
+  if (!confirm('确定要审核不通过所有订单吗？')) return;  
+
+  rejectOrderIds = []; // 清空要拒绝的订单 ID  
+
+  fetch('/shenhe/list') // 获取所有未审核订单  
+    .then(response => response.json())  
+    .then(data => {  
+      data.forEach(item => rejectOrderIds.push(item.Number));  
+      openRejectReasonModal(); // 显示原因弹框  
+    })  
+    .catch(err => console.error(err));  
+}  
+
+// 显示输入原因模态框  
+function openRejectReasonModal() {  
+  const modal = document.getElementById('rejectReasonModal');  
+  modal.style.display = 'block';  
+
+  // 绑定模态框按钮事件  
+  document.getElementById('confirmRejectBtn').onclick = () => {  
+    const reason = document.getElementById('rejectReasonInput').value.trim();  
+    if (!reason) {  
+      alert('请输入不通过原因！');  
+      return;  
+    }  
+
+    // 发送请求  
+    fetch('/shenhe/approve', {  
+      method: 'POST',  
+      headers: { 'Content-Type': 'application/json' },  
+      body: JSON.stringify({ orders: rejectOrderIds, status: `未通过(${reason})` })  
+    })  
+      .then(response => response.json())  
+      .then(result => {  
+        if (result.success) {  
+          alert('选中订单已标记为未通过！');  
+          loadShenhe();  
+          loadYiShenhe();  
+        } else {  
+          alert('操作失败：' + result.error);  
+        }  
+      })  
+      .catch(err => {  
+        console.error(err);  
+        alert('操作请求失败！');  
+      });  
+
+    closeRejectReasonModal();  
+  };  
+
+  document.getElementById('cancelRejectBtn').onclick = closeRejectReasonModal;  
+}  
+
+// 关闭输入原因模态框  
+function closeRejectReasonModal() {  
+  const modal = document.getElementById('rejectReasonModal');  
+  modal.style.display = 'none';  
+  document.getElementById('rejectReasonInput').value = ''; // 清空输入框  
+}
 
   </script>
 </body>

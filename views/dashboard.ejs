@@ -3,7 +3,11 @@
 <head>  
     <meta charset="UTF-8">  
     <meta name="viewport" content="width=device-width, initial-scale=1.0">  
-    <title>服装管理系统</title>  
+    <title>服装管理系统</title>
+    <script>  
+      const currentUser = <%- JSON.stringify(user || {}) %>; // 在页面顶部定义  
+      console.log('当前用户:', currentUser); // 测试输出  
+    </script>    
     <link rel="stylesheet" href="/css/style.css">  
 </head>  
 
@@ -403,7 +407,7 @@
           <!-- 备注 -->  
           <div class="mb-3">  
             <label for="modalRemarks" class="form-label">备注</label>  
-            <textarea class="form-control" id="modalRemarks" name="remarks" rows="3"></textarea>  
+            <input class="form-control" id="modalRemarks" name="remarks">
           </div>  
         </form>
       </div>  
@@ -415,11 +419,74 @@
   </div>  
 
   <script>  
- 
+
+ // 将编号设置到编号输入框中  
  personalInfoLink.addEventListener('click', (e) => {  
   e.preventDefault();  
   // 填充用户信息到表单  
-  document.getElementById('gerenxinxiguanliModal').style.display = 'block';  
+  document.getElementById('gerenxinxiguanliModal').style.display = 'block'; 
+  // 从 EJS 变量中获取当前登录用户的用户名  
+  const username = currentUser.username; // 假设已从后端传递到全局变量 
+  // 将编号设置到编号输入框中  
+  document.getElementById("modalNumber").value = username;    
+
+// 发起请求查询  
+fetch(`/gerenxinxiguanli/fetch?number=${username}`)  
+  .then(res => res.json())  
+  .then(result => {  
+    if (result.success) {  
+      // 存在记录，自动填充表单  
+      const data = result.data;  
+      document.getElementById('modalNumber').value = data.number || '';  
+      document.getElementById('modalName').value = data.name || '';  
+      document.getElementById('modalGender').value = data.gender || '';  
+      document.getElementById('modalBirthDate').value = data.birthDate || '';  
+      document.getElementById('modalAge').value = data.age || '';  
+      document.getElementById('modalPosition').value = data.position || '';  
+      document.getElementById('modalTeam').value = data.team || '';  
+      document.getElementById('modalRank').value = data.rank || '';  
+      document.getElementById('modalClimateZone').value = data.climateZone || '';  
+      document.getElementById('modalMaoleihao').value = data.maoleihao || '';  
+      document.getElementById('modalFuzhuanghao').value = data.fuzhuanghao || '';  
+      document.getElementById('modalXieleihao').value = data.xieleihao || '';  
+      document.getElementById('modalZuoxundongmaohao').value = data.zuoxundongmaohao || '';  
+      document.getElementById('modalMaoyidongfuhao').value = data.maoyidongfuhao || '';  
+      document.getElementById('modalDayidongxiehao').value = data.dayidongxiehao || '';  
+      document.getElementById('modalChenyihao').value = data.chenyihao || '';  
+      document.getElementById('modalJianzhanghao').value = data.jianzhanghao || '';  
+      document.getElementById('modalYuyitifuhao').value = data.yuyitifuhao || '';  
+      document.getElementById('modalLifu').value = data.lifu || '';  
+      document.getElementById('modalChangfu').value = data.changfu || '';  
+      document.getElementById('modalKuqun').value = data.kuqun || '';  
+      document.getElementById('modalShengao').value = data.shengao || '';  
+      document.getElementById('modalXiongwei').value = data.xiongwei || '';  
+      document.getElementById('modalYaowei').value = data.yaowei || '';  
+      document.getElementById('modalTouwei').value = data.touwei || '';  
+      document.getElementById('modalLingwei').value = data.lingwei || '';  
+      document.getElementById('modalJiaochang').value = data.jiaochang || '';  
+      document.getElementById('modalZhiwei').value = data.zhiwei || '';  
+      document.getElementById('modalRuwuriqi').value = data.ruwuriqi || '';  
+      document.getElementById('modalYijishiguan').value = data.yijishiguan || '';  
+      document.getElementById('modalErjishiguan').value = data.erjishiguan || '';  
+      document.getElementById('modalTiganriqi').value = data.tiganriqi || '';  
+      document.getElementById('modalXianzhiriqi').value = data.xianzhiriqi || '';  
+      document.getElementById('modalXianxianriqi').value = data.xianxianriqi || '';  
+      document.getElementById('modalZhiji').value = data.zhiji || '';  
+      document.getElementById('modalXinglei').value = data.xinglei || '';  
+      document.getElementById('modalRemarks').value = data.remarks || ''; 
+
+    } else {  
+      // 说明数据库里没查到记录：要么提示用户“未找到信息”，要么清空表单以便创建  
+      alert(result.error || '暂时没有个人信息，请录入');   
+    }  
+
+    // 不管有没有查到，都弹出模态框，供用户查看或编辑  
+    document.getElementById('gerenxinxiguanliModal').style.display = 'block';  
+  })  
+  .catch(err => {  
+    console.error(err);  
+    alert('查询信息失败，请稍后重试');  
+  });   
 });
         
     // 清空模态窗口表单数据  
@@ -436,8 +503,9 @@
     document.getElementById('cancelModal').onclick = function() {  
       document.getElementById('gerenxinxiguanliModal').style.display = 'none';  
     };  
-
-    // 保存消防员信息 
+    
+   
+    // 保存或修改消防员信息 
     document.getElementById('savegerenxinxiguanli').onclick = function() {  
       const form = document.getElementById('gerenxinxiguanliForm');  
       const formData = {};  
@@ -455,7 +523,7 @@
         } else {  
           formData[input.name] = input.value.trim();  
         }  
-      });  
+      });
 
       if (!valid) return;  
 
@@ -463,7 +531,9 @@
       // 添加  
       url = '/gerenxinxiguanli/add';  
       method = 'POST';  
-    
+      
+      console.log(formData); 
+      console.log(JSON.stringify(formData)); 
 
       fetch(url, {  
         method: method,  
@@ -477,14 +547,8 @@
           if (result.success) {  
             alert('保存成功');  
             document.getElementById('gerenxinxiguanliModal').style.display = 'none';  
-            loadFirefighters();  
           } else {  
-            // 处理编号重复的错误  
-            if (result.error.includes('编号')) {  
-                alert(result.error);  
-            } else {  
-              alert('保存失败：' + result.error);  
-            }  
+            alert('保存失败：' + result.error);  
           }  
         })  
         .catch(err => console.error(err));  

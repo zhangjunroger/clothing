@@ -1,249 +1,407 @@
-<!DOCTYPE html>  
-<html lang="zh-CN">  
-<head>  
-  <meta charset="UTF-8">  
-  <title>服装管理</title>  
-  <style>  
-    /* 基本样式 */  
-    .container {  
-      width: 90%;  
-      margin: 0 auto;  
-    }  
-    table {  
-      width: 100%;  
-      border-collapse: collapse;  
-    }  
-    table, th, td {  
-      border: 1px solid #ccc;  
-    }  
-    th, td {  
-      padding: 8px;  
-      text-align: center;  
-    }  
-    .modal {  
-      display: none; /* 隐藏模态窗口 */  
-      position: fixed;  
-      z-index: 1;  
-      left: 0;  
-      top: 0;  
-      width: 100%;  
-      height: 100%;  
-      overflow: auto;  
-      background-color: rgba(0,0,0,0.5); /* 半透明背景 */  
-    }  
-    .modal-content {  
-      background-color: #fff;  
-      margin: 10% auto;  
-      padding: 20px;  
-      width: 80%;  
-    }  
-    .modal-header, .modal-footer {  
-      text-align: right;  
-    }  
-    .modal-body {  
-      max-height: 400px;  
-      overflow-y: auto;  
-    }  
-    .button {  
-      padding: 6px 12px;  
-      margin: 5px;  
-    }  
-    /* 错误消息样式 */  
-    .error {  
-      border-color: red;  
-    }  
-    .error-message {  
-      color: red;  
-      font-size: 12px;  
-    }  
-  </style>  
-</head>  
-<body>  
-  <div class="container">  
-    <h1>服装管理</h1>  
+<!DOCTYPE html>
+<html lang="zh-CN">
 
-    <!-- Excel模板下载 + 导入 -->  
-    <section>  
-      <a href="/template/clothing_template.xlsx" class="button">下载Excel模板</a>  
-      <form id="importForm" style="margin-top: 10px;">  
-        <label for="excelFile">上传Excel文件：</label>  
-        <input type="file" id="excelFile" name="excelFile" accept=".xlsx" required>  
-        <button type="submit">导入</button>  
-      </form>  
-    </section>  
+<head>
+  <meta charset="UTF-8">
+  <title>服装管理</title>
+  <style>
+    /* 基本样式 */
+    .container {
+      width: 90%;
+      margin: 0 auto;
+    }
 
-    <hr>  
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
 
-    <!-- 手动添加服装信息表单 -->  
-    <section>  
-      <h2>添加服装信息</h2>  
-      <form id="addClothingForm">  
-        <!-- 表单字段 -->  
-        <div>  
-          <label for="itemNumber">物品编号：</label>  
-          <input type="text" id="itemNumber" name="itemNumber" required>  
-        </div>  
-        <div>  
-          <label for="itemName">物品名称：</label>  
-          <input type="text" id="itemName" name="itemName" required>  
-        </div>  
-        <div>  
-          <label for="specification">规格：</label>  
-          <input type="text" id="specification" name="specification">  
-        </div>  
-        <div>  
-          <label for="quantity">数量：</label>  
-          <input type="number" id="quantity" name="quantity" required>  
-        </div>  
-        <div>  
-          <label for="category">类别：</label>  
-          <input type="text" id="category" name="category">  
-        </div>  
-        <div>  
-          <label for="warehouseLocation">仓库位置：</label>  
-          <input type="text" id="warehouseLocation" name="warehouseLocation">  
-        </div>  
-        <div>  
-          <label for="remarks">备注：</label>  
-          <input type="text" id="remarks" name="remarks">  
-        </div>  
-        <button type="submit">添加</button>  
-      </form>  
-    </section>  
+    table,
+    th,
+    td {
+      border: 1px solid #ccc;
+    }
 
-    <hr>  
+    th,
+    td {
+      padding: 8px;
+      text-align: center;
+    }
 
-    <!-- 服装信息表格展示 -->  
-    <section>  
-      <h2>服装信息列表</h2>  
-      <table id="clothingTable">  
-        <thead>  
-          <tr>  
-            <th>物品编号</th>  
-            <th>物品名称</th>  
-            <th>规格</th>  
-            <th>数量</th>  
-            <th>类别</th>  
-            <th>仓库位置</th>  
-            <th>备注</th>  
-            <th>操作</th>  
-          </tr>  
-        </thead>  
-        <tbody>  
-          <!-- 数据将通过AJAX动态加载 -->  
-        </tbody>  
-      </table>  
-    </section>  
-  </div>  
+    .modal {
+      display: none;
+      /* 隐藏模态窗口 */
+      position: fixed;
+      z-index: 1;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0, 0, 0, 0.5);
+      /* 半透明背景 */
+    }
 
-  <!-- 模态窗口（用于展示导入的Excel数据） -->  
-  <div id="importModal" class="modal">  
-    <div class="modal-content">  
-      <div class="modal-header">  
-        <span id="closeModal" style="cursor:pointer;">&times;</span>  
-      </div>  
-      <div class="modal-body">  
-        <h2>预览导入的数据</h2>  
-        <table id="importPreviewTable">  
-          <!-- 动态生成表格 -->  
-        </table>  
-      </div>  
-      <div class="modal-footer">  
-        <button id="confirmImport" class="button">确认导入</button>  
-        <button id="cancelImport" class="button">取消</button>  
-      </div>  
-    </div>  
-  </div>  
+    .modal-content {
+      background-color: #fff;
+      margin: 10% auto;
+      padding: 20px;
+      width: 80%;
+    }
 
+    .modal-header,
+    .modal-footer {
+      text-align: right;
+    }
 
-  <div id="editModal" class="modal">  
-    <div class="modal-content">  
-      <h2>修改服装信息</h2>  
-      <form id="editClothingForm">  
-        <!-- 隐藏字段 -->  
-        <input type="hidden" id="ModalclothingId" />  
-  
-        <!-- 物品编号 -->  
-        <div class="form-group">  
-          <label for="ModalitemNumber">物品编号：</label>  
-          <input type="text" id="ModalitemNumber" readonly />  
-        </div>  
-  
-        <!-- 物品名称 -->  
-        <div class="form-group">  
-          <label for="ModalitemName">物品名称：</label>  
-          <input type="text" id="ModalitemName" />  
-        </div>  
-  
-        <!-- 规格 -->  
-        <div class="form-group">  
-          <label for="Modalspecification">规格：</label>  
-          <input type="text" id="Modalspecification" />  
-        </div>  
-  
-        <!-- 数量 -->  
-        <div class="form-group">  
-          <label for="Modalquantity">数量：</label>  
-          <input type="text" id="Modalquantity" />  
-        </div>  
-  
-        <!-- 类别 -->  
-        <div class="form-group">  
-          <label for="Modalcategory">类别：</label>  
-          <input type="text" id="Modalcategory" />  
-        </div>  
-  
-        <!-- 仓库位置 -->  
-        <div class="form-group">  
-          <label for="ModalwarehouseLocation">仓库位置：</label>  
-          <input type="text" id="ModalwarehouseLocation" />  
-        </div>  
-  
-        <!-- 备注 -->  
-        <div class="form-group">  
-          <label for="Modalremarks">备注：</label>  
-          <textarea id="Modalremarks"></textarea>  
-        </div>  
-  
-        <!-- 操作按钮 -->  
-        <div class="form-group">  
-          <button type="button" id="confirmEditButton">确认修改</button>  
-          <button type="button" onclick="closeEditModal()">取消</button>  
-        </div>  
-      </form>  
-    </div>  
+    .modal-body {
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .button {
+      padding: 6px 12px;
+      margin: 5px;
+    }
+
+    /* 错误消息样式 */
+    .error {
+      border-color: red;
+    }
+
+    .error-message {
+      color: red;
+      font-size: 12px;
+    }
+
+    /* 缩略图样式 */
+    .thumbnail {
+      width: 80px !important;
+      /* 固定宽度 */
+      height: 80px !important;
+      /* 固定高度 */
+      object-fit: cover;
+      /* 自动裁剪，保持比例 */
+      border-radius: 5px;
+      /* 圆角 */
+      border: 1px solid #ccc;
+      /* 添加边框 */
+      cursor: pointer;
+      /* 鼠标悬浮变成手型 */
+      transition: transform 0.2s ease;
+      /* 悬浮动画 */
+    }
+
+    .thumbnail:hover {
+      transform: scale(1.05);
+      /* 悬浮时稍微放大 */
+    }
+
+    /* 响应式样式 */
+    @media screen and (max-width: 768px) {
+      .thumbnail {
+        width: 60px;
+        height: 60px;
+      }
+    }
+
+    @media screen and (max-width: 480px) {
+      .thumbnail {
+        width: 50px;
+        height: 50px;
+      }
+    }
+
+    /* 大图模态框图片样式 */
+    .large-image {
+      max-width: 90vw;
+      /* 最大宽度：视口宽度的 90% */
+      max-height: 90vh;
+      /* 最大高度：视口高度的 90% */
+      margin: auto;
+      display: block;
+    }
+
+    /* 模态框背景 */
+    .modal-background {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(0, 0, 0, 0.8);
+      /* 半透明黑色背景 */
+      z-index: 1000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-background-hidden {
+      display: none;
+      /* 隐藏模态框 */
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>服装管理</h1>
+
+    <!-- Excel模板下载 + 导入 -->
+    <section>
+      <a href="/template/clothing_template.xlsx" class="button">下载Excel模板</a>
+      <form id="importForm" style="margin-top: 10px;">
+        <label for="excelFile">上传Excel文件：</label>
+        <input type="file" id="excelFile" name="excelFile" accept=".xlsx" required>
+        <button type="submit">导入</button>
+      </form>
+    </section>
+
+    <hr>
+
+    <!-- 手动添加服装信息表单 -->
+    <section>
+      <h2>添加服装信息</h2>
+      <form id="addClothingForm" enctype="multipart/form-data">
+        <!-- 表单字段 -->
+        <div>
+          <label for="itemNumber">物品编号：</label>
+          <input type="text" id="itemNumber" name="itemNumber" required>
+        </div>
+        <div>
+          <label for="itemName">物品名称：</label>
+          <input type="text" id="itemName" name="itemName" required>
+        </div>
+        <div>
+          <label for="itemPic">缩略图：</label>
+          <input type="file" id="itemPic" name="itemPic" accept="image/*">
+        </div>
+        <!-- 动态尺码区域 -->
+        <div>
+          <label>尺码与数量：</label>
+          <button type="button" id="addSizeButton">添加尺码</button>
+          <div id="sizesContainer">
+            <!-- 动态生成的尺码输入行 -->
+          </div>
+        </div>
+        <div>
+          <label for="category">类别：</label>
+          <input type="text" id="category" name="category">
+        </div>
+        <div>
+          <label for="price">单价：</label>
+          <input type="text" id="price" name="price">
+        </div>
+        <div>
+          <label for="warehouseLocation">仓库位置：</label>
+          <input type="text" id="warehouseLocation" name="warehouseLocation">
+        </div>
+        <div>
+          <label for="remarks">备注：</label>
+          <input type="text" id="remarks" name="remarks">
+        </div>
+        <button type="submit">添加</button>
+      </form>
+    </section>
+
+    <hr>
+
+    <!-- 服装信息表格展示 -->
+    <section>
+      <h2>服装信息列表</h2>
+      <table id="clothingTable">
+        <thead>
+          <tr>
+            <th>物品编号</th>
+            <th>物品名称</th>
+            <th>缩略图</th> <!-- 新增缩略图列 -->
+            <th>尺码与数量</th> <!-- 新增尺码列 -->
+            <th>单价</th>
+            <th>类别</th>
+            <th>仓库位置</th>
+            <th>备注</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- 数据将通过AJAX动态加载 -->
+        </tbody>
+      </table>
+    </section>
+  </div>
+
+  <!-- 模态窗口（用于展示导入的Excel数据） -->
+  <div id="importModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <span id="closeModal" style="cursor:pointer;">&times;</span>
+      </div>
+      <div class="modal-body">
+        <h2>预览导入的数据</h2>
+        <table id="importPreviewTable">
+          <!-- 动态生成表格 -->
+        </table>
+      </div>
+      <div class="modal-footer">
+        <button id="confirmImport" class="button">确认导入</button>
+        <button id="cancelImport" class="button">取消</button>
+      </div>
+    </div>
   </div>
 
 
-  <script>
-      // 页面加载时获取服装列表  
-      document.addEventListener('DOMContentLoaded', function() {  
-        loadClothing();  
-    });  
-  
-    // 加载服装数据并填充表格  
-    function loadClothing() {  
-      fetch('/clothing/list')  
-        .then(response => response.json())  
-        .then(data => {  
-          const tbody = document.querySelector('#clothingTable tbody');  
-          tbody.innerHTML = ''; // 清空当前表格内容  
-          data.forEach(item => {  
-            const tr = document.createElement('tr');  
-            tr.innerHTML = generateTableRow(item);  
-            tbody.appendChild(tr);  
-          });  
-        })  
-        .catch(err => console.error(err));  
-    }  
+  <div id="editModal" class="modal">
+    <div class="modal-content">
+      <h2>修改服装信息</h2>
+      <form id="editClothingForm" enctype="multipart/form-data">
+        <!-- 隐藏字段 -->
+        <input type="hidden" id="ModalclothingId" />
 
-    // 生成表格行的HTML  
-    function generateTableRow(item) {  
+        <!-- 物品编号 -->
+        <div class="form-group">
+          <label for="ModalitemNumber">物品编号：</label>
+          <input type="text" id="ModalitemNumber" readonly />
+        </div>
+
+        <!-- 物品名称 -->
+        <div class="form-group">
+          <label for="ModalitemName">物品名称：</label>
+          <input type="text" id="ModalitemName" />
+        </div>
+
+        <!-- 缩略图 -->
+        <div class="form-group">
+          <label>缩略图</label>
+          <img id="ModalPic" class="thumbnail" src="" alt="缩略图" />
+          <input type="file" id="ModalPicFile" name="ModalPicFile" accept="image/*" />
+        </div>
+
+        <!-- 在模态框内，物品名称等字段下面，添加多尺码的编辑区域 -->
+        <div class="form-group">
+          <label>尺码与数量：</label>
+          <button type="button" id="ModaladdSizeButton">添加尺码</button>
+          <div id="ModalsizesContainer"><!-- 动态生成 --></div>
+        </div>
+
+        <!-- 类别 -->
+        <div class="form-group">
+          <label for="Modalcategory">类别：</label>
+          <input type="text" id="Modalcategory" />
+        </div>
+
+        <!-- 单价 -->
+        <div class="form-group">
+          <label for="Modalprice">单价：</label>
+          <input type="text" id="Modalprice" />
+        </div>
+
+        <!-- 仓库位置 -->
+        <div class="form-group">
+          <label for="ModalwarehouseLocation">仓库位置：</label>
+          <input type="text" id="ModalwarehouseLocation" />
+        </div>
+
+        <!-- 备注 -->
+        <div class="form-group">
+          <label for="Modalremarks">备注：</label>
+          <input type="text" id="Modalremarks" />
+        </div>
+
+        <!-- 操作按钮 -->
+        <div class="form-group">
+          <button type="button" id="confirmEditButton">确认修改</button>
+          <button type="button" onclick="closeEditModal()">取消</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 模态框大图容器（默认隐藏） -->
+  <div id="largeImageModal" class="modal-background modal-background-hidden" onclick="closeLargeImage()">
+    <img id="largeImage" class="large-image" src="" alt="大图">
+  </div>
+
+
+
+  <script>
+    // 页面加载时获取服装列表  
+    document.addEventListener('DOMContentLoaded', function () {
+      loadClothing();
+      const largeImage = document.getElementById('largeImage');
+      const largeImageContainer = document.querySelector('#largeImageModal');
+      // 如果 largeImage.src 为空字符串或是当前网页地址，则隐藏大图  
+      if (!largeImage.src || largeImage.src === window.location.href) {
+        largeImageContainer.style.display = 'none';
+        return;
+      }
+    });
+
+    // 动态添加尺码行  
+    document.getElementById('addSizeButton').addEventListener('click', () => {
+      const sizesContainer = document.getElementById('sizesContainer');
+
+      // 创建尺码输入行  
+      const sizeRow = document.createElement('div');
+      sizeRow.className = 'size-row';
+      sizeRow.innerHTML = `  
+    <input type="text" class="size-input" placeholder="尺码" />  
+    <input type="number" class="quantity-input" placeholder="库存数量" />  
+    <button type="button" class="remove-size-btn">删除</button>  
+  `;
+
+      // 添加删除按钮的事件  
+      sizeRow.querySelector('.remove-size-btn').addEventListener('click', () => {
+        sizeRow.remove();
+      });
+
+      // 将尺码行添加到容器中  
+      sizesContainer.appendChild(sizeRow);
+    });
+
+    document.getElementById('ModaladdSizeButton').addEventListener('click', () => {
+      const sizesContainer = document.getElementById('ModalsizesContainer');
+
+      const row = document.createElement('div');
+      row.innerHTML = `  
+    <input type="text" class="size-input" placeholder="尺码" />  
+    <input type="number" class="quantity-input" placeholder="数量" />  
+    <button type="button" class="remove-size-btn">删除</button>  
+  `;
+      sizesContainer.appendChild(row);
+
+      // 删除行事件  
+      row.querySelector('.remove-size-btn').addEventListener('click', () => {
+        row.remove();
+      });
+    });
+
+
+
+    // 加载服装数据并填充表格  
+    function loadClothing() {
+      fetch('/clothing/list')
+        .then(response => response.json())
+        .then(data => {
+          const tbody = document.querySelector('#clothingTable tbody');
+          tbody.innerHTML = ''; // 清空当前表格内容  
+          data.forEach(item => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = generateTableRow(item);
+            tbody.appendChild(tr);
+          });
+        })
+        .catch(err => console.error(err));
+    }
+
+    // 生成表格行的HTML
+    function generateTableRow(item) {
       return `  
         <td>${item.itemNumber}</td>  
-        <td>${item.itemName}</td>  
-        <td>${item.specification || ''}</td>  
-        <td>${item.quantity || ''}</td>  
+        <td>${item.itemName}</td>
+        <td><img src="${item.itemPic || ''}" alt="缩略图" class="thumbnail" onclick="showLargeImage('${item.itemPic || ''}')" />  </td>  
+        <td>${(item.sizes || []).map(sizeObj => `${sizeObj.size}: ${sizeObj.quantity}`).join('<br>')}</td> 
+        <td>${item.price || ''}</td>          
         <td>${item.category || ''}</td>  
         <td>${item.warehouseLocation || ''}</td>  
         <td>${item.remarks || ''}</td>  
@@ -251,309 +409,426 @@
           <button onclick="showEditClothingModal('${item.objectId}')">修改</button>   
           <button onclick="deleteClothing('${item.objectId}')">删除</button>  
         </td>  
-      `;  
-    }  
+      `;
+    }
 
-function showEditClothingModal(id) {
-  fetch(`/clothing/get/${id}`)  
-        .then(response => response.json())  
+
+    // 双击缩略图显示大图  
+    function showLargeImage(src) {
+      const modal = document.getElementById('largeImageModal'); // 获取模态框  
+      const largeImage = document.getElementById('largeImage'); // 获取大图显示区域  
+
+      // 如果 src 为空字符串或是当前网页地址，则隐藏大图  
+      if (!src || src === window.location.href) {
+        largeImage.style.display = 'none';
+        return;
+      }
+
+      // 设置大图的 src  
+      largeImage.src = src;
+      // 显示模态框
+      // 动态显示模态框  
+      modal.style.display = 'flex'; // 确保模态框显示
+    }
+
+    // 点击模态框关闭大图  
+    function closeLargeImage() {
+      const modal = document.getElementById('largeImageModal'); // 获取模态框  
+
+      // 隐藏模态框  
+      modal.style.display = 'none'; // 确保模态框显示
+    }
+
+    function showEditClothingModal(id) {
+      fetch(`/clothing/get/${id}`)
+        .then(response => response.json())
         .then(item => {
-            // 将数据填充到模态框中
-            document.getElementById('ModalclothingId').value = item.objectId; 
-            document.getElementById('ModalitemNumber').value = item.itemNumber; 
-            document.getElementById('ModalitemName').value = item.itemName;  
-            document.getElementById('Modalspecification').value = item.specification;  
-            document.getElementById('Modalquantity').value = item.quantity;  
-            document.getElementById('Modalcategory').value = item.category;  
-            document.getElementById('ModalwarehouseLocation').value = item.warehouseLocation;  
-            document.getElementById('Modalremarks').value = item.remarks;  
-            // 显示模态框  
-            document.getElementById('editModal').style.display = 'block';  
+          // 将数据填充到模态框中
+          document.getElementById('ModalclothingId').value = item.objectId;
+          document.getElementById('ModalitemNumber').value = item.itemNumber;
+          document.getElementById('ModalPic').value = item.itemPic;
+
+          // =========== 多尺码部分 ===========  
+          const sizesContainer = document.getElementById('ModalsizesContainer');
+          sizesContainer.innerHTML = ''; // 先清空  
+
+          if (item.sizes && Array.isArray(item.sizes)) {
+            item.sizes.forEach(sizeObj => {
+              // 每个尺码生成一行  
+              const row = document.createElement('div');
+              row.innerHTML = `  
+            <input type="text" class="size-input" placeholder="尺码" value="${sizeObj.size || ''}" />  
+            <input type="number" class="quantity-input" placeholder="数量" value="${sizeObj.quantity || 0}" />  
+            <button type="button" class="remove-size-btn">删除</button>  
+          `;
+              sizesContainer.appendChild(row);
+
+              // 删除行事件  
+              row.querySelector('.remove-size-btn').addEventListener('click', () => {
+                row.remove();
+              });
+            });
+          }
+
+
+          document.getElementById('ModalitemName').value = item.itemName;
+          document.getElementById('Modalprice').value = item.price;
+          document.getElementById('Modalcategory').value = item.category;
+          document.getElementById('ModalwarehouseLocation').value = item.warehouseLocation;
+          document.getElementById('Modalremarks').value = item.remarks;
+
+          // 处理缩略图预览（展示当前图片或默认占位符）  
+          const previewImg = document.getElementById('ModalPic');
+          if (item.itemPic) {
+            previewImg.src = item.itemPic; // 如果有图片，显示图片
+            previewImg.style.cursor = 'pointer'; // 设置为点击可用的样式  
+
+            // 添加点击事件，用于显示大图  
+            previewImg.onclick = () => {
+              showLargeImage(item.itemPic);
+            };
+          } else {
+            previewImg.src = ''; // 显示默认占位符
+            previewImg.onclick = null; // 如果没有图片，移除点击事件              
+          }
+
+          // 重置文件上传输入框  
+          document.getElementById('ModalPicFile').value = '';
+
+          // 显示模态框  
+          document.getElementById('editModal').style.display = 'block';
         })
-        .catch(err => console.error(err));     
-      } 
+        .catch(err => console.error(err));
+    }
 
-function closeEditModal() {  
-  document.getElementById('editModal').style.display = 'none';  
-}  
 
-// 提交修改  
-document.getElementById('confirmEditButton').addEventListener('click', async () => {  
-  const id = document.getElementById('ModalclothingId').value;  
 
-  // 收集表单数据  
-  const updatedData = {  
-    itemNumber: document.getElementById('ModalitemNumber').value, 
-    itemName: document.getElementById('ModalitemName').value, 
-    specification: document.getElementById('Modalspecification').value,  
-    quantity: document.getElementById('Modalquantity').value,  
-    category: document.getElementById('Modalcategory').value,  
-    warehouseLocation: document.getElementById('ModalwarehouseLocation').value,  
-    remarks: document.getElementById('Modalremarks').value  
-  };  
+    function closeEditModal() {
+      document.getElementById('editModal').style.display = 'none';
+    }
 
-  try {  
-    const response = await fetch(`/clothing/update/${id}`, {  
-      method: 'PUT',  
-      headers: { 'Content-Type': 'application/json' },  
-      body: JSON.stringify(updatedData)  
-    });  
+    document.getElementById('largeImageModal').addEventListener('click', (event) => {
+      // 确保只有点击背景区域时才会关闭模态框  
+      if (event.target === event.currentTarget) {
+        closeLargeImage();
+      }
+    });
 
-    const result = await response.json();  
-    if (result.success) {  
-      alert('修改成功！');  
-      closeEditModal(); // 关闭模态框  
-      loadClothing(); // 重新加载列表  
-    } else {  
-      alert(`修改失败：${result.error}`);  
-    }  
-  } catch (err) {  
-    console.error('修改失败：', err);  
-    alert('修改失败！');  
-  }  
-});  
+
+    // 提交修改  
+    document.getElementById('confirmEditButton').addEventListener('click', async () => {
+      const id = document.getElementById('ModalclothingId').value;
+
+      // 创建 FormData 对象  
+      const formData = new FormData();
+      formData.append('itemNumber', document.getElementById('ModalitemNumber').value);
+      formData.append('itemName', document.getElementById('ModalitemName').value);
+      formData.append('price', document.getElementById('Modalprice').value);
+      formData.append('category', document.getElementById('Modalcategory').value);
+      formData.append('warehouseLocation', document.getElementById('ModalwarehouseLocation').value);
+      formData.append('remarks', document.getElementById('Modalremarks').value);
+
+      // =========== 多尺码数据收集 ===========  
+      const sizesContainer = document.getElementById('ModalsizesContainer');
+      const rows = sizesContainer.querySelectorAll('div'); // 每个div是一行尺码  
+      const sizes = [];
+
+      rows.forEach((row) => {
+        const sizeVal = row.querySelector('.size-input').value.trim();
+        const qtyVal = parseInt(row.querySelector('.quantity-input').value, 10) || 0;
+        if (sizeVal) {
+          sizes.push({ size: sizeVal, quantity: qtyVal });
+        }
+      });
+      // 以字符串形式传递  
+      formData.append('sizes', JSON.stringify(sizes));
+
+
+      // 如果用户选择了新图片，追加文件  
+      const newItemPic = document.getElementById('ModalPicFile').files[0];
+      if (newItemPic) {
+        formData.append('itemPic', newItemPic); // 文件附加到 formData  
+      }
+
+
+      try {
+        const response = await fetch(`/clothing/update/${id}`, {
+          method: 'PUT',
+          body: formData, // 使用 FormData 传递文件和普通字段 
+        });
+
+        const result = await response.json();
+        if (result.success) {
+          alert('修改成功！');
+          closeEditModal(); // 关闭模态框  
+          loadClothing(); // 重新加载列表  
+        } else {
+          alert(`修改失败：${result.error}`);
+        }
+      } catch (err) {
+        console.error('修改失败：', err);
+        alert('修改失败！');
+      }
+    });
 
 
     // 删除服装信息  
-    function deleteClothing(id) {  
-      if (!confirm('确定要删除该服装信息吗？')) return;  
+    function deleteClothing(id) {
+      if (!confirm('确定要删除该服装信息吗？')) return;
 
-      fetch(`/clothing/delete/${id}`, { method: 'DELETE' })  
-        .then(response => response.json())  
-        .then(result => {  
-          if (result.success) {  
-            alert('删除成功');  
+      fetch(`/clothing/delete/${id}`, { method: 'DELETE' })
+        .then(response => response.json())
+        .then(result => {
+          if (result.success) {
+            alert('删除成功');
             loadClothing(); // 刷新表格  
-          } else {  
-            alert('删除失败：' + result.error);  
-          }  
-        })  
-        .catch(err => console.error(err));  
-    }  
+          } else {
+            alert('删除失败：' + result.error);
+          }
+        })
+        .catch(err => console.error(err));
+    }
 
     // 提交表单，添加服装信息  
-    document.getElementById('addClothingForm').addEventListener('submit', function(event) {  
+    document.getElementById('addClothingForm').addEventListener('submit', function (event) {
       event.preventDefault(); // 阻止默认提交行为  
 
-      const form = this; // 获取表单元素  
-      const formData = {};  
-      const inputs = form.querySelectorAll('input, select');  
+      const form = this; // 获取表单元素
+      // 使用 FormData 收集所有表单内容（包括图片）  
+      const formData = new FormData(form);
+      const inputs = form.querySelectorAll('input[required]');
       let valid = true; // 表单验证标识  
 
       // 清理之前的错误提示  
-      clearErrorMessages();  
+      clearErrorMessages();
+
+      // 收集尺码数据  
+      const sizesContainer = document.getElementById('sizesContainer');
+      const sizeRows = sizesContainer.querySelectorAll('.size-row');
+      const sizes = [];
+
+      sizeRows.forEach(row => {
+        const sizeInput = row.querySelector('.size-input').value.trim();
+        const quantityInput = parseInt(row.querySelector('.quantity-input').value, 10) || 0;
+
+        if (sizeInput) {
+          sizes.push({ size: sizeInput, quantity: quantityInput });
+        }
+      });
+
+      // 将尺码数据序列化为 JSON 字符串并添加到 FormData  
+      formData.append('sizes', JSON.stringify(sizes));
 
       // 提取表单数据并验证  
-      inputs.forEach(input => {  
-        if (input.required && input.value.trim() === '') {  
+      inputs.forEach(input => {
+        if (!input.value.trim()) {
           // 验证必填字段  
-          displayErrorMessage(input, `字段 "${input.previousElementSibling.textContent}" 是必填项！`);  
-          valid = false;  
-        } else {  
-          formData[input.name] = input.value.trim(); // 去掉多余空格  
-        }  
-      });  
+          displayErrorMessage(input, `字段 "${input.previousElementSibling.textContent}" 是必填项！`);
+          valid = false;
+        }
+      });
 
-      if (!valid) return; // 不通过验证则退出  
+      if (!valid) {
+        alert('请检查必填项！');
+        return;
+      }
 
       // 提交数据到后端  
-      const submitButton = form.querySelector('[type="submit"]');  
+      const submitButton = form.querySelector('[type="submit"]');
       submitButton.disabled = true; // 禁用提交按钮，防止重复提交  
 
-      fetch('/clothing/add', {  
-        method: 'POST',  
-        headers: {  
-          'Content-Type': 'application/json'  
-        },  
-        body: JSON.stringify(formData)  
-      })  
-        .then(response => {  
-          if (!response.ok) {  
+      fetch('/clothing/add', {
+        method: 'POST',
+        body: formData // 传递 FormData 对象  
+      })
+        .then(response => {
+          if (!response.ok) {
             // 检查 HTTP 响应状态码  
-            throw new Error(`HTTP 状态码错误：${response.status}`);  
-          }  
-          return response.json();  
-        })  
-        .then(result => {  
-          if (result.success) {  
+            throw new Error(`HTTP 状态码错误：${response.status}`);
+          }
+          return response.json();
+        })
+        .then(result => {
+          if (result.success) {
             // 添加成功  
-            alert('添加成功！');  
+            alert('添加成功！');
             form.reset(); // 重置表单  
 
             // 动态添加新服装数据到表格  
-            const tbody = document.querySelector('#clothingTable tbody');  
-            const tr = document.createElement('tr');  
+            const tbody = document.querySelector('#clothingTable tbody');
+            const tr = document.createElement('tr');
             tr.innerHTML = generateTableRow(result.data); // 格式化返回数据  
-            tbody.appendChild(tr);  
+            tbody.appendChild(tr);
 
-          } else {  
+          } else {
             // 添加失败：处理后端返回的错误信息  
-            if (result.error.includes("物品编号")) {  
+            if (result.error.includes("物品编号")) {
               // 如果错误信息中提到物品编号  
-              const numberInput = form.querySelector('[name="itemNumber"]');  
+              const numberInput = form.querySelector('[name="itemNumber"]');
               displayErrorMessage(numberInput, result.error); // 在编号字段下显示错误提示  
-            } else {  
+            } else {
               alert(`添加失败：${result.error}`); // 普通错误弹窗  
-            }  
-          }  
-        })  
-        .catch(err => {  
-          console.error('请求失败：', err);  
-          alert('添加服装时发生错误，请稍后重试！');  
-        })  
-        .finally(() => {  
+            }
+          }
+        })
+        .catch(err => {
+          console.error('请求失败：', err);
+          alert('添加服装时发生错误，请稍后重试！');
+        })
+        .finally(() => {
           submitButton.disabled = false; // 恢复提交按钮  
-        });  
-    });  
+        });
+    });
 
     // 显示字段错误信息  
-    function displayErrorMessage(input, message) {  
+    function displayErrorMessage(input, message) {
       input.classList.add('error'); // 给输入框加错误样式  
-      const errorSpan = document.createElement('span');  
-      errorSpan.className = 'error-message';  
-      errorSpan.textContent = message;  
+      const errorSpan = document.createElement('span');
+      errorSpan.className = 'error-message';
+      errorSpan.textContent = message;
       input.parentNode.appendChild(errorSpan); // 在输入框父容器中添加错误提示  
-    }  
+    }
 
     // 清理所有错误提示  
-    function clearErrorMessages() {  
-      const errorMessages = document.querySelectorAll('.error-message');  
+    function clearErrorMessages() {
+      const errorMessages = document.querySelectorAll('.error-message');
       errorMessages.forEach(msg => msg.remove()); // 删除错误信息  
-      const errorInputs = document.querySelectorAll('.error');  
+      const errorInputs = document.querySelectorAll('.error');
       errorInputs.forEach(input => input.classList.remove('error')); // 移除错误标识  
-    }  
+    }
 
     // 导入Excel文件表单提交  
-    document.getElementById('importForm').addEventListener('submit', function(event) {  
-      event.preventDefault();  
+    document.getElementById('importForm').addEventListener('submit', function (event) {
+      event.preventDefault();
 
-      const fileInput = document.getElementById('excelFile');  
-      const file = fileInput.files[0];  
-      if (!file) {  
-        alert('请选择Excel文件');  
-        return;  
-      }  
+      const fileInput = document.getElementById('excelFile');
+      const file = fileInput.files[0];
+      if (!file) {
+        alert('请选择Excel文件');
+        return;
+      }
 
-      const formData = new FormData();  
-      formData.append('excelFile', file);  
+      const formData = new FormData();
+      formData.append('excelFile', file);
 
-      fetch('/clothing/import-preview', {  
-        method: 'POST',  
-        body: formData  
-      })  
-      .then(response => response.json())  
-      .then(data => {  
-        if (data.success) {  
-          // 显示模态窗口并展示预览数据  
-          showImportModal(data.previewData);  
-        } else {  
-          alert('预览失败：' + data.error);  
-        }  
-      })  
-      .catch(err => console.error(err));  
-    });  
+      fetch('/clothing/import-preview', {
+        method: 'POST',
+        body: formData
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            // 显示模态窗口并展示预览数据  
+            showImportModal(data.previewData);
+          } else {
+            alert('预览失败：' + data.error);
+          }
+        })
+        .catch(err => console.error(err));
+    });
 
     // 显示导入模态窗口  
-    function showImportModal(previewData) {  
-      const modal = document.getElementById('importModal');  
-      const closeModalBtn = document.getElementById('closeModal');  
-      const confirmBtn = document.getElementById('confirmImport');  
-      const cancelBtn = document.getElementById('cancelImport');  
-      const previewTable = document.getElementById('importPreviewTable');  
+    function showImportModal(previewData) {
+      const modal = document.getElementById('importModal');
+      const closeModalBtn = document.getElementById('closeModal');
+      const confirmBtn = document.getElementById('confirmImport');
+      const cancelBtn = document.getElementById('cancelImport');
+      const previewTable = document.getElementById('importPreviewTable');
 
       // 清空预览表格内容  
-      previewTable.innerHTML = '';  
+      previewTable.innerHTML = '';
 
-      if (previewData.length === 0) {  
-        previewTable.innerHTML = '<p>没有可预览的数据。</p>';  
-        return;  
-      }  
+      if (previewData.length === 0) {
+        previewTable.innerHTML = '<p>没有可预览的数据。</p>';
+        return;
+      }
 
       // 动态生成表格头  
-      const headers = Object.keys(previewData[0]);  
-      const thead = document.createElement('thead');  
-      const headerRow = document.createElement('tr');  
-      headers.forEach(header => {  
-        const th = document.createElement('th');  
-        th.textContent = header;  
-        headerRow.appendChild(th);  
-      });  
-      thead.appendChild(headerRow);  
-      previewTable.appendChild(thead);  
+      const headers = Object.keys(previewData[0]);
+      const thead = document.createElement('thead');
+      const headerRow = document.createElement('tr');
+      headers.forEach(header => {
+        const th = document.createElement('th');
+        th.textContent = header;
+        headerRow.appendChild(th);
+      });
+      thead.appendChild(headerRow);
+      previewTable.appendChild(thead);
 
       // 动态生成表格体  
-      const tbody = document.createElement('tbody');  
-      previewData.forEach(item => {  
-        const tr = document.createElement('tr');  
-        headers.forEach(header => {  
-          const td = document.createElement('td');  
-          td.textContent = item[header] !== undefined ? item[header] : '';  
-          tr.appendChild(td);  
-        });  
-        tbody.appendChild(tr);  
-      });  
-      previewTable.appendChild(tbody);  
+      const tbody = document.createElement('tbody');
+      previewData.forEach(item => {
+        const tr = document.createElement('tr');
+        headers.forEach(header => {
+          const td = document.createElement('td');
+          td.textContent = item[header] !== undefined ? item[header] : '';
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      });
+      previewTable.appendChild(tbody);
 
       // 显示模态窗口  
-      modal.style.display = 'block';  
+      modal.style.display = 'block';
 
       // 关闭模态窗口事件  
-      closeModalBtn.onclick = () => {  
-        modal.style.display = 'none';  
-      };  
-      cancelBtn.onclick = () => {  
-        modal.style.display = 'none';  
-      };  
+      closeModalBtn.onclick = () => {
+        modal.style.display = 'none';
+      };
+      cancelBtn.onclick = () => {
+        modal.style.display = 'none';
+      };
 
       // 确认导入事件  
-      confirmBtn.onclick = () => {  
-        fetch('/clothing/import-confirm', {  
-          method: 'POST',  
-          headers: { 'Content-Type': 'application/json' },  
-          body: JSON.stringify({ data: previewData })  
-        })  
-        .then(response => response.json())  
-        .then(result => {  
-          if (result.success) {  
-            // 构建详细反馈信息  
-            const message = `  
+      confirmBtn.onclick = () => {
+        fetch('/clothing/import-confirm', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ data: previewData })
+        })
+          .then(response => response.json())
+          .then(result => {
+            if (result.success) {
+              // 构建详细反馈信息  
+              const message = `  
               导入完成：  
               成功导入：${result.saved} 条记录。  
               跳过：${result.skipped} 条记录。  
-            `;  
+            `;
 
-            // 显示跳过记录详情  
-            if (result.skipped > 0) {  
-              const skippedDetails = result.details.skipped.map(item => {  
-                return `物品编号: ${item.data.itemNumber || '未知'}, 原因: ${item.reason}`;  
-              }).join('\n');  
+              // 显示跳过记录详情  
+              if (result.skipped > 0) {
+                const skippedDetails = result.details.skipped.map(item => {
+                  return `物品编号: ${item.data.itemNumber || '未知'}, 原因: ${item.reason}`;
+                }).join('\n');
 
-              alert(`${message}\n跳过详情：\n${skippedDetails}`);  
-            } else {  
-              alert(message);  
-            }  
+                alert(`${message}\n跳过详情：\n${skippedDetails}`);
+              } else {
+                alert(message);
+              }
 
-            // 隐藏模态窗口，重新加载列表  
-            modal.style.display = 'none';  
-            loadClothing(); // 调用现有的列表加载逻辑  
-          } else {  
-            alert('导入失败：' + result.error);  
-          }  
-        })  
-        .catch(err => console.error('导入请求失败：', err));  
-      };  
-    }  
+              // 隐藏模态窗口，重新加载列表  
+              modal.style.display = 'none';
+              loadClothing(); // 调用现有的列表加载逻辑  
+            } else {
+              alert('导入失败：' + result.error);
+            }
+          })
+          .catch(err => console.error('导入请求失败：', err));
+      };
+    }
 
     // 页面加载时获取服装列表  
-    document.addEventListener('DOMContentLoaded', loadClothing);  
+    document.addEventListener('DOMContentLoaded', loadClothing);
 
     // 点击模态窗口外部关闭模态窗口  
-    window.onclick = function(event) {  
-      const modal = document.getElementById('importModal');  
-      if (event.target == modal) {  
-        modal.style.display = 'none';  
-      }  
+    window.onclick = function (event) {
+      const modal = document.getElementById('importModal');
+      if (event.target == modal) {
+        modal.style.display = 'none';
+      }
     };  
-  </script>  
-</body>  
+  </script>
+</body>
+
 </html>

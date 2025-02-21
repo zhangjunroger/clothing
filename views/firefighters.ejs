@@ -156,7 +156,8 @@
             <th>现职日期</th>  
             <th>现衔日期</th>  
             <th>职级</th>  
-            <th>形类</th>  
+            <th>形类</th>
+            <th>可用余额</th>              
             <th>备注</th>  
             <th>操作</th>  
           </tr>  
@@ -357,15 +358,20 @@
             <label for="modalZhiji" class="form-label">职级</label>  
             <input type="text" class="form-control" id="modalZhiji" name="zhiji">  
           </div>  
-          <!-- 性类 -->  
+          <!-- 形类 -->  
           <div class="mb-3">  
             <label for="modalXinglei" class="form-label">形类</label>  
             <input type="text" class="form-control" id="modalXinglei" name="xinglei">  
+          </div>
+          <!-- 可用余额 -->  
+          <div class="mb-3">  
+            <label for="modalKeyongyue" class="form-label">可用余额</label>  
+            <input type="text" class="form-control" id="modalKeyongyue" name="keyongyue">  
           </div>  
           <!-- 备注 -->  
           <div class="mb-3">  
-            <label for="modalRemarks" class="form-label">备注</label>  
-            <textarea class="form-control" id="modalRemarks" name="remarks" rows="3"></textarea>  
+            <label for="modalRemarks" class="form-label">备注</label>
+            <input type="text" class="form-control" id="modalRemarks" name="remarks"> 
           </div>  
         </form>
       </div>  
@@ -456,7 +462,8 @@
         <td>${item.xianzhiriqi || ''}</td>  
         <td>${item.xianxianriqi || ''}</td>  
         <td>${item.zhiji || ''}</td>  
-        <td>${item.xinglei || ''}</td>  
+        <td>${item.xinglei || ''}</td>
+        <td>${item.keyongyue || ''}</td>   
         <td>${item.remarks || ''}</td>  
         <td>  
           <button onclick="showEditFirefighterModal('${item.id}')">修改</button>  
@@ -549,6 +556,7 @@
   document.getElementById('modalXianxianriqi').value = item.xianxianriqi || '';
   document.getElementById('modalZhiji').value = item.zhiji || '';
   document.getElementById('modalXinglei').value = item.xinglei || '';
+  document.getElementById('modalKeyongyue').value = item.keyongyue || '';
   document.getElementById('modalRemarks').value = item.remarks || '';
 }
 

@@ -42,7 +42,8 @@ const columnMapping = {
     "现职日期": "xianzhiriqi",  
     "现衔日期": "xianxianriqi",  
     "职级": "zhiji",  
-    "形类": "xinglei",  
+    "形类": "xinglei",
+    "可用余额": "keyongyue",    
     "备注": "remarks"  
   };
 
