@@ -1,77 +1,242 @@
-<!-- views/admin/users.ejs -->  
+<!-- views/users.ejs -->
 
-<!DOCTYPE html>  
-<html lang="zh-CN">  
-<head>  
-    <meta charset="UTF-8">  
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">  
-    <title>用户管理 - 服装管理系统</title>  
-    <link rel="stylesheet" href="/css/style.css">  
-</head>  
-<body>  
-    <div class="container">  
-        <h1>用户管理（管理员 Admin 权限）</h1>  
+<!DOCTYPE html>
+<html lang="zh-CN">
 
-        <!-- 用户列表 -->  
-        <div id="usersList">  
-            <p>正在加载用户列表...</p>  
-        </div>  
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户管理 - 物品申领系统</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
 
-        <!-- 注册新用户 -->  
-        <div class="register-form">  
-            <h2>注册新用户</h2>  
-            <form id="registerForm">  
-                <input type="text" id="username" placeholder="用户名" required>  
-                <input type="password" id="password" placeholder="密码" required>  
+<style>
+    /* 模态窗口基础样式 */
+    .modal {
+        display: none;
+        /* 默认隐藏 */
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 1000;
+        width: 50%;
+        max-width: 600px;
+        /* 增大最大宽度，让大屏幕显示更多内容 */
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    /* 模态内容样式 */
+    .modal-content {
+        width: 90%;
+        padding: 20px;
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    .modal-content input {  
+    width: 50%;  
+    padding: 8px;  
+    border: 1px solid #ddd;  
+    border-radius: 4px;  
+    box-sizing: border-box;  
+}  
+
+    /* 其余样式保持不变 */
+    .close-modal {
+        color: #aaa !important;
+        float: right !important;
+        font-size: 28px !important;
+        font-weight: bold !important;
+        cursor: pointer !important;
+    }
+
+    .close-modal:hover {
+        color: #000 !important;
+    }
+
+    .form-group {
+        margin-bottom: 15px !important;
+    }
+
+    .form-group label {
+        display: block !important;
+        margin-bottom: 5px !important;
+    }
+
+    .form-group input {
+        width: 100% !important;
+        padding: 8px !important;
+        border: 1px solid #ddd !important;
+        border-radius: 4px !important;
+        box-sizing: border-box !important;
+        /* 确保padding不会增加宽度 */
+    }
+
+    .form-buttons {
+        display: flex !important;
+        justify-content: flex-end !important;
+        gap: 10px !important;
+        margin-top: 15px !important;
+    }
+
+    .password-error {
+        color: #e74c3c !important;
+        font-size: 14px !important;
+        margin-top: 10px !important;
+        min-height: 20px !important;
+    }
+
+    /* 按钮样式 */
+    .btn-edit-password {
+        background-color: #3498db !important;
+        color: white !important;
+        border: none !important;
+        padding: 5px 10px !important;
+        border-radius: 3px !important;
+        cursor: pointer !important;
+        margin-right: 5px !important;
+    }
+
+    .btn-edit-password:hover {
+        background-color: #2980b9 !important;
+    }
+
+    #cancelPasswordBtn {
+        background-color: #95a5a6 !important;
+        color: white !important;
+        border: none !important;
+        padding: 8px 15px !important;
+        border-radius: 3px !important;
+        cursor: pointer !important;
+    }
+
+    #savePasswordBtn {
+        background-color: #2ecc71 !important;
+        color: white !important;
+        border: none !important;
+        padding: 8px 15px !important;
+        border-radius: 3px !important;
+        cursor: pointer !important;
+    }
+
+    .btn-change {
+        background-color: #f49236;
+        color: white;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .btn-change:hover {
+        background-color: #f49236;
+    }
+</style>
+
+<body>
+    <div class="container">
+        <h1>用户管理（管理员 Admin 权限）</h1>
+
+        <!-- 用户列表 -->
+        <div id="usersList">
+            <p>正在加载用户列表...</p>
+        </div>
+
+        <!-- 导出和打印按钮 -->
+        <div class="action-buttons">
+            <button id="exportExcelBtn" class="btn-action">导出Excel</button>
+            <button id="printPdfBtn" class="btn-action">打印PDF</button>
+        </div>
+
+        <!-- 注册新用户 -->
+        <div class="register-form">
+            <h2>注册新用户</h2>
+            <form id="registerForm">
+                <input type="text" id="username" placeholder="用户名" required>
+                <input type="password" id="password" placeholder="密码" required>
                 <input type="email" id="email" placeholder="邮箱" required>
-                <label for="role">角色：</label>  
-                <select id="role" name="role" required>  
-                    <option value="user">普通用户</option>  
-                    <option value="admin">管理员</option>  
-                </select>  
-                <button class="btn-regist" type="submit">注册</button>  
-            </form>  
-        </div>  
-    </div>  
-    <script>  
+                <label for="role">角色：</label>
+                <select id="role" name="role" required>
+                    <option value="user">普通用户</option>
+                    <option value="admin">管理员</option>
+                </select>
+                <button class="btn-regist" type="submit">注册</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 密码修改模态框 -->
+    <div id="passwordModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>修改用户密码</h2>
+            <p id="modalUserInfo">正在修改账户: <span id="modalUsername" style="font-weight: bold; color: red;"></span>密码!</p>
+            <form id="passwordForm">
+                <input type="hidden" id="modalUserId">
+                <div class="form-group">
+                    <label for="newPassword">新密码:</label>
+                    <input type="password" id="newPassword" required>
+                </div>
+                <div class="form-group">
+                    <label for="confirmPassword">确认密码:</label>
+                    <input type="password" id="confirmPassword" required>
+                </div>
+                <div class="password-error" id="passwordError"></div>
+                <div class="form-buttons">
+                    <button type="button" id="cancelPasswordBtn">取消</button>
+                    <button type="submit" id="savePasswordBtn">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <script src="https://unpkg.com/xlsx-js-style@1.2.0/dist/xlsx.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.15/jspdf.plugin.autotable.min.js"></script>
+
+    <script>
         console.log('EJS 模板已正确渲染');  
-    </script>  
-    <script>  
-    async function loadUsers() { 
-        console.log('loadUsers 函数已被调用');  
-        try {  
-            const response = await fetch('/admin/users-list');  
-            
-            if (!response.ok) {  
-                const errorData = await response.json();  
-                throw new Error(errorData.error || 'Failed to load users');  
-            }  
-            
-            const users = await response.json();  
-            displayUsers(users);  
-        } catch (error) {  
-            console.error('加载用户列表失败:', error);  
-            const usersListDiv = document.getElementById('usersList');  
-            usersListDiv.innerHTML = `<p>加载用户列表失败: ${error.message}</p>`;  
-        }  
-    }  
+    </script>
+    <script>
+        async function loadUsers() {
+            console.log('loadUsers 函数已被调用');
+            try {
+                const response = await fetch('/admin/users-list');
 
-    // 动态展示用户列表  
-    function displayUsers(users) {  
-        const usersListDiv = document.getElementById('usersList');  
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Failed to load users');
+                }
 
-        if (users.length === 0) {  
-            usersListDiv.innerHTML = '<p>目前没有用户。</p>';  
-            return;  
-        }  
+                const users = await response.json();
+                displayUsers(users);
+            } catch (error) {
+                console.error('加载用户列表失败:', error);
+                const usersListDiv = document.getElementById('usersList');
+                usersListDiv.innerHTML = `<p>加载用户列表失败: ${error.message}</p>`;
+            }
+        }
 
-        usersListDiv.innerHTML = '';  
+        // 动态展示用户列表  
+        function displayUsers(users) {
+            const usersListDiv = document.getElementById('usersList');
 
-        const table = document.createElement('table');  
-        table.className = 'users-table';  
+            if (users.length === 0) {
+                usersListDiv.innerHTML = '<p>目前没有用户。</p>';
+                return;
+            }
 
-        const thead = document.createElement('thead');  
-        thead.innerHTML = `  
+            usersListDiv.innerHTML = '';
+
+            const table = document.createElement('table');
+            table.className = 'users-table';
+
+            const thead = document.createElement('thead');
+            thead.innerHTML = `  
             <tr>  
                 <th>用户名</th>  
                 <th>邮箱</th> 
@@ -79,83 +244,433 @@
                 <th>注册时间</th>  
                 <th>操作</th>  
             </tr>  
-        `;  
-        table.appendChild(thead);  
+        `;
+            table.appendChild(thead);
 
-        const tbody = document.createElement('tbody');  
-        users.forEach(user => {  
-            const tr = document.createElement('tr');  
-            tr.innerHTML = `  
+            const tbody = document.createElement('tbody');
+            users.forEach(user => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `  
                 <td>${user.username}</td>  
                 <td>${user.email}</td>
                 <td>${user.role}</td>  
                 <td>${new Date(user.createdAt).toLocaleString()}</td>  
                 <td>  
-                    <button class="btn-delete" onclick="deleteUser('${user.id}')">删除</button>  
+                    <button class="btn-delete" onclick="deleteUser('${user.id}')">删除</button>
+                    <button class="btn-edit-password" onclick="showPasswordModal('${user.id}', '${user.username}')">修改密码</button>
+                    <button class="btn-change" onclick="resetPassword('${user.id}')">重置密码</button>    
                 </td>  
-            `;  
-            tbody.appendChild(tr);  
-        });  
-        table.appendChild(tbody);  
+            `;
+                tbody.appendChild(tr);
+            });
+            table.appendChild(tbody);
 
-        usersListDiv.appendChild(table);  
-    }  
+            usersListDiv.appendChild(table);
+        }
 
-    // 删除用户功能  
-    async function deleteUser(userId) {  
-        if (!confirm('确定要删除这个用户吗？')) return;  
+        // 删除用户功能  
+        async function deleteUser(userId) {
+            if (!confirm('确定要删除这个用户吗？')) return;
 
-        try {  
-            const response = await fetch(`/admin/users/${userId}`, {  
-                method: 'DELETE'  
-            });  
-            
-            if (response.ok) {  
-                alert('用户删除成功');  
-                loadUsers();  
-            } else {  
-                const error = await response.json();  
-                throw new Error(error.error);  
-            }  
-        } catch (error) {  
-            console.error('删除用户失败:', error);  
-            alert(`删除用户失败: ${error.message}`);  
+            try {
+                const response = await fetch(`/admin/users/${userId}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    alert('用户删除成功');
+                    loadUsers();
+                } else {
+                    const error = await response.json();
+                    throw new Error(error.error);
+                }
+            } catch (error) {
+                console.error('删除用户失败:', error);
+                alert(`删除用户失败: ${error.message}`);
+            }
+        }
+
+        // 修正重置密码的前端请求  
+        async function resetPassword(userId) {
+            if (!confirm('确定要重置这个用户的密码吗？')) return;
+
+            try {
+                // 生成随机密码  
+                const newPassword = generateRandomPassword();
+
+                const response = await fetch(`/admin/users/${userId}/reset-password`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ newPassword }) // 确保这里是有效的JSON  
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    alert(`密码已重置成功！新密码为: ${newPassword}`);
+                } else {
+                    const error = await response.json();
+                    throw new Error(error.error || '重置密码失败');
+                }
+            } catch (error) {
+                console.error('重置密码失败:', error);
+                alert(`重置密码失败: ${error.message}`);
+            }
+        }
+
+        // 生成随机密码的函数  
+        function generateRandomPassword() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+            let password = '';
+            for (let i = 0; i < 8; i++) {
+                password += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return password;
+        }
+
+        // 显示密码修改模态框  
+        function showPasswordModal(userId, username) {
+            // 设置模态框内容  
+            document.getElementById('modalUserId').value = userId;
+            document.getElementById('modalUsername').textContent = username;
+            document.getElementById('newPassword').value = '';
+            document.getElementById('confirmPassword').value = '';
+            document.getElementById('passwordError').textContent = '';
+
+            // 显示模态框  
+            document.getElementById('passwordModal').style.display = 'block';
+        }
+
+        // 关闭模态框  
+        function closePasswordModal() {
+            document.getElementById('passwordModal').style.display = 'none';
+        }
+
+        // 保存新密码  
+        async function savePassword(event) {
+            event.preventDefault();
+
+            const userId = document.getElementById('modalUserId').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const errorElement = document.getElementById('passwordError');
+
+            // 验证密码  
+            if (newPassword.length < 6) {
+                errorElement.textContent = '密码长度必须至少为6个字符';
+                return;
+            }
+
+            if (newPassword !== confirmPassword) {
+                errorElement.textContent = '两次输入的密码不一致';
+                return;
+            }
+
+            // 清除错误信息  
+            errorElement.textContent = '';
+
+            try {
+                const response = await fetch(`/admin/users/${userId}/password`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ newPassword })
+                });
+
+                if (response.ok) {
+                    alert('密码修改成功');
+                    closePasswordModal();
+                } else {
+                    const error = await response.json();
+                    throw new Error(error.error || '修改密码失败');
+                }
+            } catch (error) {
+                console.error('修改密码失败:', error);
+                errorElement.textContent = error.message;
+            }
+        }
+
+
+        // 注册新用户功能  
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const email = document.getElementById('email').value;
+            const role = document.getElementById('role').value;
+            try {
+                const response = await fetch('/admin/users', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password, email, role })
+                });
+
+                if (response.ok) {
+                    alert('用户注册成功');
+                    document.getElementById('registerForm').reset();
+                    loadUsers();
+                } else {
+                    const error = await response.json();
+                    throw new Error(error.error);
+                }
+            } catch (error) {
+                console.error('注册用户失败:', error);
+                alert(`注册用户失败: ${error.message}`);
+            }
+        });
+
+
+        // 在DOM加载完成后设置事件监听器  
+        document.addEventListener('DOMContentLoaded', () => {
+            // 加载用户列表（原有代码）  
+            loadUsers();
+
+            // 设置密码模态框事件监听器  
+            document.querySelector('.close-modal').addEventListener('click', closePasswordModal);
+            document.getElementById('cancelPasswordBtn').addEventListener('click', closePasswordModal);
+            document.getElementById('passwordForm').addEventListener('submit', savePassword);
+
+            // 点击模态框外部关闭模态框  
+            window.addEventListener('click', (event) => {
+                const modal = document.getElementById('passwordModal');
+                if (event.target === modal) {
+                    closePasswordModal();
+                }
+            });
+        });
+
+
+
+        document.getElementById('exportExcelBtn').addEventListener('click', async () => {
+            try {
+                const response = await fetch('/admin/users-list');
+                if (!response.ok) throw new Error('网络错误');
+                const users = await response.json();
+
+                // 准备数据  
+                const data = [
+                    ["已注册用户信息", "", "", ""],
+                    ["用户名", "邮箱", "权限", "注册日期"],
+                    ...users.map(user => [
+                        user.username,
+                        user.email,
+                        user.role,
+                        new Date(user.createdAt).toLocaleString()
+                    ])
+                ];
+
+                // 创建工作表  
+                const worksheet = XLSX.utils.aoa_to_sheet(data);
+
+                // 设置列宽  
+                worksheet['!cols'] = [
+                    { wch: 20 }, // 用户名  
+                    { wch: 20 }, // 邮箱  
+                    { wch: 10 }, // 权限  
+                    { wch: 20 }  // 注册日期  
+                ];
+
+                // 合并第一行单元格  
+                worksheet['!merges'] = [
+                    { s: { r: 0, c: 0 }, e: { r: 0, c: 3 } }
+                ];
+
+                // 详细的样式定义  
+                const styles = {
+                    title: {
+                        font: {
+                            name: '宋体',
+                            sz: 16,
+                            color: { rgb: "FFFFFF" },
+                            bold: true
+                        },
+                        fill: {
+                            fgColor: { rgb: "0070C0" }
+                        },
+                        alignment: {
+                            horizontal: "center",
+                            vertical: "center"
+                        },
+                        border: {
+                            top: { style: "thin", color: { rgb: "000000" } },
+                            bottom: { style: "thin", color: { rgb: "000000" } },
+                            left: { style: "thin", color: { rgb: "000000" } },
+                            right: { style: "thin", color: { rgb: "000000" } }
+                        }
+                    },
+                    header: {
+                        font: {
+                            name: '宋体',
+                            sz: 12,
+                            bold: true
+                        },
+                        fill: {
+                            fgColor: { rgb: "DDDDDD" }
+                        },
+                        alignment: {
+                            horizontal: "center",
+                            vertical: "center"
+                        },
+                        border: {
+                            top: { style: "thin", color: { rgb: "000000" } },
+                            bottom: { style: "thin", color: { rgb: "000000" } },
+                            left: { style: "thin", color: { rgb: "000000" } },
+                            right: { style: "thin", color: { rgb: "000000" } }
+                        }
+                    },
+                    cell: {
+                        alignment: {
+                            horizontal: "center",
+                            vertical: "center"
+                        },
+                        border: {
+                            top: { style: "thin", color: { rgb: "000000" } },
+                            bottom: { style: "thin", color: { rgb: "000000" } },
+                            left: { style: "thin", color: { rgb: "000000" } },
+                            right: { style: "thin", color: { rgb: "000000" } }
+                        }
+                    }
+                };
+
+                // 应用样式到单元格  
+                worksheet['A1'].s = styles.title;
+                worksheet['A2'].s = styles.header;
+                worksheet['B2'].s = styles.header;
+                worksheet['C2'].s = styles.header;
+                worksheet['D2'].s = styles.header;
+
+                // 为数据行应用样式  
+                for (let row = 3; row < data.length + 2; row++) {
+                    for (let col = 0; col < 4; col++) {
+                        const cellAddress = XLSX.utils.encode_cell({ r: row - 1, c: col });
+                        if (worksheet[cellAddress]) {
+                            worksheet[cellAddress].s = styles.cell;
+                        }
+                    }
+                }
+
+                // 创建工作簿  
+                const workbook = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(workbook, worksheet, '已注册用户信息');
+
+                // 导出文件  
+                XLSX.writeFile(workbook, '已注册用户信息.xlsx');
+
+            } catch (error) {
+                console.error('导出已注册用户信息失败:', error);
+                alert(`导出已注册用户信息失败: ${error.message}`);
+            }
+        });
+
+        // 打印用户信息为 PDF  
+        document.getElementById('printPdfBtn').addEventListener('click', async () => {
+            try {
+                const response = await fetch('/admin/users-list');
+                if (!response.ok) throw new Error('网络错误');
+                const users = await response.json();
+
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF({
+                    orientation: 'portrait',
+                    unit: 'mm',
+                    format: 'a4'
+                });
+
+                // 加载字体  
+                const fontPath = '/fonts/SourceHanSans-Regular.ttf'; // 确保字体文件路径正确  
+                const fontRes = await fetch(fontPath);
+                if (!fontRes.ok) throw new Error('字体文件未找到');
+
+                const fontBlob = await fontRes.arrayBuffer();
+
+                // 使用适当的方法转换为 Base64 字符串  
+                const fontBase64 = arrayBufferToBase64(fontBlob); // 转换为 Base64 
+
+                // 添加字体到 jsPDF  
+                doc.addFileToVFS('SourceHanSans-Regular.ttf', fontBase64);
+                doc.addFont('SourceHanSans-Regular.ttf', 'SourceHanSans', 'normal');
+                doc.setFont('SourceHanSans');
+
+                // 创建格式化日期时间的函数  
+                function formatDateTime(dateString) {
+                    const date = new Date(dateString);
+
+                    // 获取各个时间部分  
+                    const year = date.getFullYear();
+                    const month = String(date.getMonth() + 1).padStart(2, '0'); // 月份范围从 0 到 11  
+                    const day = String(date.getDate()).padStart(2, '0');
+                    const hours = String(date.getHours()).padStart(2, '0');
+                    const minutes = String(date.getMinutes()).padStart(2, '0');
+                    const seconds = String(date.getSeconds()).padStart(2, '0');
+
+                    // 返回格式化后的字符串，确保没有多余空格  
+                    return `${year}-${month}-${day}/${hours}:${minutes}:${seconds}`;
+                }
+
+                // 创建表格内容  
+                const formattedUsers = users.map(user => {
+                    return [
+                        user.username,
+                        user.email,
+                        user.role,
+                        formatDateTime(user.createdAt) // 使用格式化函数获取注册时间  
+                    ];
+                });
+
+                // 调用 autoTable 创建表格  
+                doc.autoTable({
+                    head: [['用户名', '邮箱', '权限', '注册时间']],
+                    body: formattedUsers,
+                    theme: 'striped',
+                    styles: {
+                        font: "SourceHanSans",
+                        fontSize: 10,
+                        cellPadding: 3,
+                        valign: 'middle',
+                        halign: 'center'
+                    },
+                    headStyles: {
+                        fillColor: [41, 128, 185],
+                        textColor: 255,
+                        fontSize: 12,
+                        halign: 'center'
+                    },
+                    columnStyles: {
+                        0: { cellWidth: 'auto', halign: 'center' },
+                        1: { cellWidth: 'auto', halign: 'center' },
+                        2: { cellWidth: 'auto', halign: 'center' },
+                        3: { cellWidth: 'auto', halign: 'center' }  // 确保注册时间列居中  
+                    },
+                    margin: { top: 30 },
+                    didDrawPage: function (data) {
+                        const title = '已注册用户信息列表';
+                        const pageWidth = doc.internal.pageSize.getWidth();
+                        const textWidth = doc.getTextWidth(title);
+                        const x = (pageWidth - textWidth) / 2;
+
+                        doc.setFontSize(18);
+                        doc.text(title, x, 20);
+                    }
+                });
+                // 保存PDF  
+                doc.save('已注册用户信息.pdf');
+
+            } catch (error) {
+                console.error('打印已注册用户信息失败:', error);
+                alert(`打印已注册用户信息失败: ${error.message}`);
+            }
+        });
+
+        // 提供转换 ArrayBuffer 为 Base64 字符串的方法  
+        function arrayBufferToBase64(buffer) {
+            let binary = '';
+            const bytes = new Uint8Array(buffer);
+            const len = bytes.byteLength;
+            for (let i = 0; i < len; i++) {
+                binary += String.fromCharCode(bytes[i]);
+            }
+            return window.btoa(binary); // 使用 window.btoa 将字符串转为 Base64  
         }  
-    }  
+    </script>
+</body>
 
-    // 注册新用户功能  
-    document.getElementById('registerForm').addEventListener('submit', async (e) => {  
-        e.preventDefault();  
-
-        const username = document.getElementById('username').value;  
-        const password = document.getElementById('password').value;  
-        const email = document.getElementById('email').value;
-        const role = document.getElementById('role').value;
-        console.log('role:', role); // 调试日志   
-        console.log(JSON.stringify({ username, password, email, role })); // 调试日志 
-        try {  
-            const response = await fetch('/admin/users', {  
-                method: 'POST',  
-                headers: { 'Content-Type': 'application/json' },  
-                body: JSON.stringify({username, password, email, role})  
-            });  
-
-            if (response.ok) {  
-                alert('用户注册成功');  
-                document.getElementById('registerForm').reset();  
-                loadUsers();  
-            } else {  
-                const error = await response.json();  
-                throw new Error(error.error);  
-            }  
-        } catch (error) {  
-            console.error('注册用户失败:', error);  
-            alert(`注册用户失败: ${error.message}`);  
-        }  
-    });  
-
-    // 页面加载后加载用户列表  
-    document.addEventListener('DOMContentLoaded', loadUsers);  
-    </script>  
-</body>  
 </html>

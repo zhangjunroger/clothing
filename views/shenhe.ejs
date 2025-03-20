@@ -1,219 +1,2251 @@
-<!DOCTYPE html>  
-<html lang="zh-CN">  
-<head>  
-  <meta charset="UTF-8">  
-  <title>物品申领审核</title>
-  <script>  
-    const currentUser = <%- JSON.stringify(user || {}) %>; // 在页面顶部定义  
-    console.log('当前用户:', currentUser); // 测试输出  
-  </script>  
-  <style>  
-    /* 基本样式 */  
-    .container {  
-      width: 90%;  
-      margin: 0 auto;  
-    }  
-    table {  
-      width: 100%;  
-      border-collapse: collapse;  
-    }  
-    table, th, td {  
-      border: 1px solid #ccc;  
-    }  
-    th, td {  
-      padding: 8px;  
-      text-align: center;  
-    }  
-    .modal {  
-      display: none; /* 隐藏模态窗口 */  
-      position: fixed;  
-      z-index: 1;  
-      left: 0;  
-      top: 0;  
-      width: 100%;  
-      height: 100%;  
-      overflow: auto;  
-      background-color: rgba(0,0,0,0.5); /* 半透明背景 */  
-    }  
-    .modal-content {  
-      background-color: #fff;  
-      margin: 10% auto;  
-      padding: 20px;  
-      width: 80%;  
-    }  
-    .modal-header, .modal-footer {  
-      text-align: right;  
-    }  
-    .modal-body {  
-      max-height: 400px;  
-      overflow-y: auto;  
-    }  
-    .button {  
-      padding: 6px 12px;  
-      margin: 5px;  
-    }  
-    /* 错误消息样式 */  
-    .error {  
-      border-color: red;  
-    }  
-    .error-message {  
-      color: red;  
-      font-size: 12px;  
-    }  
-  </style>
-</head>  
-<body>  
+<!DOCTYPE html>
+<html lang="zh-CN">
 
-    <!-- 服装信息表格展示 -->  
-    <section>  
-      <h2>申领信息列表</h2>  
-      <table id="ShenheTable">  
-        <thead>  
-          <tr>  
-            <th>用户编号</th>
-            <th>物品编号</th>  
-            <th>物品名称</th>  
-            <th>规格</th>  
-            <th>类别</th>  
-            <th>申领个数</th>              
-            <th>审核状态</th> 
-            <th>操作</th>              
-          </tr>  
-        </thead>  
-        <tbody>  
-          <!-- 数据将通过AJAX动态加载 -->  
-        </tbody>  
-      </table>  
-    </section>  
+<head>
+  <meta charset="UTF-8">
+  <title>物品申领审核</title>
+  <script>
+    const currentUser = <%- JSON.stringify(user || {}) %>; // 在页面顶部定义  
+  </script>
+  <!-- 引入Tailwind CSS（仅开发环境示例） -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <!-- 1. 引入某款艺术字体（示例：Amatic SC） -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@700&display=swap" />
+
+  <!-- PDF生成库 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+
+  <!-- Excel生成库 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    /* 基本样式 */
+    /* 背景图片样式 */
+    body {
+      background-image: url('/images/background.jpg');
+      /* 背景图片路径 */
+      background-size: cover;
+      /* 图片适应屏幕大小 */
+      background-repeat: no-repeat;
+      /* 不重复平铺 */
+      background-position: center;
+      /* 居中显示 */
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      /* 占满整个视口高度 */
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .fancy-font {
+      font-family: 'Amatic SC', cursive;
+      /* cursive等用于回退 */
+    }
+
+
+    /* 背景遮罩 */
+    .modal-backdrop {
+      display: none;
+      /* 默认隐藏 */
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      /* 过渡动画可选 */
+      z-index: 800;
+    }
+
+    .modal-backdrop.active {
+      display: block;
+    }
+
+    /* 调整模态窗口基础样式 */
+    .modal {
+      display: none;
+      /* 默认隐藏 */
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 1000;
+      width: 60%;
+      /* 调整宽度 */
+      max-width: 800px;
+      /* 调整最大宽度 */
+      max-height: 80vh;
+      /* 可选：调整最大高度 */
+      overflow-y: auto;
+    }
+
+    /* 模态内容样式 */
+    .modal-content {
+      width: 100%;
+      padding: 10px;
+      /* 调整内边距，这样内容会紧凑一些 */
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    /* 模态窗口内表单元素自适应 */
+    #editClothingForm {
+      width: 100%;
+    }
+
+    /* 确保行占满空间 */
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      width: 100%;
+      margin-left: 0;
+      margin-right: 0;
+    }
+
+    /* 列元素拉伸以占满空间 */
+    .col-md-4,
+    .col-md-6,
+    .col-md-12 {
+      flex-grow: 1;
+      transition: all 0.3s ease;
+      /* 添加过渡效果使尺寸变化更平滑 */
+    }
+
+    /* 输入框自动填充可用空间 */
+    .form-control,
+    .form-select {
+      width: 100%;
+      min-height: 38px;
+      padding: 8px 12px;
+      box-sizing: border-box;
+    }
+
+    /* 标签变大以适应大屏幕 */
+    @media (min-width: 1200px) {
+      .form-label {
+        font-size: 1.1rem;
+      }
+
+      .form-control,
+      .form-select {
+        font-size: 1.05rem;
+        padding: 10px 15px;
+        min-height: 45px;
+      }
+
+      /* 按钮在大屏幕上变大 */
+      .modal-footer .button {
+        padding: 10px 25px;
+        font-size: 1.1rem;
+      }
+    }
+
+    /* 更大屏幕上进一步增大字体和间距 */
+    @media (min-width: 1600px) {
+      .form-label {
+        font-size: 1.2rem;
+        margin-bottom: 10px;
+      }
+
+      .form-control,
+      .form-select {
+        font-size: 1.1rem;
+        padding: 12px 18px;
+        min-height: 50px;
+      }
+
+      .mb-3 {
+        margin-bottom: 1.5rem !important;
+      }
+
+      /* 增大模态标题 */
+      .modal-header h2 {
+        font-size: 2.2rem;
+      }
+
+      /* 增大关闭按钮 */
+      #closeModal {
+        font-size: 2rem;
+      }
+
+      /* 增大关闭按钮 */
+      #closeModalChange {
+        font-size: 2rem;
+      }
+    }
+
+    /* 确保按钮栏始终占满宽度 */
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 15px;
+      width: 100%;
+      padding-top: 20px;
+      margin-top: 10px;
+    }
+
+    /* 超宽屏幕进一步扩大元素 */
+    @media (min-width: 2000px) {
+      .modal {
+        max-width: 1800px;
+        /* 超宽屏幕允许更大模态框 */
+      }
+
+      .row {
+        gap: 20px;
+        /* 增加行内元素间距 */
+      }
+    }
+
+    /* 滚动条美化 (可选) */
+    .modal::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .modal::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 4px;
+    }
+
+    .modal::-webkit-scrollbar-thumb {
+      background: #888;
+      border-radius: 4px;
+    }
+
+    .modal::-webkit-scrollbar-thumb:hover {
+      background: #555;
+    }
+
+    .modal.active {
+      display: block;
+    }
+
+    /* 模态内容区 */
+    .modal-content {
+      background-color: #f7f7f7;
+      /* 背景带点浅灰 */
+      border: 3px solid #888;
+      /* 边框线加粗 */
+      border-radius: 6px;
+      padding: 16px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-header {
+      border-bottom: 2px solid #ccc;
+      padding-bottom: 8px;
+      margin-bottom: 8px;
+    }
+
+    .modal-header h2 {
+      margin: 0;
+    }
+
+    .modal-header span {
+      font-size: 1.4rem;
+    }
+
+    .modal-body {
+      margin: 16px 0;
+      max-height: 70vh;
+      /* 避免内容过多时超出屏幕 */
+      overflow-y: auto;
+    }
+
+    .modal-footer {
+      border-top: 2px solid #ccc;
+      padding-top: 8px;
+      margin-top: 8px;
+      text-align: right;
+      /* 简单的右对齐 */
+    }
+
+    /* 表单样式 */
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    .form-label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 600;
+      color: #555;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .form-control:focus {
+      border-color: #007bff;
+      outline: none;
+      box-shadow: 0 0 3px rgba(0, 123, 255, 0.3);
+    }
+
+    /* 通用按钮样式 */
+    .button {
+      padding: 10px 20px;
+      /* 幅度内边距 */
+      border: none;
+      /* 去掉边框 */
+      border-radius: 5px;
+      /* 圆角 */
+      background-color: #007bff;
+      /* 背景颜色 */
+      color: white;
+      /* 字体颜色 */
+      font-size: 16px;
+      /* 字体大小 */
+      cursor: pointer;
+      /* 鼠标指针 */
+      transition: background-color 0.3s;
+      /* 过渡效果 */
+    }
+
+    /* 按钮悬停样式 */
+    .button:hover {
+      background-color: #0056b3;
+      /* 悬停时的背景颜色 */
+    }
+
+    .button-primary {
+      background-color: #28a745;
+      color: #fff;
+    }
+
+    .button-primary:hover {
+      background-color: #218838;
+      box-shadow: 0 0 8px rgba(40, 167, 69, 0.2);
+    }
+
+    .button-secondary {
+      background-color: #6c757d;
+      color: #fff;
+    }
+
+    .button-secondary:hover {
+      background-color: #5a6268;
+      box-shadow: 0 0 8px rgba(108, 117, 125, 0.2);
+    }
+
+    /* 响应式设计 */
+    @media screen and (max-width: 768px) {
+      .modal {
+        width: 95%;
+        padding: 15px;
+        max-height: 85vh;
+        /* 适当减少最大高度以适应移动设备 */
+      }
+
+      .modal-header h2 {
+        font-size: 1.2rem;
+      }
+    }
+
+    /* 全局容器 */
+    .container {
+      width: 80%;
+      max-width: 800px;
+      margin: 20px auto;
+      padding: 10px 0;
+      /* 可以根据需要添加背景或阴影 */
+    }
+
+    .container h1 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 2.0rem;
+      font-size: 50px;
+    }
+
+    .container h2 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 1.5rem;
+      font-size: 30px;
+    }
+
+
+    /* 三个 section 的通用样式 */
+    section {
+      background-color: #fff;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    }
+
+    /* Excel模板上传表单 & 搜索表单基础样式 */
+    form {
+      display: flex;
+      flex-wrap: wrap;
+      /* 当屏幕宽度较小，自动换行 */
+      align-items: center;
+      gap: 0.5rem;
+      /* 表单元素之间的间距 */
+    }
+
+    label {
+      font-weight: 600;
+      margin-right: 0.5rem;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    input[type="file"],
+    select {
+      padding: 0.5rem;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 0.9rem;
+      flex: 1;
+      /* 让输入框或选择框能够灵活扩展宽度 */
+      min-width: 100px;
+      /* 避免过小 */
+    }
+
+    input[type="file"] {
+      flex: none;
+      /* 上传按钮大小通常固定 */
+    }
+
+    /* 分割线美化 */
+    hr {
+      border: none;
+      border-top: 1px solid #ddd;
+      margin: 2rem 0;
+    }
+
+    .users-table {
+      width: 100%;
+      /* 表格宽度占满父容器 */
+      border-collapse: collapse;
+      /* 去掉单元格间的间隙 */
+      margin-top: 20px;
+      /* 表格顶部留空 */
+      background: #fff;
+      /* 表格背景色 */
+      border-radius: 4px;
+      /* 表格圆角 */
+      overflow: hidden;
+      /* 防止溢出 */
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      /* 添加阴影 */
+    }
+
+    .users-table th,
+    .users-table td {
+      border: 1px solid #ddd;
+      /* 单元格边框颜色 */
+      padding: 12px;
+      /* 单元格内边距 */
+      text-align: center;
+      /* 水平居中 */
+      vertical-align: middle;
+      /* 垂直居中 */
+      font-size: 14px;
+      /* 字体大小 */
+      color: #333;
+      /* 字体颜色 */
+      word-wrap: break-word;
+      word-break: break-all;
+    }
+
+    .users-table th {
+      background-color: #f1dbb5;
+      /* 表头背景色 */
+      font-weight: bold;
+      /* 表头加粗 */
+      color: #333;
+      /* 表头字体颜色 */
+    }
+
+    .users-table tr:nth-child(even) {
+      background-color: #f9f9f9;
+      /* 偶数行背景色 */
+    }
+
+    .users-table tr:hover {
+      background-color: #f1f1f1;
+      /* 鼠标悬停时的背景色 */
+    }
+
+    /* 错误提示样式 */
+    .error {
+      border-color: red;
+    }
+
+    .error-message {
+      color: red;
+      font-size: 12px;
+    }
+
+    .btn-delete {
+      background-color: #f44336;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .btn-delete:hover {
+      background-color: #d32f2f;
+    }
+
+    .btn-change {
+      background-color: #f49236;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .btn-change:hover {
+      background-color: #f49236;
+    }
+
+
+    /* 报表相关样式 */
+    .date-range {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .radio-group {
+      display: flex;
+      gap: 20px;
+    }
+
+    .print-container {
+      width: 100%;
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #fff;
+    }
+
+    .print-header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .print-header h1 {
+      margin-bottom: 10px;
+    }
+
+    .print-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+
+    .print-table th,
+    .print-table td {
+      border: 1px solid #000;
+      padding: 8px;
+      text-align: center;
+    }
+
+    .print-table th {
+      background-color: #f0f0f0;
+    }
+
+    .print-footer {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 20px;
+    }
+
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+
+      .print-container,
+      .print-container * {
+        visibility: visible;
+      }
+
+      .print-container {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        padding: 0;
+      }
+
+      .no-print {
+        display: none !important;
+      }
+    }
+
+    /* 打印专用样式 */
+    @media print {
+
+      /* 基本打印设置 */
+      @page {
+        size: auto;
+        margin: 10mm 10mm 10mm 10mm;
+        /* 减小页面边距 */
+      }
+
+      body {
+        margin: 0;
+        padding: 0;
+        background: white;
+      }
+
+      /* 隐藏非打印元素 */
+      .no-print {
+        display: none !important;
+      }
+
+      /* 控制打印容器 */
+      .print-container {
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        page-break-after: avoid;
+        /* 防止容器后自动分页 */
+      }
+
+      /* 控制表格打印 */
+      table {
+        width: 100% !important;
+        page-break-inside: auto;
+        border-collapse: collapse;
+      }
+
+      tr,
+      td,
+      th {
+        page-break-inside: avoid;
+        /* 尽量避免行内分页 */
+      }
+
+      /* 如果按钮在容器中，可以为容器添加样式 */
+      .print-footer .no-print {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        /* 按钮之间的间距 */
+        margin-bottom: 10px;
+        /* 底部留一些空间 */
+      }
+
+      .button-container {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+      }
+
+      .action-buttons {
+        display: flex !important;
+        justify-content: flex-end !important;
+        gap: 10px;
+        width: 100%;
+      }
+
+      /* 重置可能影响对齐的样式 */
+      .print-footer {
+        width: 100%;
+        box-sizing: border-box;
+      }
+
+      .no-print {
+        width: 100%;
+      }
+
+      /* 避免元素产生无意义的分页 */
+      * {
+        overflow: visible !important;
+      }
+
+    }
+
+    /* 缩略图样式 */
+    .thumbnail {
+      width: 80px !important;
+      /* 固定宽度 */
+      height: 80px !important;
+      /* 固定高度 */
+      object-fit: cover;
+      /* 自动裁剪，保持比例 */
+      border-radius: 5px;
+      /* 圆角 */
+      border: 1px solid #ccc;
+      /* 添加边框 */
+      cursor: pointer;
+      /* 鼠标悬浮变成手型 */
+      transition: transform 0.2s ease;
+      /* 悬浮动画 */
+    }
+
+    .thumbnail:hover {
+      transform: scale(1.05);
+      /* 悬浮时稍微放大 */
+    }
+
+    /* 响应式样式 */
+    @media screen and (max-width: 768px) {
+      .thumbnail {
+        width: 60px;
+        height: 60px;
+      }
+    }
+
+    @media screen and (max-width: 480px) {
+      .thumbnail {
+        width: 50px;
+        height: 50px;
+      }
+    }
+
+    /* 大图模态框图片样式 */
+    .large-image {
+      max-width: 90vw;
+      /* 最大宽度：视口宽度的 90% */
+      max-height: 90vh;
+      /* 最大高度：视口高度的 90% */
+      margin: auto;
+      display: block;
+    }
+
+    /* 模态框背景 */
+    .modal-background {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(0, 0, 0, 0.8);
+      /* 半透明黑色背景 */
+      z-index: 2000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-background-hidden {
+      display: none;
+      /* 隐藏模态框 */
+    }
+  </style>
+</head>
+
+<body>
+
+  <script src="https://unpkg.com/xlsx-js-style@1.2.0/dist/xlsx.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.15/jspdf.plugin.autotable.min.js"></script>
+
+
+  <div class="container">
+    <h1>订单审核管理</h1>
+
+    <!-- 服装信息表格展示 -->
+    <section>
+      <h2>申领信息列表（未审核）</h2>
+      <table id="ShenheTable" class="users-table">
+        <thead>
+          <tr>
+            <th>选择</th>
+            <th>用户姓名</th>
+            <th>订单编号</th>
+            <th>订单信息</th>
+            <th>订单金额</th>
+            <th>订单时间</th>
+            <th>审核状态</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- 数据将通过AJAX动态加载 -->
+        </tbody>
+      </table>
+    </section>
+
+
+    <section>
+      <div style="display: flex; justify-content: center; gap: 15px; margin-top: 20px; margin-bottom: 5px;">
+        <button id="checkoutBtn" class="button">审核通过已选订单</button>
+        <button id="approveAllBtn" class="button">审核通过所有订单</button>
+        <button id="rejectSelectedBtn" class="button">审核不通过已选订单</button>
+        <button id="rejectAllBtn" class="button">审核不通过所有订单</button>
+      </div>
+    </section>
+
+    <!-- 服装信息表格展示 -->
+    <section>
+      <h2>申领信息列表（已审核）</h2>
+      <table id="YiShenheTable" class="users-table">
+        <thead>
+          <tr>
+            <th><input type="checkbox" id="selectAllCheckbox" title="全选/取消全选"></th>
+            <th>用户姓名</th>
+            <th>订单编号</th>
+            <th>订单信息</th>
+            <th>订单金额</th>
+            <th>订单时间</th>
+            <th>审核时间</th>
+            <th>审核状态</th>
+            <th>操作</th>            
+          </tr>
+        </thead>
+        <tbody>
+          <!-- 数据将通过AJAX动态加载 -->
+        </tbody>
+      </table>
+
+      <div style="display: flex; justify-content: center; gap: 15px; margin-top: 20px; margin-bottom: 5px;">
+        <button onclick="showReportModal()" class="button">打印报表</button>
+        <button onclick="BatchReject()" class="button">批量退回</button>
+      </div>
+
+    </section>
+
+    <div id="rejectReasonModal" class="modal">
+      <div class="modal-content">
+        <h3>请输入不通过原因</h3>
+        <div class="mt-4"> 
+        <textarea id="rejectReasonInput" rows="5" style="width: 100%;" placeholder="请输入原因..."></textarea>
+      </div> 
+        <div class="modal-footer">
+          <button id="confirmRejectBtn" class="button">确定</button>
+          <button id="cancelRejectBtn" class="button">取消</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 背景遮罩 -->
+  <div class="modal-backdrop" id="modalBackdrop"></div>
+
+  <!-- 报表选择模态窗口 -->
+  <div id="reportModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>打印报表</h2>
+        <span class="close" onclick="closeReportModal()">&times;</span>
+      </div>
+
+      <div class="modal-body">
+        <form id="reportForm">
+
+          <div class="row">
+            <div class="col-md-4 mb-3">
+              <label for="itemNameSearch">用户姓名：</label>
+              <input type="text" id="itemNameSearch" class="form-control">
+            </div>
+            <div class="col-md-4 mb-3">
+              <label for="itemNumberSearch">订单编号：</label>
+              <input type="text" id="itemNumberSearch" class="form-control">
+            </div>
+            <div class="col-md-4 mb-3">
+              <label for="itemInfoSearch">订单信息所含物品编号：</label>
+              <input type="text" id="itemInfoSearch" class="form-control">
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label for="minPriceSearch">最小订单金额（元）：</label>
+              <input type="number" id="minPriceSearch" class="form-control">
+            </div>
+            <div class="col-md-6 mb-3">
+              <label for="maxPriceSearch">最大订单金额(元)：</label>
+              <input type="number" id="maxPriceSearch" class="form-control">
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label for="itemStartYearSearch">订单起始日期：</label>
+              <input type="date" id="itemStartYearSearch" class="form-control">
+            </div>
+            <div class="col-md-6 mb-3">
+              <label for="itemEndYearSearch">订单终止日期：</label>
+              <input type="date" id="itemEndYearSearch" class="form-control">
+            </div>
+          </div>
+
+
+              <div class="row">
+                <div class="col-md-4 mb-3">
+                  <label for="shenheStartYearSearch">审核起始日期：</label>
+                  <input type="date" id="shenheStartYearSearch" class="form-control">
+                </div>
+                <div class="col-md-4 mb-3">
+                  <label for="shenheEndYearSearch">审核终止日期：</label>
+                  <input type="date" id="shenheEndYearSearch" class="form-control">
+                </div>
+                <div class="col-md-4 mb-3">
+                  <label for="StateSearch">订单状态：</label>
+                  <select id="StateSearch" class="form-control">
+                    <option value="">无限制</option>
+                    <option value="已审核">已审核</option>
+                    <option value="未通过">未通过</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- 排序选项 -->
+              <div class="row">
+                <div class="col-md-4 mb-3">
+                  <label for="sortField">排序字段：</label>
+                  <select id="sortField" class="form-control">
+                    <option value="">默认排序</option>
+                    <option value="Number">按订单编号</option>
+                    <option value="userName">按用户姓名</option>
+                    <option value="Cost">按订单金额</option>
+                    <option value="Time">按订单日期</option>
+                    <option value="ShenheTime">按审核日期</option>
+                    <option value="shenhezhuangtai">按订单状态</option>
+                    <!-- 动态显示基于报表类型的排序选项 -->
+                  </select>
+                </div>
+
+                <div class="col-md-3 mb-3">
+                  <label for="sortOrder">排序方式：</label>
+                  <select id="sortOrder" class="form-control">
+                    <option value="asc">升序</option>
+                    <option value="desc">降序</option>
+                  </select>
+                </div>
+
+                <div class="col-md-5 mb-3">
+                  <label>输出格式：</label>
+                  <div class="radio-group">
+                    <label>
+                      <input type="radio" name="outputFormat" value="print" checked> 打印
+                    </label>
+                    <label>
+                      <input type="radio" name="outputFormat" value="pdf"> PDF
+                    </label>
+                    <label>
+                      <input type="radio" name="outputFormat" value="excel"> Excel
+                    </label>
+                  </div>
+                </div>
+
+              </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button onclick="generateReport()" class="button">生成报表</button>
+        <button onclick="closeReportModal()" class="button">取消</button>
+      </div>
+    </div>
+  </div>
 
   <script>
-      
-      // 页面加载时获取物品列表  
-      document.addEventListener('DOMContentLoaded', function() {  
-        loadShenhe();    
+
+    // 页面加载时获取物品列表  
+    document.addEventListener('DOMContentLoaded', function () {
+      loadShenhe();
+      loadYiShenhe();
+  // 全选功能  
+  const selectAllCheckbox = document.getElementById('selectAllCheckbox');  
+  if (selectAllCheckbox) {  
+    selectAllCheckbox.addEventListener('change', function() {  
+      const checkboxes = document.querySelectorAll('.record-checkbox');  
+      checkboxes.forEach(checkbox => {  
+        checkbox.checked = this.checked;  
+      });  
     });  
+  }  
+});  
 
 
-// 加载申领数据并填充表格  
-function loadShenhe() {  
-    fetch('/shenhe/list') // 获取物品数据的 API  
-        .then(response => response.json())  
-        .then(data => {  
-            const tbody = document.querySelector('#ShenheTable tbody');  
-            tbody.innerHTML = ''; // 清空当前表格内容 
-            
-            // 遍历物品数据，生成每行表格  
-            data.forEach(item => {  
-                const tr = document.createElement('tr');  
-                tr.innerHTML = generateTableRowShenhe(item);
-                tbody.appendChild(tr);  
-            });  
-        })  
-        .catch(err => console.error(err));  
+    // 加载未审核申领数据并填充表格  
+    function loadShenhe() {
+      fetch('/shenhe/list') // 获取物品数据的 API  
+        .then(response => response.json())
+        .then(data => {
+          const tbody = document.querySelector('#ShenheTable tbody');
+          tbody.innerHTML = ''; // 清空当前表格内容 
+
+          // 遍历物品数据，生成每行表格  
+          data.forEach(item => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = generateTableRowShenhe(item);
+            tbody.appendChild(tr);
+          });
+        })
+        .catch(err => console.error(err));
+    }
+
+// 格式化日期为常规格式  
+function formatDate(date) {  
+    const year = date.getFullYear();  
+    const month = date.getMonth() + 1; // 月份从 0 开始  
+    const day = date.getDate();  
+    const hours = String(date.getHours()).padStart(2, '0'); // 补零  
+    const minutes = String(date.getMinutes()).padStart(2, '0'); // 补零  
+    const seconds = String(date.getSeconds()).padStart(2, '0'); // 补零  
+
+    return `${year}年${month}月${day}日${hours}-${minutes}-${seconds}`; // 返回格式化后的字符串  
 }  
 
-// 生成表格行的 HTML  
-function generateTableRowShenhe(item) {  
- 
-  return `  
-        <td>${item.userId}</td> 
-        <td>${item.itemNumber}</td>  
-        <td>${item.itemName}</td>  
-        <td>${item.specification || ''}</td>  
-        <td>${item.category || ''}</td>  
-        <td>${item.quantity || ''}</td>  
-        <td>${item.shenhezhuangtai || ''}</td>
-                <td>  
-          <!-- 将整个 item 对象编码为 JSON 存储在按钮的 data-item 属性中 -->  
-          <button onclick="Shenhe('${item.itemNumber}', '${item.userId}', this)"   
-                  data-item='${JSON.stringify(item)}'>  
-            审核  
-          </button>  
-        </td> 
-    `;  
-}  
+    // 生成表格行的 HTML  
+    function generateTableRowShenhe(item) {
+
+      // 使用格式化函数
+      // 创建 Date 对象  
+      const date1 = new Date(item.Time);        
+      const formattedDate1 = date1.toLocaleString('zh-CN'); // 根据需要格式化为字符串
+      
+
+      // 从字符串解析为对象数组  
+      const items = JSON.parse(item.Info);
+      // 使用数组 `map` 构建每个商品的信息，并通过 `join` 连接成一个完整的字符串  
+      const itemsString = items.map((item, index) => {
+        return `第 ${index + 1} 件物品:<br>  
+编号: ${item.itemNumber}<br>  
+名称: ${item.itemName}<br>  
+尺码: ${item.specification}<br>  
+单价: ${item.price.toFixed(2)} 元<br>  
+数量: ${item.quantity}`;
+      }).join('<br><br>'); // 用两个换行符分隔每件物品的信息  
+
+      return `  
+    <tr>  
+      <td>  
+        <input   
+          type="checkbox"   
+          class="item-checkbox"  
+          data-userId="${item.userName}"  
+          data-Number="${item.Number}"  
+          data-Info="${itemsString}"   
+          data-Cost="${item.Cost}"  
+          data-Time="${formattedDate1}"
+          data-shenhezhuangtai="${item.shenhezhuangtai}"   
+        />  
+      </td>  
+      <td>${item.userName}</td>  
+      <td>${item.Number}</td>  
+      <td>${itemsString}</td>  
+      <td>${item.Cost}</td>  
+      <td>${formattedDate1}</td> 
+      <td>${item.shenhezhuangtai}</td>  
+    </tr>  
+  `;
+    }
 
 
-// 审核按钮操作  
-function Shenhe(itemNumber, userId, buttonElement) {  
-    // 获取按钮的 data-item 属性并解析为对象  
-    const item = JSON.parse(buttonElement.getAttribute('data-item'));  
-    
-    console.log(item);
-    if (!item) {  
-        console.error(`无法找到此物品的数据: ${itemNumber}`);  
-        return;  
-    }   
 
-    const itemnum = item.itemNumber;
-    const itemname = item.itemName;
-    const itemspec = item.specification;
-    const itemcategory = item.category;
-    const itemquantity = item.quantity;
+    // 加载已审核申领数据并填充表格  
+    function loadYiShenhe() {
+      fetch('/shenhe/Yilist') // 获取物品数据的 API  
+        .then(response => response.json())
+        .then(data => {
+          const tbody = document.querySelector('#YiShenheTable tbody');
+          tbody.innerHTML = ''; // 清空当前表格内容 
 
-      // 收集表单数据  
-  const shenheData = {  
-    userId: userId,
-    itemNumber: itemnum, 
-    itemName: itemname, 
-    specification: itemspec,  
-    category: itemcategory,
-    quantity: itemquantity,
-    shenhezhuangtai: "已审核" 
-  };
-  
-  const tongbukuchun = {
-    itemNumber: itemnum, 
-    quantity_shenling: itemquantity
-  };
+          // 遍历物品数据，生成每行表格  
+          data.forEach(item => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = generateTableRowYiShenhe(item);
+            tbody.appendChild(tr);
+          });
+        })
+        .catch(err => console.error(err));
+    }
 
-  console.log(shenheData);
+    // 生成表格行的 HTML  
+    function generateTableRowYiShenhe(item) {
 
-  const id = item.objectId;
-  console.log(id);
+      // 使用格式化函数
+      // 创建 Date 对象  
+      const date1 = new Date(item.Time);        
+      const formattedDate1 = date1.toLocaleString('zh-CN'); // 根据需要格式化为字符串
+      
+      let formattedDate2;
 
-    // 提交审核操作到后端  
-    fetch(`/shenhe/update/${id}`, {  
-        method: 'PUT',  
-        headers: { 'Content-Type': 'application/json' },  
-        body: JSON.stringify(shenheData) // 传递物品 ID、用户 ID 和申领数量  
-    })  
-        .then(response => {  
-            if (response.ok) {  
-                alert('审核成功！');  
-                loadShenhe(); // 刷新物品列表  
-            } else {  
-                return response.json().then(err => { throw new Error(err.error); });  
-            }  
-        })  
-        .catch(error => {  
-            console.error('审核失败:', error);  
-            alert(`审核失败: ${error.message}`);  
-        }); 
+      if (item.ShenheTime && item.ShenheTime !== 0){
+        const date2 = new Date(item.ShenheTime);  
+        formattedDate2 = date2.toLocaleString('zh-CN'); // 根据需要格式化为字符串
+      }else{
+        formattedDate2 ='审核中，请稍后！';
+      };
+
+      // 从字符串解析为对象数组  
+      const items = JSON.parse(item.Info);
+      // 使用数组 `map` 构建每个商品的信息，并通过 `join` 连接成一个完整的字符串  
+      const itemsString = items.map((item, index) => {
+        return `第 ${index + 1} 件物品:<br>  
+编号: ${item.itemNumber}<br>  
+名称: ${item.itemName}<br>  
+尺码: ${item.specification}<br>  
+单价: ${item.price.toFixed(2)} 元<br>  
+数量: ${item.quantity}`;
+      }).join('<br><br>'); // 用两个换行符分隔每件物品的信息  
+
+      return `
+    <tr>
+      <td><input type="checkbox" class="record-checkbox" data-id="${item.objectId}"></td>   
+      <td>${item.userName}</td>  
+      <td>${item.Number}</td>  
+      <td>${itemsString}</td>  
+      <td>${item.Cost}</td>  
+      <td>${formattedDate1}</td>
+      <td>${formattedDate2}</td>  
+      <td>${item.shenhezhuangtai}</td>
+      <td><button onclick="SingleReject('${item.objectId}')" class="btn-change">退回</button></td>  
+    </tr>
+  `;
+    }
+
+
+// 删除服装信息  
+async function SingleReject(id) {
+
+      // 获取当前行的记录ID  
+      const recordId = id;  
+      
+      // 确认对话框  
+      const confirmReject = confirm('确定要退回此订单记录吗？');  
+      if (!confirmReject) return;  
+
+      try {  
+        const response = await fetch('/shenhe/singleReject', {  
+          method: 'POST',  
+          headers: {  
+            'Content-Type': 'application/json'  
+          },  
+          body: JSON.stringify({ recordId: recordId })  
+        });  
+
+        const result = await response.json();  
         
-    // 提交审核操作到后端  
-    fetch(`/shenhe/update_kuchun/`, {  
-        method: 'PUT',  
-        headers: { 'Content-Type': 'application/json' },  
-        body: JSON.stringify(tongbukuchun) // 传递物品 ID、用户 ID 和申领数量  
-    })  
-        .then(response => {  
-            if (response.ok) {  
-                alert('同步更新库存成功！');  
-                loadShenhe(); // 刷新物品列表  
-            } else {  
-                return response.json().then(err => { throw new Error(err.error); });  
-            }  
-        })  
-        .catch(error => {  
-            console.error('同步更新库存失败:', error);  
-            alert(`同步更新库存失败: ${error.message}`);  
-        });         
+        if (result.success) {  
+          loadShenhe();
+          loadYiShenhe();           
+          alert('订单已退回！');  
+        } else {  
+          alert(result.error);  
+        }  
+      } catch (error) {  
+        console.error('订单退回失败:', error);  
+        alert('订单退回失败！');  
+      }  
+    };   
 
 
-} 
+function BatchReject() {
+
+      const checkboxes = document.querySelectorAll('.record-checkbox:checked');  
+      
+      // 收集选中的记录ID  
+      const selectedIds = Array.from(checkboxes).map(checkbox => checkbox.dataset.id); 
+      
+      console.log(selectedIds);
+
+      // 检查是否选择了记录  
+      if (selectedIds.length === 0) {  
+        alert('请选择要退回的订单记录');  
+        return;  
+      }  
+
+      // 确认对话框  
+      const confirmBatchReject = confirm(`确定要退回选中的 ${selectedIds.length} 条订单记录吗？`);  
+      if (!confirmBatchReject) return;  
+
+      // 发送批量退回请求  
+      fetch('/shenhe/batchReject', {  
+        method: 'POST',  
+        headers: {  
+          'Content-Type': 'application/json'  
+        },  
+        body: JSON.stringify({ recordIds: selectedIds })  
+      })  
+      .then(response => response.json())  
+      .then(result => {  
+        if (result.success) {  
+          loadShenhe();
+          loadYiShenhe();  
+          alert(`成功退回 ${result.total} 条订单！`);  
+        } else {  
+          alert(result.error);  
+        }  
+      })  
+      .catch(error => {  
+        console.error('订单批量退回失败:', error);  
+        alert('订单批量退回失败');  
+      });  
+    };  
+
+
+    // 点击模态窗口外部关闭模态窗口  
+    window.onclick = function (event) {
+      const modal = document.getElementById('reportModal');
+      if (event.target == modal) {
+        modal.style.display = 'none';
+      }
+    };
+
+    document.getElementById('checkoutBtn').addEventListener('click', approveSelectedOrders);
+    document.getElementById('approveAllBtn').addEventListener('click', approveAllOrders);
+
+    document.getElementById('rejectSelectedBtn').addEventListener('click', rejectSelectedOrders);
+    document.getElementById('rejectAllBtn').addEventListener('click', rejectAllOrders);
+
+
+
+    let rejectOrderIds = []; // 保存要拒绝的订单编号  
+
+    // 审核通过已选订单  
+    function approveSelectedOrders() {
+      const selectedCheckboxes = document.querySelectorAll('.item-checkbox:checked');
+      if (selectedCheckboxes.length === 0) {
+        alert('请选择要审核的订单！');
+        return;
+      }
+
+      const selectedOrders = Array.from(selectedCheckboxes).map(checkbox => checkbox.dataset.number);
+
+      // 发送请求  
+      fetch('/shenhe/approve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orders: selectedOrders, status: '已审核' }) // 审核通过  
+      })
+        .then(response => response.json())
+        .then(result => {
+          if (result.success) {
+            alert('选中订单已审核通过！');
+            loadShenhe(); // 刷新未审核列表  
+            loadYiShenhe(); // 刷新已审核列表  
+          } else {
+            alert('审核失败：' + result.error);
+          }
+        })
+        .catch(err => {
+          console.error(err);
+          alert('审核请求失败！');
+        });
+    }
+
+    // 审核通过所有订单  
+    function approveAllOrders() {
+
+      if (!confirm('确定要审核通过所有订单吗？')) return;
+
+      fetch('/shenhe/approveAll', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: '已审核' }) // 审核通过  
+      })
+        .then(response => response.json())
+        .then(result => {
+          if (result.success) {
+            alert('所有订单已审核通过！');
+            loadShenhe();
+            loadYiShenhe();
+          } else {
+            alert('审核失败：' + result.error);
+          }
+        })
+        .catch(err => {
+          console.error(err);
+          alert('审核请求失败！');
+        });
+    }
+
+    // 审核不通过已选订单  
+    function rejectSelectedOrders() {
+      const selectedCheckboxes = document.querySelectorAll('.item-checkbox:checked');
+      if (selectedCheckboxes.length === 0) {
+        alert('请选择要拒绝的订单！');
+        return;
+      }
+
+      rejectOrderIds = Array.from(selectedCheckboxes).map(checkbox => checkbox.dataset.number);
+
+      // 显示输入原因弹框  
+      openRejectReasonModal();
+    }
+
+    // 审核不通过所有订单  
+    function rejectAllOrders() {
+      
+      if (!confirm('确定要审核不通过所有订单吗？')) return;
+
+      rejectOrderIds = []; // 清空要拒绝的订单 ID  
+
+      fetch('/shenhe/list') // 获取所有未审核订单  
+        .then(response => response.json())
+        .then(data => {
+          data.forEach(item => rejectOrderIds.push(item.Number));
+          openRejectReasonModal(); // 显示原因弹框  
+        })
+        .catch(err => console.error(err));
+    }
+
+    // 显示输入原因模态框  
+    function openRejectReasonModal() {
+      const modal = document.getElementById('rejectReasonModal');
+      modal.style.display = 'block';
+
+      // 绑定模态框按钮事件  
+      document.getElementById('confirmRejectBtn').onclick = () => {
+        const reason = document.getElementById('rejectReasonInput').value.trim();
+        if (!reason) {
+          alert('请输入不通过原因！');
+          return;
+        }
+
+        // 发送请求  
+        fetch('/shenhe/approve', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ orders: rejectOrderIds, status: `未通过(${reason})` })
+        })
+          .then(response => response.json())
+          .then(result => {
+            if (result.success) {
+              alert('选中订单已标记为未通过！');
+              loadShenhe();
+              loadYiShenhe();
+            } else {
+              alert('操作失败：' + result.error);
+            }
+          })
+          .catch(err => {
+            console.error(err);
+            alert('操作请求失败！');
+          });
+
+        closeRejectReasonModal();
+      };
+
+      document.getElementById('cancelRejectBtn').onclick = closeRejectReasonModal;
+    }
+
+    // 关闭输入原因模态框  
+    function closeRejectReasonModal() {
+      const modal = document.getElementById('rejectReasonModal');
+      modal.style.display = 'none';
+      document.getElementById('rejectReasonInput').value = ''; // 清空输入框  
+    }
+
+
+    // 显示报表模态窗口  
+    function showReportModal() {
+      document.getElementById('reportModal').style.display = 'block';
+      document.getElementById('modalBackdrop').style.display = 'block';
+    }
+
+
+
+    // 关闭报表模态窗口  
+    function closeReportModal() {
+      document.getElementById('reportModal').style.display = 'none';
+      document.getElementById('modalBackdrop').style.display = 'none';
+    }
+
+
+    // 生成报表时收集所有筛选条件  
+    function generateReport() {
+      const outputFormatElement = document.querySelector('input[name="outputFormat"]:checked').value;
+      // 基本参数 
+      const params = {};
+      params.number = document.getElementById('itemNumberSearch').value;
+      params.name = document.getElementById('itemNameSearch').value;
+      params.itemInfoSearch = document.getElementById('itemInfoSearch').value;
+      params.startyear = document.getElementById('itemStartYearSearch').value;
+      params.endyear = document.getElementById('itemEndYearSearch').value;
+      params.shenhestartyear = document.getElementById('shenheStartYearSearch').value;
+      params.shenheendyear = document.getElementById('shenheEndYearSearch').value;
+
+      let minprice = document.getElementById('minPriceSearch').value;  
+      let maxprice = document.getElementById('maxPriceSearch').value;  
+
+      // 智能处理价格范围  
+      params.minprice = minprice === '' ? 0 :Number(minprice);  
+    
+      // 空值时设置为无穷大，而不是0  
+      params.maxprice = maxprice === '' ? Number.MAX_SAFE_INTEGER : Number(maxprice);
+      
+      params.state = document.getElementById('StateSearch').value;
+
+      // 添加排序参数  
+      params.sortField = document.getElementById('sortField').value;
+      params.sortOrder = document.getElementById('sortOrder').value;
+
+      // 请求报表数据  
+      fetch('/shenhe_reports/generate?' + new URLSearchParams(params))
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            if (outputFormatElement === 'print') {
+              displayPrintableReport(data.report);
+            } else if (outputFormatElement === 'pdf') {
+              downloadReportPDF(data.report);
+            } else if (outputFormatElement === 'excel') {
+              downloadReportExcel(data.report);
+            }
+          } else {
+            alert('生成报表失败：' + data.error);
+          }
+        })
+        .catch(err => {
+          console.error('报表生成失败:', err);
+          alert('报表生成失败，请稍后重试');
+        });
+
+      // 关闭模态窗口  
+      closeReportModal();
+    }
+
+    // 显示可打印的报表  
+    function displayPrintableReport(report) {
+      // 创建打印容器  
+      const printContainer = document.createElement('div');
+      printContainer.className = 'print-container';
+      printContainer.id = 'printableReport';
+
+      // 添加报表头部  
+      const header = document.createElement('div');
+      header.className = 'print-header';
+      header.innerHTML = `  
+    <h1>订单审核信息统计表</h1>  
+  `;
+      printContainer.appendChild(header);
+
+      // 添加报表内容  
+      const content = document.createElement('div');
+      content.className = 'print-content';
+      content.innerHTML = generateReportTable(report);
+      printContainer.appendChild(content);
+
+      // 添加打印信息（放在表格下方）  
+      const printInfo = document.createElement('div');
+      printInfo.className = 'print-info';
+
+      // 从 EJS 变量中获取当前登录用户的用户名  
+      const username = currentUser.username; // 假设已从后端传递到全局变量
+
+      // 发起请求查询
+      fetch(`/gerenxinxiguanli/fetch?number=${username}`)
+        .then(res => res.json())
+        .then(result => {
+          if (result.success) {
+            // 存在记录，自动填充表单  
+            const data = result.data;
+            if (currentUser && data.name) {
+              printInfo.innerHTML = `  
+    <div class="print-info-container" style="display: flex; gap: 20px;">  
+      <div class="print-date">打印日期：${new Date().toLocaleDateString()}</div>  
+      <div class="print-user">打印人：${data.name || '系统管理员'}</div>  
+    </div>  
+  `;
+              printContainer.appendChild(printInfo);
+              return;
+            }
+          }
+        });
+
+      // 添加报表底部（仅包含操作按钮）  
+      const footer = document.createElement('div');
+      footer.className = 'print-footer';
+      footer.innerHTML = `  
+    <div class="no-print action-buttons">  
+      <button onclick="printReportIframe()" class="button">打印此页</button>  
+      <button onclick="closeReport()" class="button button-secondary">关闭</button>  
+    </div>  
+  `;
+      printContainer.appendChild(footer);
+
+      // 添加必要的样式  
+      const style = document.createElement('style');
+      style.textContent = `  
+  .action-buttons {  
+    display: flex !important;  
+    justify-content: flex-end !important;  
+    gap: 10px;  
+    width: 100%;  
+  }  
+  
+  /* 重置可能影响对齐的样式 */  
+  .print-footer {  
+    width: 100%;  
+    box-sizing: border-box;  
+  }  
+  
+  .no-print {  
+    width: 100%;  
+  }  
+`;
+      document.head.appendChild(style);
+
+
+      // 添加到文档中  
+      document.body.appendChild(printContainer);
+    }
+
+    // 使用iframe打印  
+    function printReportIframe() {
+      // 获取要打印的内容  
+      const printContent = document.getElementById('printableReport');
+
+      // 创建一个新的iframe  
+      const iframe = document.createElement('iframe');
+      iframe.style.display = 'none';
+      document.body.appendChild(iframe);
+
+      // 获取iframe的文档  
+      const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+
+      // 写入基本HTML结构  
+      iframeDoc.write(`  
+    <!DOCTYPE html>  
+    <html>  
+    <head>  
+      <title>订单审核信息统计表</title>  
+      <style>  
+        /* 重置样式 */  
+        body, html {  
+          margin: 0;  
+          padding: 0;  
+          font-family: Arial, sans-serif;  
+        }  
+        
+        /* 报表样式 */  
+        .print-content {  
+          padding: 10mm;  
+        }  
+        
+        .print-header {  
+          text-align: center;  
+          margin-bottom: 15mm;  
+        }  
+        
+        /* 打印信息样式 - 新增 */  
+        .print-info {  
+          padding: 0 10mm;  
+          margin-top: 10mm;  
+        }  
+        
+        .print-info-container {  
+          display: flex;  
+          justify-content: space-between;  
+          border-top: 1px solid #ddd;  
+          padding-top: 5mm;  
+        }  
+        
+        .print-date, .print-user {  
+          font-size: 10pt;  
+        }  
+        
+        .print-footer {  
+          text-align: center;  
+          margin-top: 10mm;  
+        }  
+        
+        /* 表格样式 */  
+        table {  
+          width: 100%;  
+          border-collapse: collapse;  
+        }  
+        
+        th, td {  
+          border: 1px solid #333;  
+          padding: 3mm;  
+          text-align: center;  
+        }  
+        
+        th {  
+          background-color: #f2f2f2;  
+        }  
+        
+        /* 隐藏不打印的元素 */  
+        .no-print {  
+          display: none;  
+        }  
+        
+        /* 页码样式 */  
+        .page-number {  
+          position: absolute;  
+          bottom: 5mm;  
+          width: 100%;  
+          text-align: center;  
+          font-size: 10pt;  
+        }  
+        
+        /* 控制分页 */  
+        .page-break {  
+          page-break-after: always;  
+        }  
+        
+        @page {  
+          margin: 10mm;  
+        }  
+      </style>  
+    </head>  
+    <body>  
+      ${printContent.innerHTML.replace(/<div class="no-print">.*?<\/div>/g, '')}  
+    </body>  
+    </html>  
+  `);
+
+      iframeDoc.close();
+
+      // 等待图片加载完成  
+      setTimeout(() => {
+        // 打印iframe内容  
+        iframe.contentWindow.focus();
+        iframe.contentWindow.print();
+
+        // 打印后删除iframe  
+        setTimeout(() => {
+          document.body.removeChild(iframe);
+        }, 1000);
+      }, 500);
+    }
+
+    // 关闭报表  
+    function closeReport() {
+      const container = document.getElementById('printableReport');
+      if (container) {
+        document.body.removeChild(container);
+      }
+    }
+
+
+    // 生成报表表格HTML  
+    function generateReportTable(report) {
+
+      let tableHTML = '<table class="print-table">';
+
+      // 根据报表生成表头  
+      tableHTML += `  
+      <thead>  
+        <tr> 
+            <th>用户姓名</th>
+            <th>订单编号</th>
+            <th>订单信息</th>
+            <th>订单金额</th>
+            <th>订单时间</th>
+            <th>审核时间</th>
+            <th>审核状态</th>
+        </tr>  
+      </thead>  
+      <tbody>  
+    `;
+
+      report.forEach(item => {
+
+      // 使用格式化函数
+      // 创建 Date 对象  
+      const date1 = new Date(item.Time);        
+      const formattedDate1 = date1.toLocaleString('zh-CN'); // 根据需要格式化为字符串
+      
+      let formattedDate2;
+
+      if (item.ShenheTime && item.ShenheTime!== 0){
+        const date2 = new Date(item.ShenheTime);  
+        formattedDate2 = date2.toLocaleString('zh-CN'); // 根据需要格式化为字符串
+      }else{
+        formattedDate2 ='审核中，请稍后！';
+      };
+
+        // 从字符串解析为对象数组  
+        const items = JSON.parse(item.Info);
+        // 使用数组 `map` 构建每个商品的信息，并通过 `join` 连接成一个完整的字符串  
+        const itemsString = items.map((item2, index) => {
+          return `第 ${index + 1} 件物品:<br>  
+编号: ${item2.itemNumber}<br>  
+名称: ${item2.itemName}<br>  
+尺码: ${item2.specification}<br>  
+单价: ${item2.price.toFixed(2)} 元<br>  
+数量: ${item2.quantity}`;
+        }).join('<br><br>'); // 用两个换行符分隔每件物品的信息
+
+        tableHTML += `  
+        <tr> 
+        <td>${item.userName}</td>  
+        <td>${item.Number}</td>
+        <td>${itemsString}</td> 
+        <td>${item.Cost || ''}</td>          
+        <td>${formattedDate1 || ''}</td>  
+        <td>${formattedDate2 || ''}</td>  
+        <td>${item.shenhezhuangtai || ''}</td>  
+        </tr>  
+      `;
+      });
+
+      tableHTML += '</tbody></table>';
+      return tableHTML;
+    }
+
+    // 下载PDF报表  
+    async function downloadReportPDF(report) {
+      // 创建PDF文档  
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+
+      // 加载字体  
+      const fontPath = '/fonts/SourceHanSans-Regular.ttf'; // 确保字体文件路径正确  
+      const fontRes = await fetch(fontPath);
+      if (!fontRes.ok) throw new Error('字体文件未找到');
+
+      const fontBlob = await fontRes.arrayBuffer();
+
+      // 使用适当的方法转换为 Base64 字符串  
+      const fontBase64 = arrayBufferToBase64(fontBlob); // 转换为 Base64 
+
+      // 添加字体到 jsPDF  
+      doc.addFileToVFS('SourceHanSans-Regular.ttf', fontBase64);
+      doc.addFont('SourceHanSans-Regular.ttf', 'SourceHanSans', 'normal');
+      doc.setFont('SourceHanSans');
+
+
+      // 设置标题  
+      const title = '订单审核信息统计表';
+      doc.setFontSize(18);
+      doc.text(title, 105, 15, { align: 'center' });
+
+      // 设置表格列  
+      let columns = [];
+      let rows = [];
+      let formattedDate1=[];
+      let formattedDate2=[];
+
+      columns = [
+        { header: '用户姓名', dataKey: 'userName' },
+        { header: '订单编号', dataKey: 'Number' },
+        { header: '订单信息', dataKey: 'Info' },
+        { header: '订单金额', dataKey: 'Cost' },
+        { header: '订单时间', dataKey: 'Time' },
+        { header: '审核时间', dataKey: 'ShenheTime' },        
+        { header: '审核状态', dataKey: 'shenhezhuangtai' }
+      ];
+
+
+      // 将报表数据转换为行数据  
+      rows = report.map(item => {
+        const row = {};
+        columns.forEach(col => {
+          // 使用nullish合并运算符 (??)，只会在值为null或undefined时使用后面的值
+          if (col.dataKey == 'Info') {
+            // 转换为指定格式  
+            // 从字符串解析为对象数组  
+            const items = JSON.parse(item.Info);
+
+            // 使用数组 `map` 构建每个商品的信息，并通过 `join` 连接成一个完整的字符串  
+            const itemsString = items.map((item2, index) => {
+              return `第${index + 1}件物品: 
+编号: ${item2.itemNumber}  
+名称: ${item2.itemName}  
+尺码: ${item2.specification}  
+单价: ${item2.price.toFixed(2)} 元 
+数量: ${item2.quantity}`;
+            }).join('\n\n'); // 用两个换行符分隔每件物品的信息  
+
+           row[col.dataKey] = itemsString;
+
+          } else if (col.dataKey == 'Time'){
+
+            const date1 = new Date(item.Time);
+            formattedDate1 = date1.toLocaleString('zh-CN'); // 根据需要格式化为字符串
+            row[col.dataKey] = formattedDate1;
+
+      } else if (col.dataKey == 'ShenheTime'){
+            
+        if (item.ShenheTime && item.ShenheTime !== 0){
+        const date2 = new Date(item.ShenheTime);  
+        formattedDate2 = date2.toLocaleString('zh-CN'); // 根据需要格式化为字符串
+        row[col.dataKey] = formattedDate2;
+      }
+
+      else{
+        formattedDate2 ='审核中，请稍后！';
+        row[col.dataKey] = formattedDate2;
+        
+      };
+
+        }else{
+
+            row[col.dataKey] = item[col.dataKey] ?? '';
+
+          }
+        });
+        return row;
+      });
+
+      // 保存上次表格结束的位置  
+      let lastY = 0;
+
+      // 生成PDF表格  
+      doc.autoTable({
+        startY: 35,
+        head: [columns.map(col => col.header)],
+        body: rows.map(row => columns.map(col => row[col.dataKey])),
+        theme: 'grid',
+        headStyles: {
+          fillColor: [41, 128, 185],
+          textColor: 255,
+          fontSize: 12,
+          halign: 'center'
+        },
+        margin: { top: 30 },
+        styles: {
+          font: "SourceHanSans",
+          fontSize: 12,
+          cellPadding: 3,
+          valign: 'middle',
+          halign: 'center'
+        },
+        columnStyles: {  
+    // 订单编号列（第2列）设置较窄的宽度  
+    1: { cellWidth: 30 },  
+    // 订单信息列（第3列）设置较宽的宽度  
+    2: {   
+      cellWidth: 80,  // 增加订单信息列的宽度  
+      // 确保多行文本正确换行  
+      cellPadding: {  
+        top: 3,  
+        bottom: 3,  
+        left: 3,  
+        right: 3  
+      }  
+    }  
+  },  
+        didDrawPage: (data) => {
+          // 保存表格结束位置  
+          lastY = data.cursor.y;
+        }
+      });
+
+      // 添加页脚  
+      const pageCount = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        // 确保设置字体后再添加日期文本  
+        doc.setFont('SourceHanSans');
+        doc.setPage(i);
+        doc.setFontSize(10);
+        doc.text(`第${i}页/共${pageCount}页`, 105, doc.internal.pageSize.height - 10, { align: 'center' });
+
+        // 只在最后一页的表格下方添加日期和打印人信息  
+        if (i === pageCount) {
+          // 确保设置字体  
+          doc.setFont('SourceHanSans');
+          doc.setFontSize(10);
+
+          // 在表格下方添加日期和打印人信息  
+          const footerY = lastY + 15; // 表格结束位置下方15mm  
+
+          // 左侧添加打印日期  
+          doc.text(`打印日期:${new Date().toLocaleDateString()}`, 15, footerY);
+
+
+          // 从 EJS 变量中获取当前登录用户的用户名  
+          const username = currentUser.username; // 假设已从后端传递到全局变量
+
+          // 调用生成函数并在完成后输出PDF  
+          generatePDF(doc, username, footerY).then(finalDoc => {
+            // 下载PDF  
+            finalDoc.save(`${title}-${new Date().toISOString().split('T')[0]}.pdf`);
+          }).catch(error => {
+            console.error('PDF生成过程中出错:', error);
+          });
+        }
+
+      }
+    }
+
+
+    function generatePDF(doc, username, footerY) {
+      return new Promise((resolve, reject) => {
+        // 左侧添加打印日期  
+        doc.text(`打印日期:${new Date().toLocaleDateString()}`, 15, footerY);
+
+        fetch(`/gerenxinxiguanli/fetch?number=${username}`)
+          .then(res => res.json())
+          .then(result => {
+            if (result.success && result.data && result.data.name) {
+              // 右侧添加打印人  
+              doc.text(`打印人:${result.data.name}`, 50, footerY);
+            } else {
+              // 如果没有获取到名字，使用默认名称  
+              doc.text(`打印人:系统管理员`, 50, footerY);
+            }
+            resolve(doc); // 返回修改后的doc对象  
+          })
+          .catch(err => {
+            console.error('获取用户信息失败:', err);
+            // 出错时也添加默认打印人  
+            doc.text(`打印人:系统管理员`, 50, footerY);
+            resolve(doc); // 尽管有错误，仍然返回doc对象  
+          });
+      });
+    }
+
+
+    // 提供转换 ArrayBuffer 为 Base64 字符串的方法  
+    function arrayBufferToBase64(buffer) {
+      let binary = '';
+      const bytes = new Uint8Array(buffer);
+      const len = bytes.byteLength;
+      for (let i = 0; i < len; i++) {
+        binary += String.fromCharCode(bytes[i]);
+      }
+      return window.btoa(binary); // 使用 window.btoa 将字符串转为 Base64  
+    }
+
+
+    // 下载Excel报表  
+    function downloadReportExcel(report) {
+
+      // 设置表格标题行  
+      let headers = [];
+      const title = '订单审核信息统计表';
+
+      headers = ['用户姓名', '订单编号', '订单信息', '订单金额', '订单时间', '审核时间', '审核状态'];
+
+      // 准备数据行，添加标题行  
+      const rows = [];
+
+      // 添加标题行（第一行，后面会合并单元格）  
+      rows.push([title]);
+
+      // 第二行添加表头  
+      rows.push(headers);
+
+      report.forEach(item => {
+
+      // 使用格式化函数
+      // 创建 Date 对象  
+      const date1 = new Date(item.Time);        
+      const formattedDate1 = date1.toLocaleString('zh-CN'); // 根据需要格式化为字符串
+      
+      let formattedDate2;
+
+      if (item.ShenheTime && item.ShenheTime!== 0){
+        const date2 = new Date(item.ShenheTime);  
+        formattedDate2 = date2.toLocaleString('zh-CN'); // 根据需要格式化为字符串
+      }else{
+        formattedDate2 ='审核中，请稍后！';
+      };
+
+            // 从字符串解析为对象数组  
+            const items = JSON.parse(item.Info);
+            // 使用数组 `map` 构建每个商品的信息，并通过 `join` 连接成一个完整的字符串  
+            const itemsString = items.map((item2, index) => {
+              return `第 ${index + 1} 件物品:  
+编号: ${item2.itemNumber} 
+名称: ${item2.itemName}  
+尺码: ${item2.specification}  
+单价: ${item2.price.toFixed(2)} 元  
+数量: ${item2.quantity}`;
+            }).join('\n'); // 用两个换行符分隔每件物品的信息  
+
+
+        rows.push([
+          item.userName || '',
+          item.Number || '',
+          itemsString || '',
+          item.Cost || '',
+          formattedDate1 || '',
+          formattedDate2 || '',
+          item.shenhezhuangtai || ''
+        ]);
+      });
+
+      // 添加空行  
+      rows.push([]);
+
+      // 为最后一行的每个单元格填充空值以保证所有列都存在  
+      const printInfoRow = [];
+      for (let i = 0; i < headers.length; i++) {
+        printInfoRow.push('');
+      }
+
+      // 设置打印日期和打印人信息  
+      printInfoRow[0] = `打印日期:${new Date().toLocaleDateString()}`;
+      rows.push(printInfoRow);
+
+      // 获取打印人信息 - 使用Promise  
+      const username = currentUser.username; // 假设已从后端传递到全局变量  
+
+      // 使用fetch获取用户信息，并在回调中处理生成Excel  
+      fetch(`/gerenxinxiguanli/fetch?number=${username}`)
+        .then(response => response.json())
+        .then(result => {
+          // 设置打印人信息 - 使用中间位置作为起始点  
+          const halfLength = Math.floor(headers.length / 2);
+          if (result.success && result.data && result.data.name) {
+            rows[rows.length - 1][halfLength] = `打印人:${result.data.name}`;
+          } else {
+            rows[rows.length - 1][halfLength] = `打印人:系统管理员`;
+          }
+
+          // 生成Excel文件(在确保获取到打印人信息后)  
+          generateAndDownloadExcel(rows, headers, title);
+        })
+        .catch(error => {
+          console.error('获取用户信息失败:', error);
+          // 发生错误时设置默认打印人  
+          const halfLength = Math.floor(headers.length / 2);
+          rows[rows.length - 1][halfLength] = `打印人:系统管理员`;
+          // 错误时也能生成Excel  
+          generateAndDownloadExcel(rows, headers, title);
+        });
+
+
+      // 将Excel生成和下载逻辑移到单独的函数  
+      function generateAndDownloadExcel(rows, headers, title) {
+
+        // 创建工作表  
+        const ws = XLSX.utils.aoa_to_sheet(rows);
+        // 设置合并单元格 - 将标题行合并  
+        // 合并区域格式为 {s: {c: 起始列, r: 起始行}, e: {c: 结束列, r: 结束行}}  
+        const merge = {
+          s: { c: 0, r: 0 }, // 起始位置：第1行，第1列  
+          e: { c: headers.length - 1, r: 0 } // 结束位置：第1行，最后一列  
+        };
+
+        // 如果没有合并单元格数组，则创建一个  
+        if (!ws['!merges']) ws['!merges'] = [];
+
+        // 添加合并区域  
+        ws['!merges'].push(merge);
+
+        // 确定打印信息行的行号  
+        const printInfoRow = rows.length - 1;
+
+        // 计算中间位置  
+        const halfLength = Math.floor(headers.length / 2);
+
+        // 设置打印日期的合并单元格（左半部分）  
+        const dateMerge = {
+          s: { c: 0, r: printInfoRow }, // 起始位置：最后一行，第1列  
+          e: { c: halfLength - 1, r: printInfoRow } // 结束位置：最后一行，中间位置-1  
+        };
+        ws['!merges'].push(dateMerge);
+
+        // 设置打印人的合并单元格（右半部分）  
+        const userMerge = {
+          s: { c: halfLength, r: printInfoRow }, // 起始位置：最后一行，中间位置  
+          e: { c: headers.length - 1, r: printInfoRow } // 结束位置：最后一行，最后一列  
+        };
+        ws['!merges'].push(userMerge);
+
+        // === 根据每列内容自动调整列宽 ===  
+        // 初始化列宽数组，每列至少有一个最小宽度  
+        const colWidths = Array(headers.length).fill().map(() => ({ wch: 8 }));
+
+        // 首先考虑表头的宽度  
+        headers.forEach((header, idx) => {
+          const headerWidth = getStringWidth(header);
+          colWidths[idx].wch = headerWidth;
+        });
+
+        // 遍历每一行数据，找出每列中最宽的内容  
+        for (let r = 2; r < rows.length - 1; r++) {  // 从数据行开始，跳过标题和表头  
+          for (let c = 0; c < headers.length; c++) {
+            if (rows[r][c] !== undefined && rows[r][c] !== null) {
+              // 获取内容宽度  
+              const cellWidth = getStringWidth(rows[r][c].toString());
+              // 更新列宽，只有当内容宽度大于当前列宽时才更新  
+              if (cellWidth > colWidths[c].wch) {
+                colWidths[c].wch = cellWidth;
+              }
+            }
+          }
+        }
+
+        // 检查打印信息行的宽度需求  
+        const printDateText = rows[printInfoRow][0] || '';
+        const printUserText = rows[printInfoRow][halfLength] || '';
+
+        // 左半边（打印日期）需要的总宽度  
+        const dateInfoWidth = getStringWidth(printDateText);
+        // 右半边（打印人）需要的总宽度  
+        const userInfoWidth = getStringWidth(printUserText);
+
+        // 计算当前左半边列的总宽度  
+        let leftTotalWidth = 0;
+        for (let i = 0; i < halfLength; i++) {
+          leftTotalWidth += colWidths[i].wch;
+        }
+
+        // 计算当前右半边列的总宽度  
+        let rightTotalWidth = 0;
+        for (let i = halfLength; i < headers.length; i++) {
+          rightTotalWidth += colWidths[i].wch;
+        }
+
+        // 如果打印日期需要更多空间，适当调整左半部分的列宽  
+        if (dateInfoWidth > leftTotalWidth && halfLength > 0) {
+          const extraWidthPerCol = Math.ceil((dateInfoWidth - leftTotalWidth) / halfLength);
+          for (let i = 0; i < halfLength; i++) {
+            colWidths[i].wch += extraWidthPerCol;
+          }
+        }
+
+        // 如果打印人需要更多空间，适当调整右半部分的列宽  
+        if (userInfoWidth > rightTotalWidth && (headers.length - halfLength > 0)) {
+          const extraWidthPerCol = Math.ceil((userInfoWidth - rightTotalWidth) / (headers.length - halfLength));
+          for (let i = halfLength; i < headers.length; i++) {
+            colWidths[i].wch += extraWidthPerCol;
+          }
+        }
+
+        // 为所有列增加一些边距  
+        colWidths.forEach((col) => {
+          col.wch += 4; // 增加4个字符的边距（左右各2个）  
+        });
+
+        // 设置最终的列宽  
+        ws['!cols'] = colWidths;
+
+        // 设置标题单元格样式  
+        // 详细的样式定义  
+        const styles = {
+          title: {
+            font: {
+              name: '宋体',
+              sz: 16,
+              color: { rgb: "FFFFFF" },
+              bold: true
+            },
+            fill: {
+              fgColor: { rgb: "0070C0" }
+            },
+            alignment: {
+              horizontal: "center",
+              vertical: "center"
+            }
+            // 移除了边框样式  
+          },
+          header: {
+            font: {
+              name: '宋体',
+              sz: 12,
+              bold: true
+            },
+            fill: {
+              fgColor: { rgb: "DDDDDD" }
+            },
+            alignment: {
+              horizontal: "center",
+              vertical: "center"
+            },
+            border: {
+              top: { style: "thin", color: { rgb: "000000" } },
+              bottom: { style: "thin", color: { rgb: "000000" } },
+              left: { style: "thin", color: { rgb: "000000" } },
+              right: { style: "thin", color: { rgb: "000000" } }
+            }
+          },
+          cell: {
+            alignment: {
+              horizontal: "center",
+              vertical: "center"
+            },
+            border: {
+              top: { style: "thin", color: { rgb: "000000" } },
+              bottom: { style: "thin", color: { rgb: "000000" } },
+              left: { style: "thin", color: { rgb: "000000" } },
+              right: { style: "thin", color: { rgb: "000000" } }
+            }
+          },
+          footerInfo: {
+            font: {
+              name: '宋体',
+              sz: 10,
+              bold: true
+            },
+            alignment: {
+              horizontal: "left",
+              vertical: "center"
+            }
+          }
+        };
+
+        // 应用样式到单元格  
+        ws['A1'].s = styles.title;
+        // 为表头行（第2行）的每一列设置样式  
+        for (let i = 0; i < headers.length; i++) {
+          // 将列索引转换为Excel列标识 (A2, B2, C2...)  
+          const cellRef = XLSX.utils.encode_cell({ c: i, r: 1 }); // r=1 是第二行
+          // 确保单元格存在  
+          if (!ws[cellRef]) ws[cellRef] = {};
+          if (!ws[cellRef].s) ws[cellRef].s = {};
+          ws[cellRef].s = styles.header;
+        }
+
+        // 为数据行应用样式  
+        for (let row = 3; row < rows.length + 2; row++) {
+          for (let col = 0; col < headers.length; col++) {
+            const cellAddress = XLSX.utils.encode_cell({ r: row - 1, c: col });
+            if (ws[cellAddress]) {
+              ws[cellAddress].s = styles.cell;
+            }
+          }
+        }
+
+        // 为打印信息行的所有单元格应用无边框样式  
+        for (let col = 0; col < headers.length; col++) {
+          const cellAddress = XLSX.utils.encode_cell({ r: printInfoRow, c: col });
+          if (!ws[cellAddress]) ws[cellAddress] = { v: "" };
+          ws[cellAddress].s = styles.footerInfo;
+        }
+
+
+        // 创建工作簿  
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, title);
+
+        // 生成Excel文件并下载  
+        const fileName = `${title}-${new Date().toISOString().split('T')[0]}.xlsx`;
+        XLSX.writeFile(wb, fileName);
+      }
+    }
+
+
+    // === 添加一个辅助函数来计算字符串宽度 ===  
+    function getStringWidth(str) {
+      if (!str) return 0;
+      let width = 0;
+      for (let i = 0; i < str.length; i++) {
+        // 中文字符和全角符号占用更多宽度  
+        if (str.charCodeAt(i) > 127) {
+          width += 2.2;  // 中文字符宽度系数  
+        } else {
+          width += 1.1;  // 英文字符宽度系数  
+        }
+      }
+      // 添加一些内边距  
+      return Math.ceil(width) + 2;
+    }
 
 
   </script>
 </body>
+
 </html>

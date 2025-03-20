@@ -5,7 +5,10 @@ const router = express.Router();
 const AV = require('leancloud-storage');  
 
 // 用户管理界面  
-router.get('/users', (req, res) => {  
+router.get('/users', (req, res) => {
+    if (!req.session.user) {  
+        return res.redirect('/login');  
+    }    
     res.render('admin/users');  // 渲染 views/admin/users.ejs  
 });  
 

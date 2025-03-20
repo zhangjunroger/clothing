@@ -1,426 +1,1746 @@
-<!DOCTYPE html>  
-<html lang="zh-CN">  
-<head>  
-  <meta charset="UTF-8">  
-  <title>消防员信息管理</title>  
-  <style>  
-    .container {  
-      width: 90%;  
-      margin: 0 auto;  
-    }  
-    h1, h2 {  
-      text-align: center;  
-    }  
-    table {  
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <title>实力管理</title>
+  <script>
+    const currentUser = <%- JSON.stringify(user || {}) %>; // 在页面顶部定义    
+  </script>
+  <!-- 引入Tailwind CSS（仅开发环境示例） -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <!-- 1. 引入某款艺术字体（示例：Amatic SC） -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@700&display=swap" />
+
+  <!-- PDF生成库 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+
+  <!-- Excel生成库 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+
+<style>
+  /* 背景图片样式 */
+  body {
+    background-image: url('/images/background.jpg');
+    /* 背景图片路径 */
+    background-size: cover;
+    /* 图片适应屏幕大小 */
+    background-repeat: no-repeat;
+    /* 不重复平铺 */
+    background-position: center;
+    /* 居中显示 */
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    /* 占满整个视口高度 */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .fancy-font {
+    font-family: 'Amatic SC', cursive;
+    /* cursive等用于回退 */
+  }
+
+
+  /* 背景遮罩 */
+  .modal-backdrop {
+    display: none;
+    /* 默认隐藏 */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    /* 过渡动画可选 */
+    z-index: 999;
+  }
+
+  .modal-backdrop.active {
+    display: block;
+  }
+
+/* 调整模态窗口基础样式 */  
+.modal {  
+  display: none; /* 默认隐藏 */  
+  position: fixed;  
+  top: 50%;  
+  left: 50%;  
+  transform: translate(-50%, -50%);  
+  z-index: 1000;  
+  width: 60%; /* 调整宽度 */  
+  max-width: 800px; /* 调整最大宽度 */  
+  max-height: 80vh; /* 可选：调整最大高度 */  
+  overflow-y: auto;  
+}  
+
+/* 模态内容样式 */  
+.modal-content {  
+  width: 100%;  
+  padding: 10px; /* 调整内边距，这样内容会紧凑一些 */  
+  background-color: #fff;  
+  border-radius: 8px;  
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);  
+}  
+
+  /* 模态窗口内表单元素自适应 */
+  #firefighterForm {
+    width: 100%;
+  }
+
+  /* 确保行占满空间 */
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  /* 列元素拉伸以占满空间 */
+  .col-md-4,
+  .col-md-6,
+  .col-md-12 {
+    flex-grow: 1;
+    transition: all 0.3s ease;
+    /* 添加过渡效果使尺寸变化更平滑 */
+  }
+
+  /* 输入框自动填充可用空间 */
+  .form-control,
+  .form-select {
+    width: 100%;
+    min-height: 38px;
+    padding: 8px 12px;
+    box-sizing: border-box;
+  }
+
+  /* 标签变大以适应大屏幕 */
+  @media (min-width: 1200px) {
+    .form-label {
+      font-size: 1.1rem;
+    }
+
+    .form-control,
+    .form-select {
+      font-size: 1.05rem;
+      padding: 10px 15px;
+      min-height: 45px;
+    }
+
+    /* 按钮在大屏幕上变大 */
+    .modal-footer .button {
+      padding: 10px 25px;
+      font-size: 1.1rem;
+    }
+  }
+
+  /* 更大屏幕上进一步增大字体和间距 */
+  @media (min-width: 1600px) {
+    .form-label {
+      font-size: 1.2rem;
+      margin-bottom: 10px;
+    }
+
+    .form-control,
+    .form-select {
+      font-size: 1.1rem;
+      padding: 12px 18px;
+      min-height: 50px;
+    }
+
+    .mb-3 {
+      margin-bottom: 1.5rem !important;
+    }
+
+    /* 增大模态标题 */
+    .modal-header h2 {
+      font-size: 2.2rem;
+    }
+
+    /* 增大关闭按钮 */
+    #closeModal {
+      font-size: 2rem;
+    }
+  }
+
+  /* 确保按钮栏始终占满宽度 */
+  .modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+    width: 100%;
+    padding-top: 20px;
+    margin-top: 10px;
+  }
+
+  /* 超宽屏幕进一步扩大元素 */
+  @media (min-width: 2000px) {
+    .modal {
+      max-width: 1800px;
+      /* 超宽屏幕允许更大模态框 */
+    }
+
+    .row {
+      gap: 20px;
+      /* 增加行内元素间距 */
+    }
+  }
+
+  /* 确保模态窗口内容有足够空间 */
+  .modal-content {
+    width: 100%;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  }
+
+  /* 滚动条美化 (可选) */
+  .modal::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .modal::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+  }
+
+  .modal::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+  }
+
+  .modal::-webkit-scrollbar-thumb:hover {
+    background: #555;
+  }
+
+  .modal.active {
+    display: block;
+  }
+
+  /* 模态内容区 */
+  .modal-content {
+    background-color: #f7f7f7;
+    /* 背景带点浅灰 */
+    border: 3px solid #888;
+    /* 边框线加粗 */
+    border-radius: 6px;
+    padding: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  }
+
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .modal-header {
+    border-bottom: 2px solid #ccc;
+    padding-bottom: 8px;
+    margin-bottom: 8px;
+  }
+
+  .modal-header h2 {
+    margin: 0;
+  }
+
+  .modal-header span {
+    font-size: 1.4rem;
+  }
+
+  .modal-body {
+    margin: 16px 0;
+    max-height: 70vh;
+    /* 避免内容过多时超出屏幕 */
+    overflow-y: auto;
+  }
+
+  .modal-footer {
+    border-top: 2px solid #ccc;
+    padding-top: 8px;
+    margin-top: 8px;
+    text-align: right;
+    /* 简单的右对齐 */
+  }
+
+  /* 表单样式 */
+  .form-group {
+    margin-bottom: 15px;
+  }
+
+  .form-label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+    color: #555;
+  }
+
+  .form-control {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .form-control:focus {
+    border-color: #007bff;
+    outline: none;
+    box-shadow: 0 0 3px rgba(0, 123, 255, 0.3);
+  }
+
+  /* 通用按钮样式 */
+  .button {
+    padding: 10px 20px;
+    /* 幅度内边距 */
+    border: none;
+    /* 去掉边框 */
+    border-radius: 5px;
+    /* 圆角 */
+    background-color: #007bff;
+    /* 背景颜色 */
+    color: white;
+    /* 字体颜色 */
+    font-size: 16px;
+    /* 字体大小 */
+    cursor: pointer;
+    /* 鼠标指针 */
+    transition: background-color 0.3s;
+    /* 过渡效果 */
+  }
+
+  /* 按钮悬停样式 */
+  .button:hover {
+    background-color: #0056b3;
+    /* 悬停时的背景颜色 */
+  }
+
+  .button-primary {
+    background-color: #28a745;
+    color: #fff;
+  }
+
+  .button-primary:hover {
+    background-color: #218838;
+    box-shadow: 0 0 8px rgba(40, 167, 69, 0.2);
+  }
+
+  .button-secondary {
+    background-color: #6c757d;
+    color: #fff;
+  }
+
+  .button-secondary:hover {
+    background-color: #5a6268;
+    box-shadow: 0 0 8px rgba(108, 117, 125, 0.2);
+  }
+
+  /* 响应式设计 */
+  @media screen and (max-width: 768px) {
+    .modal {
+      width: 95%;
+      padding: 15px;
+      max-height: 85vh;
+      /* 适当减少最大高度以适应移动设备 */
+    }
+
+    .modal-header h2 {
+      font-size: 1.2rem;
+    }
+  }
+
+  /* 全局容器 */
+  .container {
+    width: 80%;
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 10px 0;
+    /* 可以根据需要添加背景或阴影 */
+  }
+
+  .container h1 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 2.0rem;
+    font-size: 50px;
+  }
+
+  .container h2 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 1.5rem;
+    font-size: 30px;
+  }
+
+
+  /* 三个 section 的通用样式 */
+  section {
+    background-color: #fff;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  }
+
+  /* Excel模板上传表单 & 搜索表单基础样式 */
+  form {
+    display: flex;
+    flex-wrap: wrap;
+    /* 当屏幕宽度较小，自动换行 */
+    align-items: center;
+    gap: 0.5rem;
+    /* 表单元素之间的间距 */
+  }
+
+  label {
+    font-weight: 600;
+    margin-right: 0.5rem;
+  }
+
+  input[type="text"],
+  input[type="number"],
+  input[type="file"],
+  select {
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    flex: 1;
+    /* 让输入框或选择框能够灵活扩展宽度 */
+    min-width: 100px;
+    /* 避免过小 */
+  }
+
+  input[type="file"] {
+    flex: none;
+    /* 上传按钮大小通常固定 */
+  }
+
+  /* 分割线美化 */
+  hr {
+    border: none;
+    border-top: 1px solid #ddd;
+    margin: 2rem 0;
+  }
+
+
+  .users-table {
+    width: 100%;
+    /* 表格宽度占满父容器 */
+    border-collapse: collapse;
+    /* 去掉单元格间的间隙 */
+    margin-top: 20px;
+    /* 表格顶部留空 */
+    background: #fff;
+    /* 表格背景色 */
+    border-radius: 4px;
+    /* 表格圆角 */
+    overflow: hidden;
+    /* 防止溢出 */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    /* 添加阴影 */
+  }
+
+  .users-table th,
+  .users-table td {
+    border: 1px solid #ddd;
+    /* 单元格边框颜色 */
+    padding: 12px;
+    /* 单元格内边距 */
+    text-align: center;
+    /* 水平居中 */
+    vertical-align: middle;
+    /* 垂直居中 */
+    font-size: 14px;
+    /* 字体大小 */
+    color: #333;
+    /* 字体颜色 */
+    word-wrap: break-word;
+    word-break: break-all;
+  }
+
+  .users-table th {
+    background-color: #f1dbb5;
+    /* 表头背景色 */
+    font-weight: bold;
+    /* 表头加粗 */
+    color: #333;
+    /* 表头字体颜色 */
+  }
+
+  .users-table tr:nth-child(even) {
+    background-color: #f9f9f9;
+    /* 偶数行背景色 */
+  }
+
+  .users-table tr:hover {
+    background-color: #f1f1f1;
+    /* 鼠标悬停时的背景色 */
+  }
+
+  /* 错误提示样式 */
+  .error {
+    border-color: red;
+  }
+
+  .error-message {
+    color: red;
+    font-size: 12px;
+  }
+
+  /* 搜索表单样式 */
+  .search-form input,
+  .search-form select {
+    padding: 6px;
+    margin-right: 10px;
+  }
+
+  .btn-delete {
+    background-color: #f44336;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  .btn-delete:hover {
+    background-color: #d32f2f;
+  }
+
+  .btn-change {
+    background-color: #f49236;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  .btn-change:hover {
+    background-color: #f49236;
+  }
+
+  /* 报表相关样式 */
+  .date-range {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .radio-group {
+    display: flex;
+    gap: 20px;
+  }
+
+  .print-container {
+    width: 100%;
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px;
+    background: #fff;
+  }
+
+  .print-header {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+
+  .print-header h1 {
+    margin-bottom: 10px;
+  }
+
+  .print-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+  }
+
+  .print-table th,
+  .print-table td {
+    border: 1px solid #000;
+    padding: 8px;
+    text-align: center;
+  }
+
+  .print-table th {
+    background-color: #f0f0f0;
+  }
+
+  .print-footer {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+  }
+
+  @media print {
+    body * {
+      visibility: hidden;
+    }
+
+    .print-container,
+    .print-container * {
+      visibility: visible;
+    }
+
+    .print-container {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      padding: 0;
+    }
+
+    .no-print {
+      display: none !important;
+    }
+  }
+
+  /* 打印专用样式 */
+  @media print {
+
+    /* 基本打印设置 */
+    @page {
+      size: auto;
+      margin: 10mm 10mm 10mm 10mm;
+      /* 减小页面边距 */
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: white;
+    }
+
+    /* 隐藏非打印元素 */
+    .no-print {
+      display: none !important;
+    }
+
+    /* 控制打印容器 */
+    .print-container {
+      width: 100%;
+      margin: 0;
+      padding: 0;
+      page-break-after: avoid;
+      /* 防止容器后自动分页 */
+    }
+
+    /* 控制表格打印 */
+    table {
+      width: 100% !important;
+      page-break-inside: auto;
+      border-collapse: collapse;
+    }
+
+    tr,
+    td,
+    th {
+      page-break-inside: avoid;
+      /* 尽量避免行内分页 */
+    }
+
+    /* 如果按钮在容器中，可以为容器添加样式 */
+    .print-footer .no-print {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      /* 按钮之间的间距 */
+      margin-bottom: 10px;
+      /* 底部留一些空间 */
+    }
+
+    .button-container {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .action-buttons {
+      display: flex !important;
+      justify-content: flex-end !important;
+      gap: 10px;
+      width: 100%;
+    }
+
+    /* 重置可能影响对齐的样式 */
+    .print-footer {
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .no-print {
+      width: 100%;
+    }
+
+
+    /* 避免元素产生无意义的分页 */
+    * {
+      overflow: visible !important;
+    }
+
+  /* 确保filter-group不会影响栅格布局 */  
+  .filter-group {  
+    width: 100%;  
+    padding: 0;  
+    margin: 0;  
+  }  
+  
+  /* 确保每个row是flex布局并且填充整个宽度 */  
+  .filter-group .row {  
+    display: flex;  
+    width: 100%;  
+    margin-left: 0;  
+    margin-right: 0;  
+  }  
+  
+  /* 关键修复：确保col-md-4实际占用33.33%的宽度 */  
+  .filter-group .col-md-4 {  
+    width: 33.33%;  
+    flex: 0 0 33.33%;  
+    max-width: 33.33%;  
+    box-sizing: border-box;  
+  }  
+  
+  /* 确保表单元素填充整个列宽 */  
+  .filter-group .form-control {  
+    width: 100%;  
+    box-sizing: border-box;  
+  }  
+  
+  /* 确保标签不会影响布局 */  
+  .filter-group label {  
+    display: block;  
+    width: 100%;  
+    box-sizing: border-box;  
+  }  
+  
+  /* 如果需要，可以添加媒体查询以确保在小屏幕上正确显示 */  
+  @media (max-width: 768px) {  
+    .filter-group .col-md-4 {  
       width: 100%;  
-      border-collapse: collapse;  
-      margin-top: 20px;  
+      flex: 0 0 100%;  
+      max-width: 100%;  
     }  
-    table, th, td {  
-      border: 1px solid #ccc;  
-    }  
-    th, td {  
-      padding: 8px;  
-      text-align: center;  
-    }  
-    .modal {  
-      display: none; /* 隐藏模态窗口 */  
-      position: fixed;  
-      z-index: 1;  
-      left: 0;  
-      top: 0;  
-      width: 100%;  
-      height: 100%;  
-      overflow: auto;  
-      background-color: rgba(0,0,0,0.5); /* 半透明背景 */  
-    }  
-    .modal-content {  
-      background-color: #fff;  
-      margin: 5% auto;  
-      padding: 20px;  
-      width: 80%;  
-      max-height: 90%;  
-      overflow-y: auto;  
-    }  
-    .modal-header, .modal-footer {  
-      text-align: right;  
-    }  
-    .modal-body {  
-      max-height: 500px;  
-      overflow-y: auto;  
-    }  
-    .button {  
-      padding: 6px 12px;  
-      margin: 5px;  
-    }  
-    /* 错误提示样式 */  
-    .error {  
-      border-color: red;  
-    }  
-    .error-message {  
-      color: red;  
-      font-size: 12px;  
-    }  
-    /* 搜索表单样式 */  
-    .search-form input,  
-    .search-form select {  
-      padding: 6px;  
-      margin-right: 10px;  
-    }  
-    /* 表格内容超出时自动换行 */  
-    td {  
-      word-wrap: break-word;  
-      word-break: break-all;  
-    }  
-  </style>  
-</head>  
-<body>  
-  <div class="container">  
-    <h1>消防员信息管理</h1>  
+  }  
 
-    <!-- Excel模板下载 + 导入 -->  
-    <section>  
-      <a href="/firefighters/template/firefighters_template.xlsx" class="button">下载Excel模板</a>  
-      <form id="importForm" style="margin-top: 10px;">  
-        <label for="excelFile">上传Excel文件：</label>  
-        <input type="file" id="excelFile" name="excelFile" accept=".xlsx" required>  
-        <button type="submit">导入</button>  
-      </form>  
-    </section>  
+  }
+</style>
 
-    <hr>  
+<body>
 
-    <!-- 搜索功能 -->  
-    <section>  
-      <h2>搜索消防员信息</h2>  
-      <form id="searchForm" class="search-form">  
-        <input type="text" id="searchNumber" placeholder="编号">  
-        <input type="text" id="searchName" placeholder="姓名">  
-        <select id="searchGender">  
-          <option value="">性别</option>  
-          <option value="男">男</option>  
-          <option value="女">女</option>  
-        </select>  
-        <input type="number" id="searchAgeMin" placeholder="年龄最小值">  
-        <input type="number" id="searchAgeMax" placeholder="年龄最大值">  
-        <input type="text" id="searchPosition" placeholder="职务">  
-        <input type="text" id="searchTeam" placeholder="中队">  
-        <input type="text" id="searchRank" placeholder="警衔">  
-        <!-- 可以继续添加搜索条件 -->  
-        <button type="button" onclick="searchFirefighters()">搜索</button>  
-        <button type="button" onclick="resetSearch()">重置</button>  
-      </form>  
-    </section>  
+  <script src="https://unpkg.com/xlsx-js-style@1.2.0/dist/xlsx.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.15/jspdf.plugin.autotable.min.js"></script>
 
-    <hr>  
 
-    <!-- 消防员信息表格展示 -->  
-    <section>  
-      <h2>消防员信息列表</h2>  
-      <button onclick="showAddFirefighterModal()" class="button">添加消防员</button>  
-      <table id="firefightersTable">  
-        <thead>  
-          <tr>  
-            <th>编号</th>  
-            <th>姓名</th>  
-            <th>性别</th>  
-            <th>出生年月</th>  
-            <th>年龄</th>  
-            <th>职务</th>  
-            <th>中队</th>  
-            <th>警衔</th>  
-            <th>气候区</th>  
-            <th>帽类号</th>  
-            <th>服装号</th>  
-            <th>鞋类号</th>  
-            <th>作训冬帽号</th>  
-            <th>毛衣冬服号</th>  
-            <th>大衣冬鞋号</th>  
-            <th>衬衣号</th>  
-            <th>肩章号</th>  
-            <th>雨衣体服号</th>  
-            <th>礼服</th>  
-            <th>常服</th>  
-            <th>裤裙</th>  
-            <th>身高</th>  
-            <th>胸围</th>  
-            <th>腰围</th>  
-            <th>头围</th>  
-            <th>领围</th>  
-            <th>脚长</th>  
-            <th>趾围</th>  
-            <th>入伍日期</th>  
-            <th>一级士官</th>  
-            <th>二级士官</th>  
-            <th>提干日期</th>  
-            <th>现职日期</th>  
-            <th>现衔日期</th>  
-            <th>职级</th>  
-            <th>形类</th>  
-            <th>备注</th>  
-            <th>操作</th>  
-          </tr>  
-        </thead>  
-        <tbody>  
-          <!-- 数据将通过AJAX动态加载 -->  
-        </tbody>  
-      </table>  
-    </section>  
-  </div>  
+  <div class="container">
+    <h1>实力管理</h1>
+    <!-- Excel模板下载 + 导入 -->
+    <section>
+      <h2>模版上传实力信息</h2>
+      <form id="importForm"
+        style="display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 15px; margin-top: 20px; margin-bottom: 20px;">
+        <a href="/firefighters/template/firefighters_template.xlsx" class="button"
+          style="white-space: nowrap;">下载Excel模板</a>
+        <label for="excelFile" style="margin: 0 5px; white-space: nowrap;">上传Excel文件：</label>
+        <input type="file" id="excelFile" name="excelFile" accept=".xlsx" required style="margin: 0 5px;">
+        <button type="submit" class="button" style="white-space: nowrap;">导入</button>
+      </form>
+    </section>
 
-  <!-- 模态窗口（用于添加和修改消防员信息） -->  
-  <div id="firefighterModal" class="modal">  
-    <div class="modal-content">  
-      <div class="modal-header">  
-        <h2 id="modalTitle">添加消防员</h2>  
-        <span id="closeModal" style="cursor:pointer;">&times;</span>  
-      </div>  
-      <div class="modal-body">  
-        <form id="firefighterForm">  
-          <input type="hidden" id="firefighterId" name="id">  
-          <!-- 编号 -->  
-          <div class="mb-3">  
-            <label for="modalNumber" class="form-label">编号</label>  
-            <input type="text" class="form-control" id="modalNumber" name="number" readonly required>  
-          </div>  
-          <!-- 姓名 -->  
-          <div class="mb-3">  
-            <label for="modalName" class="form-label">姓名</label>  
-            <input type="text" class="form-control" id="modalName" name="name" required>  
-          </div>  
-          <!-- 性别 -->  
-          <div class="mb-3">  
-            <label for="modalGender" class="form-label">性别</label>  
-            <select class="form-select" id="modalGender" name="gender">  
-              <option value="">请选择性别</option>  
-              <option value="男">男</option>  
-              <option value="女">女</option>  
-            </select>  
-          </div>  
-          <!-- 出生年月 -->  
-          <div class="mb-3">  
-            <label for="modalBirthDate" class="form-label">出生年月</label>  
-            <input type="date" class="form-control" id="modalBirthDate" name="birthDate">  
-          </div>  
-          <!-- 年龄 -->  
-          <div class="mb-3">  
-            <label for="modalAge" class="form-label">年龄</label>  
-            <input type="number" class="form-control" id="modalAge" name="age">  
-          </div>  
-          <!-- 职务 -->  
-          <div class="mb-3">  
-            <label for="modalPosition" class="form-label">职务</label>  
-            <input type="text" class="form-control" id="modalPosition" name="position">  
-          </div>  
-          <!-- 中队 -->  
-          <div class="mb-3">  
-            <label for="modalTeam" class="form-label">中队</label>  
-            <input type="text" class="form-control" id="modalTeam" name="team">  
-          </div>  
-          <!-- 警衔 -->  
-          <div class="mb-3">  
-            <label for="modalRank" class="form-label">警衔</label>  
-            <input type="text" class="form-control" id="modalRank" name="rank">  
-          </div>  
-          <!-- 气候区 -->  
-          <div class="mb-3">  
-            <label for="modalClimateZone" class="form-label">气候区</label>  
-            <input type="text" class="form-control" id="modalClimateZone" name="climateZone">  
-          </div>  
-          <!-- 帽类号 -->  
-          <div class="mb-3">  
-            <label for="modalMaoleihao" class="form-label">帽类号</label>  
-            <input type="text" class="form-control" id="modalMaoleihao" name="maoleihao">  
-          </div>  
-          <!-- 服装号 -->  
-          <div class="mb-3">  
-            <label for="modalFuzhuanghao" class="form-label">服装号</label>  
-            <input type="text" class="form-control" id="modalFuzhuanghao" name="fuzhuanghao">  
-          </div>  
-          <!-- 鞋类号 -->  
-          <div class="mb-3">  
-            <label for="modalXieleihao" class="form-label">鞋类号</label>  
-            <input type="text" class="form-control" id="modalXieleihao" name="xieleihao">  
-          </div>  
-          <!-- 作训冬帽号 -->  
-          <div class="mb-3">  
-            <label for="modalZuoxundongmaohao" class="form-label">作训冬帽号</label>  
-            <input type="text" class="form-control" id="modalZuoxundongmaohao" name="zuoxundongmaohao">  
-          </div>  
-          <!-- 毛衣冬服号 -->  
-          <div class="mb-3">  
-            <label for="modalMaoyidongfuhao" class="form-label">毛衣冬服号</label>  
-            <input type="text" class="form-control" id="modalMaoyidongfuhao" name="maoyidongfuhao">  
-          </div>  
-          <!-- 大衣冬鞋号 -->  
-          <div class="mb-3">  
-            <label for="modalDayidongxiehao" class="form-label">大衣冬鞋号</label>  
-            <input type="text" class="form-control" id="modalDayidongxiehao" name="dayidongxiehao">  
-          </div>  
-          <!-- 衬衣号 -->  
-          <div class="mb-3">  
-            <label for="modalChenyihao" class="form-label">衬衣号</label>  
-            <input type="text" class="form-control" id="modalChenyihao" name="chenyihao">  
-          </div>  
-          <!-- 肩章号 -->  
-          <div class="mb-3">  
-            <label for="modalJianzhanghao" class="form-label">肩章号</label>  
-            <input type="text" class="form-control" id="modalJianzhanghao" name="jianzhanghao">  
-          </div>  
-          <!-- 雨衣体服号 -->  
-          <div class="mb-3">  
-            <label for="modalYuyitifuhao" class="form-label">雨衣体服号</label>  
-            <input type="text" class="form-control" id="modalYuyitifuhao" name="yuyitifuhao">  
-          </div>  
-          <!-- 礼服 -->  
-          <div class="mb-3">  
-            <label for="modalLiufu" class="form-label">礼服</label>  
-            <input type="text" class="form-control" id="modalLifu" name="lifu">  
-          </div>  
-          <!-- 常服 -->  
-          <div class="mb-3">  
-            <label for="modalChangfu" class="form-label">常服</label>  
-            <input type="text" class="form-control" id="modalChangfu" name="changfu">  
-          </div>  
-          <!-- 裤裙 -->  
-          <div class="mb-3">  
-            <label for="modalKuku" class="form-label">裤裙</label>  
-            <input type="text" class="form-control" id="modalKuqun" name="kuqun">  
-          </div>  
-          <!-- 身高 -->  
-          <div class="mb-3">  
-            <label for="modalShengao" class="form-label">身高</label>  
-            <input type="number" class="form-control" id="modalShengao" name="shengao">  
-          </div>  
-          <!-- 胸围 -->  
-          <div class="mb-3">  
-            <label for="modalXiongwei" class="form-label">胸围</label>  
-            <input type="number" class="form-control" id="modalXiongwei" name="xiongwei">  
-          </div>  
-          <!-- 腰围 -->  
-          <div class="mb-3">  
-            <label for="modalYaowei" class="form-label">腰围</label>  
-            <input type="number" class="form-control" id="modalYaowei" name="yaowei">  
-          </div>  
-          <!-- 头围 -->  
-          <div class="mb-3">  
-            <label for="modalTouwwei" class="form-label">头围</label>  
-            <input type="number" class="form-control" id="modalTouwei" name="touwei">  
-          </div>  
-          <!-- 领围 -->  
-          <div class="mb-3">  
-            <label for="modalLingwei" class="form-label">领围</label>  
-            <input type="number" class="form-control" id="modalLingwei" name="lingwei">  
-          </div>  
-          <!-- 脚长 -->  
-          <div class="mb-3">  
-            <label for="modalJiaochang" class="form-label">脚长</label>  
-            <input type="number" class="form-control" id="modalJiaochang" name="jiaochang">  
-          </div>  
-          <!-- 趾围 -->  
-          <div class="mb-3">  
-            <label for="modalZhiwei" class="form-label">趾围</label>  
-            <input type="number" class="form-control" id="modalZhiwei" name="zhiwei">  
-          </div>  
-          <!-- 入伍日期 -->  
-          <div class="mb-3">  
-            <label for="modalRuwuriqi" class="form-label">入伍日期</label>  
-            <input type="date" class="form-control" id="modalRuwuriqi" name="ruwuriqi">  
-          </div>  
-          <!-- 一级士官 -->  
-          <div class="mb-3">  
-            <label for="modalYijishiguan" class="form-label">一级士官</label>  
-            <input type="date" class="form-control" id="modalYijishiguan" name="yijishiguan">  
-          </div>  
-          <!-- 二级士官 -->  
-          <div class="mb-3">  
-            <label for="modalErjishiguan" class="form-label">二级士官</label>  
-            <input type="date" class="form-control" id="modalErjishiguan" name="erjishiguan">  
-          </div>  
-          <!-- 提干日期 -->  
-          <div class="mb-3">  
-            <label for="modalTiganriqi" class="form-label">提干日期</label>  
-            <input type="date" class="form-control" id="modalTiganriqi" name="tiganriqi">  
-          </div>  
-          <!-- 现职日期 -->  
-          <div class="mb-3">  
-            <label for="modalXianzhiriqi" class="form-label">现职日期</label>  
-            <input type="date" class="form-control" id="modalXianzhiriqi" name="xianzhiriqi">  
-          </div>  
-          <!-- 现衔日期 -->  
-          <div class="mb-3">  
-            <label for="modalXianxianriqi" class="form-label">现衔日期</label>  
-            <input type="date" class="form-control" id="modalXianxianriqi" name="xianxianriqi">  
-          </div>  
-          <!-- 职级 -->  
-          <div class="mb-3">  
-            <label for="modalZhiji" class="form-label">职级</label>  
-            <input type="text" class="form-control" id="modalZhiji" name="zhiji">  
-          </div>  
-          <!-- 性类 -->  
-          <div class="mb-3">  
-            <label for="modalXinglei" class="form-label">形类</label>  
-            <input type="text" class="form-control" id="modalXinglei" name="xinglei">  
-          </div>  
-          <!-- 备注 -->  
-          <div class="mb-3">  
-            <label for="modalRemarks" class="form-label">备注</label>  
-            <textarea class="form-control" id="modalRemarks" name="remarks" rows="3"></textarea>  
-          </div>  
+    <hr>
+
+    <!-- 消防员信息表格展示 -->
+    <section>
+      <h2>搜索实力信息</h2>
+      <form id="searchForm" class="search-form">
+        <input type="text" id="searchNumber" placeholder="编号">
+        <input type="text" id="searchName" placeholder="姓名">
+        <select id="searchGender" placeholder="请选择性别">
+          <option value="">请选择性别</option>
+          <option value="男">男</option>
+          <option value="女">女</option>
+        </select>
+        <input type="number" id="searchAgeMin" placeholder="年龄最小值">
+        <input type="number" id="searchAgeMax" placeholder="年龄最大值">
+        <select class="form-select" id="searchPosition" placeholder="请选择职务">
+          <option value="">请选择职务</option>
+          <option value="专职消防员">专职消防员</option>
+          <option value="文职雇员">文职雇员</option>
+          <option value="其它">其它</option>
+        </select>
+        <select class="form-select" id="searchTeam" placeholder="请选择单位">
+          <option value="">请选择单位</option>
+          <option value="司令部">司令部</option>
+          <option value="政治部组织干部科">政治部组织干部科</option>
+          <option value="财务科">财务科</option>
+          <option value="防火监督科">防火监督科</option>
+          <option value="综合指导科">综合指导科</option>
+          <option value="战勤保障科">战勤保障科</option>
+          <option value="作战训练科">作战训练科</option>
+          <option value="装备科">装备科</option>
+          <option value="政治部队务督察科">政治部队务督察科</option>
+          <option value="指挥中心">指挥中心</option>
+          <option value="办公室">办公室</option>
+          <option value="公用">公用</option>
+          <option value="太子河大队">太子河大队</option>
+          <option value="白塔大队">白塔大队</option>
+          <option value="宏伟区消防救援大队">宏伟区消防救援大队</option>
+          <option value="灯塔市消防救援大队">灯塔市消防救援大队</option>
+          <option value="文圣区消防救援大队">文圣区消防救援大队</option>
+          <option value="辽阳县大队">辽阳县大队</option>
+          <option value="弓长岭区消防救援大队">弓长岭区消防救援大队</option>
+          <option value="雷锋街消防救援站">雷锋街消防救援站</option>
+          <option value="汤泉谷消防救援站">汤泉谷消防救援站</option>
+          <option value="佟二堡消防站">佟二堡消防站</option>
+          <option value="兆麟西路消防站">兆麟西路消防站</option>
+          <option value="铧子消防站">铧子消防站</option>
+          <option value="万和一路消防救援站">万和一路消防救援站</option>
+          <option value="安康路消防救援站">安康路消防救援站</option>
+          <option value="文昌街消防站">文昌街消防站</option>
+          <option value="腾飞街">腾飞街</option>
+          <option value="刘二堡消防救援站">刘二堡消防救援站</option>
+          <option value="黄泥洼消防救援站">黄泥洼消防救援站</option>
+          <option value="下达河消防救援站">下达河消防救援站</option>
+          <option value="备用">备用</option>
+          <option value="其它">其它</option>
+        </select>
+        <select class="form-select" id="searchYear" placeholder="请选择工作年限">
+          <option value="">请选择工作年限</option>
+          <option value="1年">1年</option>
+          <option value="2年">2年</option>
+          <option value="3年">3年</option>
+          <option value="4年">4年</option>
+          <option value="5年">5年</option>
+          <option value="6年">6年</option>
+          <option value="7年">7年</option>
+          <option value="8年">8年</option>
+          <option value="9年">9年</option>
+          <option value="10年含以上">10年含以上</option>
+          <option value="其它">其它</option>
+        </select>
+        <!-- 可以继续添加搜索条件 -->
+      </form>
+      <div style="display: flex; justify-content: center; gap: 15px; margin-top: 15px; margin-bottom: 15px;">
+        <button type="button" onclick="searchFirefighters()" class="btn-change">搜索</button>
+        <button type="button" onclick="resetSearch()" class="btn-delete">重置</button>
+      </div>
+
+      <div style="display: flex; justify-content: center; gap: 15px; margin-top: 15px; margin-bottom: 15px;">
+        <button onclick="showAddFirefighterModal()" class="button">添加实力</button>
+      </div>
+
+
+      <h2>实力信息列表</h2>
+      <table id="firefightersTable" class="users-table">
+        <thead>
+          <tr>
+            <th><input type="checkbox" id="selectAll" title="全选/取消全选"></th>
+            <th>编号</th>
+            <th>姓名</th>
+            <th>性别</th>
+            <th>出生年月</th>
+            <th>年龄</th>
+            <th>职务</th>
+            <th>单位</th>
+            <th>工作年限</th>
+            <th>帽类号</th>
+            <th>服装号</th>
+            <th>鞋类号</th>
+            <th>身高</th>
+            <th>胸围</th>
+            <th>腰围</th>
+            <th>头围</th>
+            <th>可用余额</th>
+            <th>备注</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- 数据将通过AJAX动态加载 -->
+        </tbody>
+      </table>
+    </section>
+  </div>
+
+  <!-- 在搜索表单下方，按钮区域添加批量删除按钮 -->
+  <div style="display: flex; justify-content: center; gap: 15px; margin-top: -40px; margin-bottom: 5px;">
+    <button onclick="showChangeTeamModal()" class="button">实力单位变更</button>
+    <button id="batchDeleteBtn" class="button">批量删除</button>
+    <button onclick="showReportModal()" class="button">打印报表</button>
+  </div>
+
+  <!-- 模态窗口（用于添加和修改消防员信息） -->
+  <!-- 背景遮罩 -->
+  <div class="modal-backdrop" id="modalBackdrop"></div>
+  <!-- 模态窗口（用于添加和修改消防员信息） -->
+  <div id="firefighterModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modalTitle" class="text-5xl text-center">添加实力</h2>
+        <span id="closeModal" style="cursor:pointer;">&times;</span>
+      </div>
+      
+      <div class="modal-body">
+        <form id="firefighterForm">
+          <input type="hidden" id="firefighterId" name="id">
+          <!-- 编号 -->
+          <div class="row">
+            <div class="col-md-12 mb-3">
+              <label for="modalNumber" class="form-label">编号</label>
+              <input type="text" class="form-control" id="modalNumber" name="number" required>
+            </div>
+          </div>
+
+          <div class="row">
+            <!-- 姓名 -->
+            <div class="col-md-4 mb-3">
+              <label for="modalName" class="form-label">姓名</label>
+              <input type="text" class="form-control" id="modalName" name="name" required>
+            </div>
+            <!-- 性别 -->
+            <div class="col-md-4 mb-3">
+              <label for="modalGender" class="form-label">性别</label>
+              <select class="form-select" id="modalGender" name="gender">
+                <option value="">请选择性别</option>
+                <option value="男">男</option>
+                <option value="女">女</option>
+              </select>
+            </div>
+            <!-- 身高 -->
+            <div class="col-md-4 mb-3">
+              <label for="modalShengao" class="form-label">身高</label>
+              <input type="number" class="form-control" id="modalShengao" name="shengao">
+            </div>
+          </div>
+
+          <div class="row">
+            <!-- 出生年月 -->
+            <div class="col-md-4 mb-3">
+              <label for="modalBirthDate" class="form-label">出生年月</label>
+              <input type="date" class="form-control" id="modalBirthDate" name="birthDate">
+            </div>
+            <!-- 年龄 -->
+            <div class="col-md-4 mb-3">
+              <label for="modalAge" class="form-label">年龄</label>
+              <input type="number" class="form-control" id="modalAge" name="age" readonly>
+            </div>
+            <!-- 职务 -->
+            <div class="col-md-4 mb-3">
+              <label for="modalPosition" class="form-label">职务</label>
+              <select class="form-select" id="modalPosition" name="position">
+                <option value="">请选择职务</option>
+                <option value="专职消防员">专职消防员</option>
+                <option value="文职雇员">文职雇员</option>
+                <option value="其它">其它</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="row">
+            <!-- 单位 -->
+            <div class="col-md-6 mb-3">
+              <label for="modalTeam" class="form-label">单位</label>
+              <select class="form-select" id="modalTeam" name="team">
+                <option value="">请选择单位</option>
+                <option value="司令部">司令部</option>
+                <option value="政治部组织干部科">政治部组织干部科</option>
+                <option value="财务科">财务科</option>
+                <option value="防火监督科">防火监督科</option>
+                <option value="综合指导科">综合指导科</option>
+                <option value="战勤保障科">战勤保障科</option>
+                <option value="作战训练科">作战训练科</option>
+                <option value="装备科">装备科</option>
+                <option value="政治部队务督察科">政治部队务督察科</option>
+                <option value="指挥中心">指挥中心</option>
+                <option value="办公室">办公室</option>
+                <option value="公用">公用</option>
+                <option value="太子河大队">太子河大队</option>
+                <option value="白塔大队">白塔大队</option>
+                <option value="宏伟区消防救援大队">宏伟区消防救援大队</option>
+                <option value="灯塔市消防救援大队">灯塔市消防救援大队</option>
+                <option value="文圣区消防救援大队">文圣区消防救援大队</option>
+                <option value="辽阳县大队">辽阳县大队</option>
+                <option value="弓长岭区消防救援大队">弓长岭区消防救援大队</option>
+                <option value="雷锋街消防救援站">雷锋街消防救援站</option>
+                <option value="汤泉谷消防救援站">汤泉谷消防救援站</option>
+                <option value="佟二堡消防站">佟二堡消防站</option>
+                <option value="兆麟西路消防站">兆麟西路消防站</option>
+                <option value="铧子消防站">铧子消防站</option>
+                <option value="万和一路消防救援站">万和一路消防救援站</option>
+                <option value="安康路消防救援站">安康路消防救援站</option>
+                <option value="文昌街消防站">文昌街消防站</option>
+                <option value="腾飞街">腾飞街</option>
+                <option value="刘二堡消防救援站">刘二堡消防救援站</option>
+                <option value="黄泥洼消防救援站">黄泥洼消防救援站</option>
+                <option value="下达河消防救援站">下达河消防救援站</option>
+                <option value="备用">备用</option>
+                <option value="其它">其它</option>
+              </select>
+            </div>
+            <!--工作年限 -->
+            <div class="col-md-6 mb-3">
+              <label for="modalYear" class="form-label">工作年限</label>
+              <select class="form-select" id="modalYear" name="year">
+                <option value="">请选择工作年限</option>
+                <option value="1年">1年</option>
+                <option value="2年">2年</option>
+                <option value="3年">3年</option>
+                <option value="4年">4年</option>
+                <option value="5年">5年</option>
+                <option value="6年">6年</option>
+                <option value="7年">7年</option>
+                <option value="8年">8年</option>
+                <option value="9年">9年</option>
+                <option value="10年含以上">10年含以上</option>
+                <option value="其它">其它</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="row">
+            <!-- 胸围 -->
+            <div class="col-md-4 mb-3">
+              <label for="modalXiongwei" class="form-label">胸围</label>
+              <select class="form-select" id="modalXiongwei" name="xiongwei">
+                <option value="">请选择胸围</option>
+                <option value="84">84</option>
+                <option value="88">88</option>
+                <option value="92">92</option>
+                <option value="96">96</option>
+                <option value="100">100</option>
+                <option value="104">104</option>
+                <option value="108">108</option>
+                <option value="112">112</option>
+                <option value="116">116</option>
+                <option value="120">120</option>
+                <option value="124">124</option>
+                <option value="其它">其它</option>
+              </select>
+            </div>
+            <!-- 腰围 -->
+            <div class="col-md-4 mb-3">
+              <label for="modalYaowei" class="form-label">腰围</label>
+              <select class="form-select" id="modalYaowei" name="yaowei">
+                <option value="">请选择腰围</option>
+                <option value="74">74</option>
+                <option value="80">80</option>
+                <option value="86">86</option>
+                <option value="92">92</option>
+                <option value="96">96</option>
+                <option value="100">100</option>
+                <option value="104">104</option>
+                <option value="108">108</option>
+                <option value="112">112</option>
+                <option value="116">116</option>
+                <option value="120">120</option>
+                <option value="124">124</option>
+                <option value="其它">其它</option>
+              </select>
+            </div>
+            <!-- 头围 -->
+            <div class="col-md-4 mb-3">
+              <label for="modalTouwei" class="form-label">头围</label>
+              <select class="form-select" id="modalTouwei" name="touwei">
+                <option value="">请选择头围</option>
+                <option value="54">54</option>
+                <option value="55">55</option>
+                <option value="56">56</option>
+                <option value="57">57</option>
+                <option value="58">58</option>
+                <option value="59">59</option>
+                <option value="60">60</option>
+                <option value="61">61</option>
+                <option value="62">62</option>
+                <option value="其它">其它</option>
+              </select>
+            </div>
+          </div>
+
+
+          <div class="row">
+            <!-- 鞋类号 -->
+            <div class="col-md-4 mb-3">
+              <label for="modalXieleihao" class="form-label">鞋类号</label>
+              <select class="form-select" id="modalXieleihao" name="xieleihao">
+                <option value="">请选择鞋号</option>
+                <option value="220">220</option>
+                <option value="225">225</option>
+                <option value="230">230</option>
+                <option value="235">235</option>
+                <option value="240">240</option>
+                <option value="245">245</option>
+                <option value="250">250</option>
+                <option value="255">255</option>
+                <option value="260">260</option>
+                <option value="265">265</option>
+                <option value="270">270</option>
+                <option value="275">275</option>
+                <option value="280">280</option>
+                <option value="285">285</option>
+                <option value="290">290</option>
+                <option value="其它">其它</option>
+              </select>
+            </div>
+            <!-- 服装号 -->
+            <div class="col-md-4 mb-3">
+              <label for="modalFuzhuanghao" class="form-label">服装号</label>
+              <select class="form-select" id="modalFuzhuanghao" name="fuzhuanghao">
+                <option value="">请选择服装号</option>
+                <option value="160/84">160/84</option>
+                <option value="160/88">160/88</option>
+                <option value="160/92">160/92</option>
+                <option value="165/88">165/88</option>
+                <option value="165/92">165/92</option>
+                <option value="165/92-96">165/92-96</option>
+                <option value="165/96">165/96</option>
+                <option value="165/100">165/100</option>
+                <option value="165/104">165/104</option>
+                <option value="165/108">165/108</option>
+                <option value="170/88">170/88</option>
+                <option value="170/92">170/92</option>
+                <option value="170/92-96">170/92-96</option>
+                <option value="170/96">170/96</option>
+                <option value="170/100">170/100</option>
+                <option value="170/104-108">170/104-108</option>
+                <option value="175/88">175/88</option>
+                <option value="175/92">175/92</option>
+                <option value="175/92-96">175/92-96</option>
+                <option value="175/96">175/96</option>
+                <option value="175/100">175/100</option>
+                <option value="175/104">175/104</option>
+                <option value="175/104-108">175/104-108</option>
+                <option value="175/108">175/108</option>
+                <option value="175/120-124">175/120-124</option>
+                <option value="180/92-96">180/92-96</option>
+                <option value="180/96">180/96</option>
+                <option value="180/100">180/100</option>
+                <option value="180/100-104">180/100-104</option>
+                <option value="180/104">180/104</option>
+                <option value="180/104-108">180/104-108</option>
+                <option value="180/108">180/108</option>
+                <option value="180/112-116">180/112-116</option>
+                <option value="180/116">180/116</option>
+                <option value="180/120">180/120</option>
+                <option value="180/124">180/124</option>
+                <option value="185/92-96">185/92-96</option>
+                <option value="185/96">185/96</option>
+                <option value="185/100">185/100</option>
+                <option value="185/100-104">185/100-104</option>
+                <option value="185/104">185/104</option>
+                <option value="185/104-108">185/104-108</option>
+                <option value="185/108">185/108</option>
+                <option value="185/112">185/112</option>
+                <option value="185/112-116">185/112-116</option>
+                <option value="185/116">185/116</option>
+                <option value="185/120">185/120</option>
+                <option value="185/124">185/124</option>
+                <option value="190/104">190/104</option>
+                <option value="195/112-116">195/112-116</option>
+                <option value="195/136">195/136</option>
+                <option value="其它">其它</option>
+              </select>
+            </div>
+
+            <!-- 帽类号 -->
+            <div class="col-md-4 mb-3">
+              <label for="modalMaoleihao" class="form-label">帽类号</label>
+              <select class="form-select" id="modalMaoleihao" name="maoleihao">
+                <option value="">请选择帽号</option>
+                <option value="55">55</option>
+                <option value="56">56</option>
+                <option value="57">57</option>
+                <option value="58">58</option>
+                <option value="59">59</option>
+                <option value="60">60</option>
+                <option value="61">61</option>
+                <option value="62">62</option>
+                <option value="其它">其它</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="row">
+            <!-- 可用余额 -->
+            <div class="col-md-12 mb-3">
+              <label for="modalKeyongyue" class="form-label">可用余额</label>
+              <input class="form-control" id="modalKeyongyue" name="keyongyue">
+            </div>
+          </div>
+
+          <div class="row">
+            <!-- 备注 -->
+            <div class="col-md-12 mb-3">
+              <label for="modalRemarks" class="form-label">备注</label>
+              <input class="form-control" id="modalRemarks" name="remarks">
+            </div>
+          </div>
         </form>
-      </div>  
-      <div class="modal-footer">  
-        <button id="cancelModal" class="button">取消</button>  
-        <button id="saveFirefighter" class="button">确认添加</button>  
-      </div>  
-    </div>  
-  </div>  
+      </div>
 
-  <!-- 模态窗口（用于展示导入的Excel数据） -->  
-  <div id="importModal" class="modal">  
-    <div class="modal-content">  
-      <div class="modal-header">  
-        <h2>预览导入的数据</h2>  
-        <span id="closeImportModal" style="cursor:pointer;">&times;</span>  
-      </div>  
-      <div class="modal-body">  
-        <table id="importPreviewTable">  
-          <!-- 动态生成表格 -->  
-        </table>  
-      </div>  
-      <div class="modal-footer">  
-        <button id="confirmImport" class="button">确认导入</button>  
-        <button id="cancelImport" class="button">取消</button>  
-      </div>  
-    </div>  
-  </div>  
+      <div class="modal-footer">
+        <button id="cancelModal" class="button">取消</button>
+        <button id="saveFirefighter" class="button">确认添加</button>
+      </div>
+    </div>
+  </div>
 
-  <script>  
+  <!-- 模态窗口（用于展示导入的Excel数据） -->
+  <div id="importModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>预览导入的数据</h2>
+        <span id="closeImportModal" style="cursor:pointer;">&times;</span>
+      </div>
+      <div class="modal-body">
+        <table id="importPreviewTable" class="users-table">
+          <!-- 动态生成表格 -->
+        </table>
+      </div>
+      <div class="modal-footer">
+        <button id="confirmImport" class="button">确认导入</button>
+        <button id="cancelImport" class="button">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 添加单位变更模态窗口 -->
+  <div id="changeTeamModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>实力单位变更</h2>
+        <span id="closeChangeTeamModal" style="cursor:pointer;">&times;</span>
+      </div>
+      <div class="modal-body">
+        <table id="changeTeamTable" class="users-table">
+          <thead>
+            <tr>
+              <th>编号</th>
+              <th>姓名</th>
+              <th>性别</th>
+              <th>年龄</th>
+              <th>现单位</th>
+              <th>变更单位</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- 数据将动态填充 -->
+          </tbody>
+        </table>
+      </div>
+      <div class="modal-footer">
+        <button id="submitChangeTeam" class="button">确认提交</button>
+        <button id="cancelChangeTeam" class="button">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 背景遮罩 -->
+  <div class="modal-backdrop" id="reportModalBackdrop"></div>
+
+  <!-- 报表选择模态窗口 -->
+  <div id="reportModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>打印报表</h2>
+        <span class="close" onclick="closeReportModal()">&times;</span>
+      </div>
+
+      <div class="modal-body">
+        <form id="reportForm">
+
+          <div class="row">
+            <div class="col-md-12 mb-3">
+              <label for="reportType">报表类型：</label>
+              <select id="reportType" class="form-control">
+                <option value="personnel">人员基本信息表</option>
+                <option value="equipment">人员装备配发表</option>
+                <option value="bodySize">人员体型尺寸表</option>
+                <option value="teamSummary">队伍人员统计表</option>
+                <option value="changeHistory">单位变更记录表</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-12 mb-3">
+              <label for="teamFilter">单位筛选：</label>
+              <select id="teamFilter" class="form-control">
+                <option value="">全部单位</option>
+                <option value="司令部">司令部</option>
+                <option value="政治部组织干部科">政治部组织干部科</option>
+                <option value="财务科">财务科</option>
+                <option value="防火监督科">防火监督科</option>
+                <option value="综合指导科">综合指导科</option>
+                <option value="战勤保障科">战勤保障科</option>
+                <option value="作战训练科">作战训练科</option>
+                <option value="装备科">装备科</option>
+                <option value="政治部队务督察科">政治部队务督察科</option>
+                <option value="指挥中心">指挥中心</option>
+                <option value="办公室">办公室</option>
+                <option value="公用">公用</option>
+                <option value="太子河大队">太子河大队</option>
+                <option value="白塔大队">白塔大队</option>
+                <option value="宏伟区消防救援大队">宏伟区消防救援大队</option>
+                <option value="灯塔市消防救援大队">灯塔市消防救援大队</option>
+                <option value="文圣区消防救援大队">文圣区消防救援大队</option>
+                <option value="辽阳县大队">辽阳县大队</option>
+                <option value="弓长岭区消防救援大队">弓长岭区消防救援大队</option>
+                <option value="雷锋街消防救援站">雷锋街消防救援站</option>
+                <option value="汤泉谷消防救援站">汤泉谷消防救援站</option>
+                <option value="佟二堡消防站">佟二堡消防站</option>
+                <option value="兆麟西路消防站">兆麟西路消防站</option>
+                <option value="铧子消防站">铧子消防站</option>
+                <option value="万和一路消防救援站">万和一路消防救援站</option>
+                <option value="安康路消防救援站">安康路消防救援站</option>
+                <option value="文昌街消防站">文昌街消防站</option>
+                <option value="腾飞街">腾飞街</option>
+                <option value="刘二堡消防救援站">刘二堡消防救援站</option>
+                <option value="黄泥洼消防救援站">黄泥洼消防救援站</option>
+                <option value="下达河消防救援站">下达河消防救援站</option>
+                <option value="备用">备用</option>
+                <option value="其它">其它</option>
+                <!-- 其他单位选项，与之前的单位列表保持一致 -->
+              </select>
+            </div>
+          </div>
+
+          <!-- 人员信息报表筛选条件 -->
+          <div id="personnelFilters" class="filter-group" style="width: 100%; padding: 0; margin: 0;">
+            <div class="row">
+              <div class="col-md-4 mb-3">
+                <label for="genderFilter">性别筛选：</label>
+                <select id="genderFilter" class="form-control">
+                  <option value="">全部</option>
+                  <option value="男">男</option>
+                  <option value="女">女</option>
+                </select>
+              </div>
+
+              <div class="col-md-4 mb-3">
+                <label for="ageMin">最小年龄：</label>
+                <input type="number" id="ageMin" class="form-control">
+              </div>
+              <div class="col-md-4 mb-3">
+                <label for="ageMax">最大年龄：</label>
+                <input type="number" id="ageMax" class="form-control">
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-4 mb-3">
+                <label for="positionFilter">职务筛选：</label>
+                <select id="positionFilter" class="form-control">
+                  <option value="">全部职务</option>
+                  <option value="专职消防员">专职消防员</option>
+                  <option value="文职雇员">文职雇员</option>
+                  <option value="其它">其它</option>
+                </select>
+              </div>
+
+              <div class="col-md-4 mb-3">
+                <label for="yearMin">最短工作年限：</label>
+                <select id="yearMinFilter" class="form-control">
+                  <option value="">不限</option>
+                  <option value="1年">1年</option>
+                  <option value="2年">2年</option>
+                  <option value="3年">3年</option>
+                  <option value="4年">4年</option>
+                  <option value="5年">5年</option>
+                  <option value="6年">6年</option>
+                  <option value="7年">7年</option>
+                  <option value="8年">8年</option>
+                  <option value="9年">9年</option>
+                  <option value="10年含以上">10年含以上</option>
+                </select>
+              </div>
+
+              <div class="col-md-4 mb-3">
+                <label for="yearMax">最长工作年限：</label>
+                <select id="yearMaxFilter" class="form-control">
+                  <option value="">不限</option>
+                  <option value="1年">1年</option>
+                  <option value="2年">2年</option>
+                  <option value="3年">3年</option>
+                  <option value="4年">4年</option>
+                  <option value="5年">5年</option>
+                  <option value="6年">6年</option>
+                  <option value="7年">7年</option>
+                  <option value="8年">8年</option>
+                  <option value="9年">9年</option>
+                  <option value="10年含以上">10年含以上</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- 装备配发筛选条件 -->
+          <div id="equipmentFilters" class="filter-group" style="display:none; width: 100%; padding: 0; margin: 0;">
+            <div class="row">
+              <div class="col-md-4 mb-3">
+                <label for="hatSizeFilter">帽类号筛选：</label>
+                <select id="hatSizeFilter" class="form-control">
+                  <option value="">全部</option>
+                  <option value="55">55</option>
+                  <option value="56">56</option>
+                  <option value="57">57</option>
+                  <option value="58">58</option>
+                  <option value="59">59</option>
+                  <option value="60">60</option>
+                  <option value="61">61</option>
+                  <option value="62">62</option>
+                  <option value="其它">其它</option>
+                </select>
+              </div>
+
+              <div class="col-md-4 mb-3">
+                <label for="clothingSizeFilter">服装号筛选：</label>
+                <select id="clothingSizeFilter" class="form-control">
+                  <option value="">全部</option>
+                  <option value="160/84">160/84</option>
+                  <option value="160/88">160/88</option>
+                  <option value="160/92">160/92</option>
+                  <option value="165/88">165/88</option>
+                  <option value="165/92">165/92</option>
+                  <option value="165/92-96">165/92-96</option>
+                  <option value="165/96">165/96</option>
+                  <option value="165/100">165/100</option>
+                  <option value="165/104">165/104</option>
+                  <option value="165/108">165/108</option>
+                  <option value="170/88">170/88</option>
+                  <option value="170/92">170/92</option>
+                  <option value="170/92-96">170/92-96</option>
+                  <option value="170/96">170/96</option>
+                  <option value="170/100">170/100</option>
+                  <option value="170/104-108">170/104-108</option>
+                  <option value="175/88">175/88</option>
+                  <option value="175/92">175/92</option>
+                  <option value="175/92-96">175/92-96</option>
+                  <option value="175/96">175/96</option>
+                  <option value="175/100">175/100</option>
+                  <option value="175/104">175/104</option>
+                  <option value="175/104-108">175/104-108</option>
+                  <option value="175/108">175/108</option>
+                  <option value="175/120-124">175/120-124</option>
+                  <option value="180/92-96">180/92-96</option>
+                  <option value="180/96">180/96</option>
+                  <option value="180/100">180/100</option>
+                  <option value="180/100-104">180/100-104</option>
+                  <option value="180/104">180/104</option>
+                  <option value="180/104-108">180/104-108</option>
+                  <option value="180/108">180/108</option>
+                  <option value="180/112-116">180/112-116</option>
+                  <option value="180/116">180/116</option>
+                  <option value="180/120">180/120</option>
+                  <option value="180/124">180/124</option>
+                  <option value="185/92-96">185/92-96</option>
+                  <option value="185/96">185/96</option>
+                  <option value="185/100">185/100</option>
+                  <option value="185/100-104">185/100-104</option>
+                  <option value="185/104">185/104</option>
+                  <option value="185/104-108">185/104-108</option>
+                  <option value="185/108">185/108</option>
+                  <option value="185/112">185/112</option>
+                  <option value="185/112-116">185/112-116</option>
+                  <option value="185/116">185/116</option>
+                  <option value="185/120">185/120</option>
+                  <option value="185/124">185/124</option>
+                  <option value="190/104">190/104</option>
+                  <option value="195/112-116">195/112-116</option>
+                  <option value="195/136">195/136</option>
+                  <option value="其它">其它</option>
+                </select>
+              </div>
+
+              <div class="col-md-4 mb-3">
+                <label for="shoeSizeFilter">鞋类号筛选：</label>
+                <select id="shoeSizeFilter" class="form-control">
+                  <option value="">全部</option>
+                  <option value="220">220</option>
+                  <option value="225">225</option>
+                  <option value="230">230</option>
+                  <option value="235">235</option>
+                  <option value="240">240</option>
+                  <option value="245">245</option>
+                  <option value="250">250</option>
+                  <option value="255">255</option>
+                  <option value="260">260</option>
+                  <option value="265">265</option>
+                  <option value="270">270</option>
+                  <option value="275">275</option>
+                  <option value="280">280</option>
+                  <option value="285">285</option>
+                  <option value="290">290</option>
+                  <option value="其它">其它</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- 体型尺寸筛选条件 -->
+          <div id="bodySizeFilters" class="filter-group" style="display:none; width: 100%; padding: 0; margin: 0;">
+            <div class="row">
+              <div class="col-md-3 mb-3">
+                <label for="heightMin">最小身高(CM)：</label>
+                <input type="number" id="heightMin" class="form-control">
+              </div>
+              <div class="col-md-3 mb-3">
+                <label for="heightMax">最大身高(CM)：</label>
+                <input type="number" id="heightMax" class="form-control">
+              </div>
+
+
+              <div class="col-md-3 mb-3">
+                <label for="chestMin">最小胸围(CM)：</label>
+                <input type="number" id="chestMin" class="form-control">
+              </div>
+              <div class="col-md-3 mb-3">
+                <label for="chestMax">最大胸围(CM)：</label>
+                <input type="number" id="chestMax" class="form-control">
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-3 mb-3">
+                <label for="waistMin">最小腰围(CM)：</label>
+                <input type="number" id="waistMin" class="form-control">
+              </div>
+              <div class="col-md-3 mb-3">
+                <label for="waistMax">最大腰围(CM)：</label>
+                <input type="number" id="waistMax" class="form-control">
+              </div>
+
+              <div class="col-md-3 mb-3">
+                <label for="headMin">最小头围(CM)：</label>
+                <input type="number" id="headMin" class="form-control">
+              </div>
+              <div class="col-md-3 mb-3">
+                <label for="headMax">最大头围(CM)：</label>
+                <input type="number" id="headMax" class="form-control">
+              </div>
+            </div>
+          </div>
+
+          <!-- 单位变更记录筛选条件 -->
+          <div id="changeHistoryFilters" class="filter-group" style="display:none; width: 100%; padding: 0; margin: 0;">
+            <div class="row">
+              <div class="col-md-4 mb-3">
+                <label for="startDate">开始日期：</label>
+                <input type="date" id="startDate" class="form-control">
+              </div>
+              <div class="col-md-4 mb-3">
+                <label for="endDate">结束日期：</label>
+                <input type="date" id="endDate" class="form-control">
+              </div>
+
+              <div class="col-md-4 mb-3">
+                <label for="oldTeamFilter">原单位筛选：</label>
+                <select id="oldTeamFilter" class="form-control">
+                  <option value="">全部单位</option>
+                  <option value="司令部">司令部</option>
+                  <option value="政治部组织干部科">政治部组织干部科</option>
+                  <option value="财务科">财务科</option>
+                  <option value="防火监督科">防火监督科</option>
+                  <option value="综合指导科">综合指导科</option>
+                  <option value="战勤保障科">战勤保障科</option>
+                  <option value="作战训练科">作战训练科</option>
+                  <option value="装备科">装备科</option>
+                  <option value="政治部队务督察科">政治部队务督察科</option>
+                  <option value="指挥中心">指挥中心</option>
+                  <option value="办公室">办公室</option>
+                  <option value="公用">公用</option>
+                  <option value="太子河大队">太子河大队</option>
+                  <option value="白塔大队">白塔大队</option>
+                  <option value="宏伟区消防救援大队">宏伟区消防救援大队</option>
+                  <option value="灯塔市消防救援大队">灯塔市消防救援大队</option>
+                  <option value="文圣区消防救援大队">文圣区消防救援大队</option>
+                  <option value="辽阳县大队">辽阳县大队</option>
+                  <option value="弓长岭区消防救援大队">弓长岭区消防救援大队</option>
+                  <option value="雷锋街消防救援站">雷锋街消防救援站</option>
+                  <option value="汤泉谷消防救援站">汤泉谷消防救援站</option>
+                  <option value="佟二堡消防站">佟二堡消防站</option>
+                  <option value="兆麟西路消防站">兆麟西路消防站</option>
+                  <option value="铧子消防站">铧子消防站</option>
+                  <option value="万和一路消防救援站">万和一路消防救援站</option>
+                  <option value="安康路消防救援站">安康路消防救援站</option>
+                  <option value="文昌街消防站">文昌街消防站</option>
+                  <option value="腾飞街">腾飞街</option>
+                  <option value="刘二堡消防救援站">刘二堡消防救援站</option>
+                  <option value="黄泥洼消防救援站">黄泥洼消防救援站</option>
+                  <option value="下达河消防救援站">下达河消防救援站</option>
+                  <option value="备用">备用</option>
+                  <option value="其它">其它</option>
+                  <!-- 其他单位选项，与之前的单位列表保持一致 -->
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- 排序选项 -->
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label for="sortField">排序字段：</label>
+              <select id="sortField" class="form-control">
+                <option value="">默认排序</option>
+                <option value="number">按编号</option>
+                <option value="name">按姓名</option>
+                <option value="age">按年龄</option>
+                <!-- 动态显示基于报表类型的排序选项 -->
+              </select>
+            </div>
+
+            <div class="col-md-6 mb-3">
+              <label for="sortOrder">排序方式：</label>
+              <select id="sortOrder" class="form-control">
+                <option value="asc">升序</option>
+                <option value="desc">降序</option>
+              </select>
+            </div>
+          </div>
+
+
+          <div class="row">
+            <div class="col-md-12 mb-3">
+              <label>输出格式：</label>
+              <div class="radio-group">
+                <label>
+                  <input type="radio" name="outputFormat" value="print" checked> 打印
+                </label>
+                <label>
+                  <input type="radio" name="outputFormat" value="pdf"> PDF
+                </label>
+                <label>
+                  <input type="radio" name="outputFormat" value="excel"> Excel
+                </label>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button onclick="generateReport()" class="button">生成报表</button>
+        <button onclick="closeReportModal()" class="button">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
     // 页面加载时获取消防员列表  
-    document.addEventListener('DOMContentLoaded', function() {  
-      loadFirefighters();  
-    });  
+    document.addEventListener('DOMContentLoaded', function () {
+      loadFirefighters();
+
+      // 全选/取消全选功能  
+      document.addEventListener('click', function (e) {
+        if (e.target && e.target.id === 'selectAll') {
+          const checkboxes = document.querySelectorAll('.row-checkbox');
+          checkboxes.forEach(checkbox => {
+            checkbox.checked = e.target.checked;
+          });
+        }
+      });
+
+      // 监听表格中的checkbox变化  
+      document.addEventListener('change', function (e) {
+        if (e.target && e.target.classList.contains('row-checkbox')) {
+          // 更新全选框状态  
+          const allCheckboxes = document.querySelectorAll('.row-checkbox');
+          const checkedCount = document.querySelectorAll('.row-checkbox:checked').length;
+          document.getElementById('selectAll').checked = checkedCount === allCheckboxes.length && allCheckboxes.length > 0;
+        }
+      });
+
+      // 批量删除按钮事件  
+      document.getElementById('batchDeleteBtn').addEventListener('click', function () {
+        const selectedRows = document.querySelectorAll('.row-checkbox:checked');
+        if (selectedRows.length === 0) {
+          alert('请先选择需要删除的人员');
+          return;
+        }
+        batchDeleteFirefighters();
+      });
+
+      // 重新绑定事件  
+      const reportTypeElem = document.getElementById('reportType');
+      if (reportTypeElem) {
+        // 先移除旧的事件监听器以避免重复  
+        reportTypeElem.removeEventListener('change', updateFilterOptions);
+        // 添加新的事件监听器  
+        reportTypeElem.addEventListener('change', updateFilterOptions);
+        // 初始调用一次  
+        updateFilterOptions();
+      }
+
+
+    });
+
+    // 批量删除功能  
+    function batchDeleteFirefighters() {
+      const selectedIds = Array.from(document.querySelectorAll('.row-checkbox:checked'))
+        .map(checkbox => checkbox.getAttribute('data-id'));
+
+      if (selectedIds.length === 0) {
+        alert('请先选择要删除的记录');
+        return;
+      }
+
+      if (confirm(`确定要删除选中的 ${selectedIds.length} 条记录吗？`)) {
+        fetch('/firefighters/batch-delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ids: selectedIds })
+        })
+          .then(response => response.json())
+          .then(result => {
+            if (result.success) {
+              alert(`成功删除 ${result.deletedCount} 条记录`);
+              loadFirefighters(); // 刷新表格  
+            } else {
+              alert('删除失败：' + result.error);
+            }
+          })
+          .catch(err => {
+            console.error(err);
+            alert('操作失败，请稍后重试');
+          });
+      }
+    }
+
 
     // 加载消防员数据并填充表格  
-    function loadFirefighters(queryParams = {}) {  
-      const queryString = new URLSearchParams(queryParams).toString();  
-      fetch('/firefighters/list?' + queryString)  
-        .then(response => response.json())  
-        .then(data => {  
-          const tbody = document.querySelector('#firefightersTable tbody');  
+    function loadFirefighters(queryParams = {}) {
+      const queryString = new URLSearchParams(queryParams).toString();
+      fetch('/firefighters/list?' + queryString)
+        .then(response => response.json())
+        .then(data => {
+          const tbody = document.querySelector('#firefightersTable tbody');
           tbody.innerHTML = ''; // 清空当前表格内容  
-          data.forEach(item => {  
-            const tr = document.createElement('tr');  
-            tr.innerHTML = generateTableRow(item);  
-            tbody.appendChild(tr);  
-          });  
-        })  
-        .catch(err => console.error(err));  
-    }  
+          data.forEach(item => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = generateTableRow(item);
+            tbody.appendChild(tr);
+          });
+        })
+        .catch(err => console.error(err));
+    }
 
     // 生成表格行的HTML  
-    function generateTableRow(item) {  
-      return `  
+    function generateTableRow(item) {
+      return `
+        <td><input type="checkbox" class="row-checkbox" data-id="${item.objectId}"></td>  
         <td>${item.number}</td>  
         <td>${item.name}</td>  
         <td>${item.gender}</td>  
@@ -428,376 +1748,1705 @@
         <td>${item.age || ''}</td>  
         <td>${item.position || ''}</td>  
         <td>${item.team || ''}</td>  
-        <td>${item.rank || ''}</td>  
-        <td>${item.climateZone || ''}</td>  
+        <td>${item.year || ''}</td>  
         <td>${item.maoleihao || ''}</td>  
         <td>${item.fuzhuanghao || ''}</td>  
         <td>${item.xieleihao || ''}</td>  
-        <td>${item.zuoxundongmaohao || ''}</td>  
-        <td>${item.maoyidongfuhao || ''}</td>  
-        <td>${item.dayidongxiehao || ''}</td>  
-        <td>${item.chenyihao || ''}</td>  
-        <td>${item.jianzhanghao || ''}</td>  
-        <td>${item.yuyitifuhao || ''}</td>  
-        <td>${item.lifu || ''}</td>  
-        <td>${item.changfu || ''}</td>  
-        <td>${item.kuqun || ''}</td>  
         <td>${item.shengao || ''}</td>  
         <td>${item.xiongwei || ''}</td>  
         <td>${item.yaowei || ''}</td>  
         <td>${item.touwei || ''}</td>  
-        <td>${item.lingwei || ''}</td>  
-        <td>${item.jiaochang || ''}</td>  
-        <td>${item.zhiwei || ''}</td>  
-        <td>${item.ruwuriqi || ''}</td>  
-        <td>${item.yijishiguan || ''}</td>  
-        <td>${item.erjishiguan || ''}</td>  
-        <td>${item.tiganriqi || ''}</td>  
-        <td>${item.xianzhiriqi || ''}</td>  
-        <td>${item.xianxianriqi || ''}</td>  
-        <td>${item.zhiji || ''}</td>  
-        <td>${item.xinglei || ''}</td>  
+        <td>${item.keyongyue || ''}</td>   
         <td>${item.remarks || ''}</td>  
         <td>  
-          <button onclick="showEditFirefighterModal('${item.id}')">修改</button>  
-          <button onclick="deleteFirefighter('${item.id}')">删除</button>  
+          <button onclick="showEditFirefighterModal('${item.objectId}')" class="btn-change" style="margin-bottom: 5px;">修改</button>  
+          <button onclick="deleteFirefighter('${item.objectId}')" class="btn-delete">删除</button>  
         </td>  
-      `;  
-    }  
+      `;
+    }
 
     // 删除消防员信息  
-    function deleteFirefighter(id) {  
-      if (!confirm('确定要删除该消防员信息吗？')) return;  
+    function deleteFirefighter(id) {
+      if (!confirm('确定要删除该实力信息吗？')) return;
 
-      fetch(`/firefighters/delete/${id}`, { method: 'DELETE' })  
-        .then(response => response.json())  
-        .then(result => {  
-          if (result.success) {  
-            alert('删除成功'); 
-            console.log(`${id} 删除成功`);  
+      fetch(`/firefighters/delete/${id}`, { method: 'DELETE' })
+        .then(response => response.json())
+        .then(result => {
+          if (result.success) {
+            alert('删除成功');
+            console.log(`${id} 删除成功`);
             loadFirefighters(); // 刷新表格  
-          } else {  
-            alert('删除失败：' + result.error);  
-          }  
-        })  
-        .catch(err => console.error(err));  
-    }  
+          } else {
+            alert('删除失败：' + result.error);
+          }
+        })
+        .catch(err => console.error(err));
+    }
 
     // 显示添加消防员的模态窗口  
-    function showAddFirefighterModal() {  
-      document.getElementById('modalTitle').innerText = '添加消防员';  
-      clearModalForm();  
+    function showAddFirefighterModal() {
+      document.getElementById('modalTitle').innerText = '添加实力';
+      clearModalForm();
       document.getElementById('firefighterId').value = ''; // 清空ID 
       document.getElementById('saveFirefighter').innerText = '确认添加'; // 设置按钮文字 
       const numberInput = document.getElementById('modalNumber'); // 获取 DOM 元素
       numberInput.removeAttribute('readonly'); // 移除 'readonly' 属性  
-      document.getElementById('firefighterModal').style.display = 'block';  
-    }  
+      document.getElementById('firefighterModal').style.display = 'block';
+      document.getElementById('modalBackdrop').style.display = 'block';
+    }
 
     // 显示修改消防员的模态窗口  
-    function showEditFirefighterModal(id) {  
-      fetch(`/firefighters/get/${id}`)  
-        .then(response => response.json())  
+    function showEditFirefighterModal(id) {
+      fetch(`/firefighters/get/${id}`)
+        .then(response => response.json())
         .then(item => {
-            console.log(item);  
-            document.getElementById('modalTitle').innerText = '修改消防员信息';
-            document.getElementById('saveFirefighter').innerText = '确认修改'; // 设置按钮文字
-            const numberInput = document.getElementById('modalNumber'); // 获取 DOM 元素
-            numberInput.setAttribute('readonly', true); // 确保编号框不可编辑 
-            fillModalForm(item);  
-            document.getElementById('firefighterModal').style.display = 'block';  
-        }) 
-        .catch(err => console.error(err));  
+          console.log(item);
+          document.getElementById('modalTitle').innerText = '修改实力信息';
+          document.getElementById('saveFirefighter').innerText = '确认修改'; // 设置按钮文字
+          const numberInput = document.getElementById('modalNumber'); // 获取 DOM 元素
+          numberInput.setAttribute('readonly', true); // 确保编号框不可编辑 
+          fillModalForm(item);
+          document.getElementById('firefighterModal').style.display = 'block';
+          document.getElementById('modalBackdrop').style.display = 'block';
+        })
+        .catch(err => console.error(err));
 
-      }      
+    }
     // 填充模态窗口表单数据  
-  function fillModalForm(item) {
-  document.getElementById('firefighterId').value = item.objectId || '';
-  document.getElementById('modalNumber').value = item.number || '';
-  document.getElementById('modalName').value = item.name || '';
-  document.getElementById('modalGender').value = item.gender || '';
-  document.getElementById('modalBirthDate').value = item.birthDate || '';
-  document.getElementById('modalAge').value = item.age || '';
-  document.getElementById('modalPosition').value = item.position || '';
-  document.getElementById('modalTeam').value = item.team || '';
-  document.getElementById('modalRank').value = item.rank || '';
-  document.getElementById('modalClimateZone').value = item.climateZone || '';
-  document.getElementById('modalMaoleihao').value = item.maoleihao || '';
-  document.getElementById('modalFuzhuanghao').value = item.fuzhuanghao || '';
-  document.getElementById('modalXieleihao').value = item.xieleihao || '';
-  document.getElementById('modalZuoxundongmaohao').value = item.zuoxundongmaohao || '';
-  document.getElementById('modalMaoyidongfuhao').value = item.maoyidongfuhao || '';
-  document.getElementById('modalDayidongxiehao').value = item.dayidongxiehao || '';
-  document.getElementById('modalChenyihao').value = item.chenyihao || '';
-  document.getElementById('modalJianzhanghao').value = item.jianzhanghao || '';
-  document.getElementById('modalYuyitifuhao').value = item.yuyitifuhao || '';
-  document.getElementById('modalLifu').value = item.lifu || '';
-  document.getElementById('modalChangfu').value = item.changfu || '';
-  document.getElementById('modalKuqun').value = item.kuqun || '';
-  document.getElementById('modalShengao').value = item.shengao || '';
-  document.getElementById('modalXiongwei').value = item.xiongwei || '';
-  document.getElementById('modalYaowei').value = item.yaowei || '';
-  document.getElementById('modalTouwei').value = item.touwei || '';
-  document.getElementById('modalLingwei').value = item.lingwei || '';
-  document.getElementById('modalJiaochang').value = item.jiaochang || '';
-  document.getElementById('modalZhiwei').value = item.zhiwei || '';
-  document.getElementById('modalRuwuriqi').value = item.ruwuriqi || '';
-  document.getElementById('modalYijishiguan').value = item.yijishiguan || '';
-  document.getElementById('modalErjishiguan').value = item.erjishiguan || '';
-  document.getElementById('modalTiganriqi').value = item.tiganriqi || '';
-  document.getElementById('modalXianzhiriqi').value = item.xianzhiriqi || '';
-  document.getElementById('modalXianxianriqi').value = item.xianxianriqi || '';
-  document.getElementById('modalZhiji').value = item.zhiji || '';
-  document.getElementById('modalXinglei').value = item.xinglei || '';
-  document.getElementById('modalRemarks').value = item.remarks || '';
-}
+    function fillModalForm(item) {
+      document.getElementById('firefighterId').value = item.objectId || '';
+      document.getElementById('modalNumber').value = item.number || '';
+      document.getElementById('modalName').value = item.name || '';
+      document.getElementById('modalGender').value = item.gender || '';
+      document.getElementById('modalBirthDate').value = item.birthDate || '';
+      document.getElementById('modalAge').value = item.age || '';
+      document.getElementById('modalPosition').value = item.position || '';
+      document.getElementById('modalTeam').value = item.team || '';
+      document.getElementById('modalYear').value = item.year || '';
+      document.getElementById('modalMaoleihao').value = item.maoleihao || '';
+      document.getElementById('modalFuzhuanghao').value = item.fuzhuanghao || '';
+      document.getElementById('modalXieleihao').value = item.xieleihao || '';
+      document.getElementById('modalShengao').value = item.shengao || '';
+      document.getElementById('modalXiongwei').value = item.xiongwei || '';
+      document.getElementById('modalYaowei').value = item.yaowei || '';
+      document.getElementById('modalTouwei').value = item.touwei || '';
+      document.getElementById('modalKeyongyue').value = item.keyongyue || '';
+      document.getElementById('modalRemarks').value = item.remarks || '';
+    }
 
     // 清空模态窗口表单数据  
-    function clearModalForm() {  
-      document.getElementById('firefighterForm').reset();  
+    function clearModalForm() {
+      document.getElementById('firefighterForm').reset();
       // 清除错误提示  
-      clearErrorMessages();  
-    }  
+      clearErrorMessages();
+    }
 
     // 关闭模态窗口  
-    document.getElementById('closeModal').onclick = function() {  
-      document.getElementById('firefighterModal').style.display = 'none';  
-    };  
-    document.getElementById('cancelModal').onclick = function() {  
-      document.getElementById('firefighterModal').style.display = 'none';  
-    };  
+    document.getElementById('closeModal').onclick = function () {
+      document.getElementById('firefighterModal').style.display = 'none';
+      document.getElementById('modalBackdrop').style.display = 'none';
+    };
+    document.getElementById('cancelModal').onclick = function () {
+      document.getElementById('firefighterModal').style.display = 'none';
+      document.getElementById('modalBackdrop').style.display = 'none';
+    };
 
     // 保存消防员（添加或修改）  
-    document.getElementById('saveFirefighter').onclick = function() {  
-      const id = document.getElementById('firefighterId').value; 
-      console.log('保存或修改消防员信息时的id为：', id); 
-      const form = document.getElementById('firefighterForm');  
-      const formData = {};  
-      const inputs = form.querySelectorAll('input, select');  
-      let valid = true;  
+    document.getElementById('saveFirefighter').onclick = function () {
+      const id = document.getElementById('firefighterId').value;
+      const form = document.getElementById('firefighterForm');
+      const formData = {};
+      const inputs = form.querySelectorAll('input, select');
+      let valid = true;
 
       // 清理之前的错误提示  
-      clearErrorMessages();  
+      clearErrorMessages();
 
       // 1. 提取表单数据并验证  
-      inputs.forEach(input => {  
-        if (input.required && input.value.trim() === '') {  
-          displayErrorMessage(input, `字段 "${input.previousElementSibling.innerText}" 是必填项！`);  
-          valid = false;  
-        } else {  
-          formData[input.name] = input.value.trim();  
-        }  
-      });  
+      inputs.forEach(input => {
+        if (input.required && input.value.trim() === '') {
+          displayErrorMessage(input, `字段 "${input.previousElementSibling.innerText}" 是必填项！`);
+          valid = false;
+        } else {
+          formData[input.name] = input.value.trim();
+        }
+      });
 
-      if (!valid) return;  
+      if (!valid) return;
 
-      let url, method;  
-      if (id) {  
+      let url, method;
+      if (id) {
         // 更新  
-        url = `/firefighters/update/${id}`;  
-        method = 'PUT';  
-      } else {  
+        url = `/firefighters/update/${id}`;
+        method = 'PUT';
+      } else {
         // 添加  
-        url = '/firefighters/add';  
-        method = 'POST';  
-      }  
+        url = '/firefighters/add';
+        method = 'POST';
+      }
 
-      fetch(url, {  
-        method: method,  
-        headers: {  
-          'Content-Type': 'application/json',  
-        },  
-        body: JSON.stringify(formData),  
-      })  
-        .then(response => response.json())  
-        .then(result => {  
-          if (result.success) {  
-            alert('保存成功');  
-            document.getElementById('firefighterModal').style.display = 'none';  
-            loadFirefighters();  
-          } else {  
+      fetch(url, {
+        method: method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      })
+        .then(response => response.json())
+        .then(result => {
+          if (result.success) {
+            alert('保存成功');
+            document.getElementById('firefighterModal').style.display = 'none';
+            document.getElementById('modalBackdrop').style.display = 'none';
+            loadFirefighters();
+          } else {
             // 处理编号重复的错误  
-            if (result.error.includes('编号')) {  
-              displayErrorMessage(document.getElementById('modalNumber'), result.error);  
-            } else {  
-              alert('保存失败：' + result.error);  
-            }  
-          }  
-        })  
-        .catch(err => console.error(err));  
-    };  
+            if (result.error.includes('编号')) {
+              displayErrorMessage(document.getElementById('modalNumber'), result.error);
+            } else {
+              alert('保存失败：' + result.error);
+            }
+          }
+        })
+        .catch(err => console.error(err));
+    };
 
     // 显示字段错误信息  
-    function displayErrorMessage(input, message) {  
+    function displayErrorMessage(input, message) {
       input.classList.add('error'); // 给输入框加错误样式  
-      const errorSpan = document.createElement('span');  
-      errorSpan.className = 'error-message';  
-      errorSpan.textContent = message;  
+      const errorSpan = document.createElement('span');
+      errorSpan.className = 'error-message';
+      errorSpan.textContent = message;
       input.parentNode.appendChild(errorSpan); // 在输入框父容器中添加错误提示  
-    }  
+    }
 
     // 清理所有错误提示  
-    function clearErrorMessages() {  
-      const errorMessages = document.querySelectorAll('.error-message');  
+    function clearErrorMessages() {
+      const errorMessages = document.querySelectorAll('.error-message');
       errorMessages.forEach(msg => msg.remove()); // 删除错误信息  
-      const errorInputs = document.querySelectorAll('.error');  
+      const errorInputs = document.querySelectorAll('.error');
       errorInputs.forEach(input => input.classList.remove('error')); // 移除错误标识  
-    }  
+    }
 
     // 搜索功能  
-    function searchFirefighters() {  
-      const queryParams = {  
-        number: document.getElementById('searchNumber').value.trim(),  
-        name: document.getElementById('searchName').value.trim(),  
-        gender: document.getElementById('searchGender').value,  
-        ageMin: document.getElementById('searchAgeMin').value,  
-        ageMax: document.getElementById('searchAgeMax').value,  
-        position: document.getElementById('searchPosition').value.trim(),  
-        team: document.getElementById('searchTeam').value.trim(),  
-        rank: document.getElementById('searchRank').value.trim(),  
+    function searchFirefighters() {
+      const queryParams = {
+        number: document.getElementById('searchNumber').value.trim(),
+        name: document.getElementById('searchName').value.trim(),
+        gender: document.getElementById('searchGender').value,
+        ageMin: document.getElementById('searchAgeMin').value,
+        ageMax: document.getElementById('searchAgeMax').value,
+        position: document.getElementById('searchPosition').value.trim(),
+        team: document.getElementById('searchTeam').value.trim(),
+        year: document.getElementById('searchYear').value.trim(),
         // 可以继续添加其他搜索条件  
-      };  
-      loadFirefighters(queryParams);  
-    }  
+      };
+      loadFirefighters(queryParams);
+    }
 
     // 重置搜索条件  
-    function resetSearch() {  
-      document.getElementById('searchForm').reset();  
-      loadFirefighters();  
-    }  
+    function resetSearch() {
+      document.getElementById('searchForm').reset();
+      loadFirefighters();
+    }
 
     // 导入Excel文件表单提交  
-    document.getElementById('importForm').addEventListener('submit', function(event) {  
-      event.preventDefault();  
+    document.getElementById('importForm').addEventListener('submit', function (event) {
+      event.preventDefault();
 
-      const fileInput = document.getElementById('excelFile');  
-      const file = fileInput.files[0];  
-      if (!file) {  
-        alert('请选择Excel文件');  
-        return;  
-      }  
+      const fileInput = document.getElementById('excelFile');
+      const file = fileInput.files[0];
+      if (!file) {
+        alert('请选择Excel文件');
+        return;
+      }
 
-      const formData = new FormData();  
-      formData.append('excelFile', file);  
+      const formData = new FormData();
+      formData.append('excelFile', file);
 
-      fetch('/firefighters/import-preview', {  
-        method: 'POST',  
-        body: formData  
-      })  
-      .then(response => response.json())  
-      .then(data => {  
-        if (data.success) {  
-          // 显示模态窗口并展示预览数据  
-          showImportModal(data.previewData);  
-        } else {  
-          alert('预览失败：' + data.error);  
-        }  
-      })  
-      .catch(err => console.error(err));  
-    });  
+      fetch('/firefighters/import-preview', {
+        method: 'POST',
+        body: formData
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            // 显示模态窗口并展示预览数据  
+            showImportModal(data.previewData);
+          } else {
+            alert('预览失败：' + data.error);
+          }
+        })
+        .catch(err => console.error(err));
+    });
 
     // 显示导入模态窗口  
-    function showImportModal(previewData) {  
-      const modal = document.getElementById('importModal');  
-      const closeModalBtn = document.getElementById('closeImportModal');  
-      const confirmBtn = document.getElementById('confirmImport');  
-      const cancelBtn = document.getElementById('cancelImport');  
-      const previewTable = document.getElementById('importPreviewTable');  
+    function showImportModal(previewData) {
+      const modal = document.getElementById('importModal');
+      const closeModalBtn = document.getElementById('closeImportModal');
+      const confirmBtn = document.getElementById('confirmImport');
+      const cancelBtn = document.getElementById('cancelImport');
+      const previewTable = document.getElementById('importPreviewTable');
 
       // 清空预览表格内容  
-      previewTable.innerHTML = '';  
+      previewTable.innerHTML = '';
 
-      if (previewData.length === 0) {  
-        previewTable.innerHTML = '<p>没有可预览的数据。</p>';  
-        return;  
-      }  
+      if (previewData.length === 0) {
+        previewTable.innerHTML = '<p>没有可预览的数据。</p>';
+        return;
+      }
 
       // 动态生成表格头  
-      const headers = Object.keys(previewData[0]);  
-      const thead = document.createElement('thead');  
-      const headerRow = document.createElement('tr');  
-      headers.forEach(header => {  
-        const th = document.createElement('th');  
-        th.textContent = header;  
-        headerRow.appendChild(th);  
-      });  
-      thead.appendChild(headerRow);  
-      previewTable.appendChild(thead);  
+      const headers = Object.keys(previewData[0]);
+      const thead = document.createElement('thead');
+      const headerRow = document.createElement('tr');
+      headers.forEach(header => {
+        const th = document.createElement('th');
+        th.textContent = header;
+        headerRow.appendChild(th);
+      });
+      thead.appendChild(headerRow);
+      previewTable.appendChild(thead);
 
       // 动态生成表格体  
-      const tbody = document.createElement('tbody');  
-      previewData.forEach(item => {  
-        const tr = document.createElement('tr');  
-        headers.forEach(header => {  
-          const td = document.createElement('td');  
-          td.textContent = item[header] !== undefined ? item[header] : '';  
-          tr.appendChild(td);  
-        });  
-        tbody.appendChild(tr);  
-      });  
-      previewTable.appendChild(tbody);  
+      const tbody = document.createElement('tbody');
+      previewData.forEach(item => {
+        const tr = document.createElement('tr');
+        headers.forEach(header => {
+          const td = document.createElement('td');
+          td.textContent = item[header] !== undefined ? item[header] : '';
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      });
+      previewTable.appendChild(tbody);
 
       // 显示模态窗口  
-      modal.style.display = 'block';  
+      modal.style.display = 'block';
 
       // 关闭模态窗口事件  
-      closeModalBtn.onclick = () => {  
-        modal.style.display = 'none';  
-      };  
-      cancelBtn.onclick = () => {  
-        modal.style.display = 'none';  
-      };  
+      closeModalBtn.onclick = () => {
+        modal.style.display = 'none';
+      };
+      cancelBtn.onclick = () => {
+        modal.style.display = 'none';
+      };
 
       // 确认导入事件  
-      confirmBtn.onclick = () => {  
-        fetch('/firefighters/import-confirm', {  
-          method: 'POST',  
-          headers: { 'Content-Type': 'application/json' },  
-          body: JSON.stringify({ data: previewData })  
-        })  
-          .then(response => response.json())  
-          .then(result => {  
-            if (result.success) {  
+      confirmBtn.onclick = () => {
+        fetch('/firefighters/import-confirm', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ data: previewData })
+        })
+          .then(response => response.json())
+          .then(result => {
+            if (result.success) {
               // 构建详细反馈信息  
               const message = `  
                 导入完成：  
                 成功导入：${result.saved} 条记录。  
                 跳过：${result.skipped} 条记录。  
-              `;  
+              `;
 
               // 显示跳过记录详情  
-              if (result.skipped > 0) {  
-                const skippedDetails = result.details.skipped.map(item => {  
-                  return `编号: ${item.data.number || '未知'}, 原因: ${item.reason}`;  
-                }).join('\n');  
+              if (result.skipped > 0) {
+                const skippedDetails = result.details.skipped.map(item => {
+                  return `编号: ${item.data.number || '未知'}, 原因: ${item.reason}`;
+                }).join('\n');
 
-                alert(`${message}\n跳过详情：\n${skippedDetails}`);  
-              } else {  
-                alert(message);  
-              }  
+                alert(`${message}\n跳过详情：\n${skippedDetails}`);
+              } else {
+                alert(message);
+              }
 
               // 隐藏模态窗口，重新加载列表  
-              modal.style.display = 'none';  
+              modal.style.display = 'none';
               loadFirefighters(); // 调用现有的列表加载逻辑  
-            } else {  
-              alert('导入失败：' + result.error);  
-            }  
-          })  
-          .catch(err => console.error('导入请求失败：', err));  
-      };  
-    }  
+            } else {
+              alert('导入失败：' + result.error);
+            }
+          })
+          .catch(err => console.error('导入请求失败：', err));
+      };
+    }
 
     // 点击模态窗口外部关闭模态窗口  
-    window.onclick = function(event) {  
-      const firefighterModal = document.getElementById('firefighterModal');  
-      const importModal = document.getElementById('importModal');  
-      if (event.target == firefighterModal) {  
-        firefighterModal.style.display = 'none';  
-      }  
-      if (event.target == importModal) {  
-        importModal.style.display = 'none';  
-      }  
-    };  
-  </script>  
-</body>  
+    window.onclick = function (event) {
+      const firefighterModal = document.getElementById('firefighterModal');
+      const importModal = document.getElementById('importModal');
+      if (event.target == firefighterModal) {
+        firefighterModal.style.display = 'none';
+        document.getElementById('modalBackdrop').style.display = 'none';
+      }
+      if (event.target == importModal) {
+        importModal.style.display = 'none';
+      }
+    };
+
+    // 获取出生日期输入框  
+    const birthDateInput = document.getElementById("modalBirthDate");
+    // 获取年龄输入框  
+    const ageInput = document.getElementById("modalAge");
+
+    // 注册监听事件：当日期发生变动时  
+    birthDateInput.addEventListener("change", () => {
+      const birthDateValue = birthDateInput.value; // 形如 "2023-03-05"  
+
+      if (!birthDateValue) {
+        // 清空或保留  
+        ageInput.value = "";
+        return;
+      }
+
+      const birthDate = new Date(birthDateValue);
+      if (isNaN(birthDate)) {
+        // 非法日期（理论上不太会发生，但可做防御性处理）  
+        ageInput.value = "";
+        return;
+      }
+
+      const today = new Date();
+      let age = today.getFullYear() - birthDate.getFullYear();
+
+      // 计算是否过了生日（月份或日期）  
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+      const dayDiff = today.getDate() - birthDate.getDate();
+      if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
+        age--;
+      }
+
+      // 若年龄小于0，可根据需要设为0或空字符串  
+      if (age < 0) {
+        age = 0;
+      }
+
+      // 写回到年龄输入框  
+      ageInput.value = age;
+    });
+
+
+    // 显示单位变更模态窗口  
+    function showChangeTeamModal() {
+      const selectedRows = document.querySelectorAll('.row-checkbox:checked');
+      if (selectedRows.length === 0) {
+        alert('请先选择需要变更单位的人员');
+        return;
+      }
+
+      // 获取选中行的数据  
+      const selectedIds = Array.from(selectedRows).map(checkbox => checkbox.getAttribute('data-id'));
+      fetchSelectedFirefighters(selectedIds);
+    }
+
+    // 获取选中的消防员数据  
+    function fetchSelectedFirefighters(ids) {
+      Promise.all(ids.map(id =>
+        fetch(`/firefighters/get/${id}`)
+          .then(response => response.json())
+      ))
+        .then(firefighters => {
+          displayChangeTeamTable(firefighters);
+          document.getElementById('changeTeamModal').style.display = 'block';
+          document.getElementById('modalBackdrop').style.display = 'block';
+        })
+        .catch(err => {
+          console.error(err);
+          alert('获取数据失败，请稍后重试');
+        });
+    }
+
+    // 显示变更单位表格  
+    function displayChangeTeamTable(firefighters) {
+      const tbody = document.querySelector('#changeTeamTable tbody');
+      tbody.innerHTML = '';
+
+      firefighters.forEach(item => {
+        const tr = document.createElement('tr');
+        tr.setAttribute('data-id', item.objectId);
+
+        // 创建单位选择下拉菜单  
+        const teamSelect = `  
+      <select class="form-select new-team">  
+        <option value="">请选择单位</option>  
+        <option value="司令部">司令部</option>  
+        <option value="政治部组织干部科">政治部组织干部科</option>  
+        <option value="财务科">财务科</option>  
+        <option value="防火监督科">防火监督科</option>  
+        <option value="综合指导科">综合指导科</option>  
+        <option value="战勤保障科">战勤保障科</option>  
+        <option value="作战训练科">作战训练科</option>  
+        <option value="装备科">装备科</option>  
+        <option value="政治部队务督察科">政治部队务督察科</option>  
+        <option value="指挥中心">指挥中心</option>  
+        <option value="办公室">办公室</option>  
+        <option value="公用">公用</option>  
+        <option value="太子河大队">太子河大队</option>  
+        <option value="白塔大队">白塔大队</option>  
+        <option value="宏伟区消防救援大队">宏伟区消防救援大队</option>  
+        <option value="灯塔市消防救援大队">灯塔市消防救援大队</option>  
+        <option value="文圣区消防救援大队">文圣区消防救援大队</option>  
+        <option value="辽阳县大队">辽阳县大队</option>  
+        <option value="弓长岭区消防救援大队">弓长岭区消防救援大队</option>  
+        <option value="雷锋街消防救援站">雷锋街消防救援站</option>  
+        <option value="汤泉谷消防救援站">汤泉谷消防救援站</option>  
+        <option value="佟二堡消防站">佟二堡消防站</option>  
+        <option value="兆麟西路消防站">兆麟西路消防站</option>  
+        <option value="铧子消防站">铧子消防站</option>  
+        <option value="万和一路消防救援站">万和一路消防救援站</option>  
+        <option value="安康路消防救援站">安康路消防救援站</option>  
+        <option value="文昌街消防站">文昌街消防站</option>  
+        <option value="腾飞街">腾飞街</option>  
+        <option value="刘二堡消防救援站">刘二堡消防救援站</option>  
+        <option value="黄泥洼消防救援站">黄泥洼消防救援站</option>  
+        <option value="下达河消防救援站">下达河消防救援站</option>  
+        <option value="备用">备用</option>  
+        <option value="其它">其它</option>  
+      </select>  
+    `;
+
+        tr.innerHTML = `  
+      <td>${item.number || ''}</td>  
+      <td>${item.name || ''}</td>  
+      <td>${item.gender || ''}</td>  
+      <td>${item.age || ''}</td>  
+      <td>${item.team || ''}</td>  
+      <td>${teamSelect}</td>  
+      <td><button class="remove-row button-secondary">删除</button></td>  
+    `;
+
+        tbody.appendChild(tr);
+      });
+
+      // 绑定删除行按钮事件  
+      document.querySelectorAll('.remove-row').forEach(button => {
+        button.addEventListener('click', function () {
+          this.closest('tr').remove();
+        });
+      });
+    }
+
+    // 关闭模态窗口  
+    document.getElementById('closeChangeTeamModal').addEventListener('click', function () {
+      document.getElementById('changeTeamModal').style.display = 'none';
+      document.getElementById('modalBackdrop').style.display = 'none';
+    });
+
+    document.getElementById('cancelChangeTeam').addEventListener('click', function () {
+      document.getElementById('changeTeamModal').style.display = 'none';
+      document.getElementById('modalBackdrop').style.display = 'none';
+    });
+
+    // 提交单位变更  
+    document.getElementById('submitChangeTeam').addEventListener('click', function () {
+      const rows = document.querySelectorAll('#changeTeamTable tbody tr');
+      const changes = [];
+      const updates = [];
+
+      // 检查是否有数据  
+      if (rows.length === 0) {
+        alert('没有需要变更的数据');
+        return;
+      }
+
+      // 收集变更数据  
+      rows.forEach(row => {
+        const id = row.getAttribute('data-id');
+        const number = row.cells[0].textContent;
+        const name = row.cells[1].textContent;
+        const gender = row.cells[2].textContent;
+        const age = row.cells[3].textContent;
+        const oldTeam = row.cells[4].textContent;
+        const newTeam = row.cells[5].querySelector('select').value;
+
+        // 验证新单位是否已选择  
+        if (!newTeam) {
+          alert('请为所有人员选择变更单位');
+          throw new Error('变更单位未选择');
+        }
+
+        // 创建变更记录  
+        changes.push({
+          number,
+          name,
+          gender,
+          age,
+          oldTeam,
+          newTeam,
+          changeDate: new Date().toISOString().split('T')[0]
+        });
+
+        // 创建更新记录  
+        updates.push({
+          id,
+          team: newTeam
+        });
+      });
+
+      // 提交变更  
+      saveTeamChanges(changes, updates);
+    });
+
+    // 保存单位变更  
+    function saveTeamChanges(changes, updates) {
+      // 1. 更新Firefighter表中的单位  
+      fetch('/firefighters/batch-update-team', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ updates })
+      })
+        .then(response => response.json())
+        .then(result => {
+          if (result.success) {
+            // 2. 将变更记录保存到Change表  
+            return fetch('/changes/add', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ changes })
+            });
+          } else {
+            throw new Error('更新单位失败：' + result.error);
+          }
+        })
+        .then(response => response.json())
+        .then(result => {
+          if (result.success) {
+            alert('单位变更成功');
+            document.getElementById('changeTeamModal').style.display = 'none';
+            document.getElementById('modalBackdrop').style.display = 'none';
+            loadFirefighters(); // 刷新表格  
+          } else {
+            alert('保存变更记录失败：' + result.error);
+          }
+        })
+        .catch(err => {
+          console.error(err);
+          alert('操作失败：' + (err.message || '未知错误'));
+        });
+    }
+
+
+    // 显示报表模态窗口  
+    function showReportModal() {
+      document.getElementById('reportModal').style.display = 'block';
+      document.getElementById('modalBackdrop').style.display = 'block';
+
+      // 设置默认日期为当前月份的第一天和最后一天  
+      const now = new Date();
+      const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+      const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+      document.getElementById('startDate').valueAsDate = firstDay;
+      document.getElementById('endDate').valueAsDate = lastDay;
+
+    }
+
+
+
+    // 关闭报表模态窗口  
+    function closeReportModal() {
+      document.getElementById('reportModal').style.display = 'none';
+      document.getElementById('modalBackdrop').style.display = 'none';
+    }
+
+    // 根据选择的报表类型显示不同的筛选选项  
+    function updateFilterOptions() {
+      const reportTypeElement = document.getElementById('reportType').value;
+      console.log('reportType:', reportTypeElement);
+
+      // 隐藏所有筛选组  
+      document.querySelectorAll('.filter-group').forEach(elem => {
+        elem.style.display = 'none';
+      });
+
+      // 显示对应报表类型的筛选组  
+      switch (reportTypeElement) {
+        case 'personnel':
+          document.getElementById('personnelFilters').style.display = 'block';
+          updateSortOptions(['number', 'name', 'ageNum', 'team', 'year']);
+          break;
+        case 'equipment':
+          document.getElementById('equipmentFilters').style.display = 'block';
+          updateSortOptions(['number', 'name', 'team']);
+          break;
+        case 'bodySize':
+          document.getElementById('bodySizeFilters').style.display = 'block';
+          updateSortOptions(['number', 'name', 'shengaoNum', 'xiongweiNum', 'yaoweiNum', 'touweiNum']);
+          break;
+        case 'teamSummary':
+          // 队伍人员统计表不需要额外筛选  
+          updateSortOptions(['team', 'total', 'male', 'female', 'avgAge']);
+          break;
+        case 'changeHistory':
+          document.getElementById('changeHistoryFilters').style.display = 'block';
+          updateSortOptions(['changeDate', 'number', 'name', 'oldTeam', 'newTeam']);
+          break;
+      }
+    }
+
+    // 更新排序字段选项  
+    function updateSortOptions(fields) {
+      const sortField = document.getElementById('sortField');
+
+      // 清空现有选项  
+      sortField.innerHTML = '<option value="">默认排序</option>';
+
+      // 添加报表特定的排序字段  
+      const fieldNames = {
+        'number': '编号',
+        'name': '姓名',
+        'ageNum': '年龄',
+        'team': '单位',
+        'year': '工作年限',
+        'shengaoNum': '身高',
+        'xiongweiNum': '胸围',
+        'yaoweiNum': '腰围',
+        'touweiNum': '头围',
+        'total': '总人数',
+        'male': '男性人数',
+        'female': '女性人数',
+        'avgAge': '平均年龄',
+        'changeDate': '变更日期',
+        'oldTeam': '原单位',
+        'newTeam': '变更单位'
+      };
+
+      fields.forEach(field => {
+        const option = document.createElement('option');
+        option.value = field;
+        option.textContent = fieldNames[field] || field;
+        sortField.appendChild(option);
+      });
+    }
+
+    // 生成报表时收集所有筛选条件  
+    function generateReport() {
+      const reportTypeElement = document.getElementById('reportType').value;
+      const teamFilterElement = document.getElementById('teamFilter').value;
+      const outputFormatElement = document.querySelector('input[name="outputFormat"]:checked').value;
+
+      // 基本参数 - 修改为正确的参数名  
+      const params = {
+        reportType: reportTypeElement,  // 正确的参数名  
+        teamFilter: teamFilterElement   // 正确的参数名  
+      };
+
+      // 根据报表类型收集特定筛选条件  
+      switch (reportTypeElement) {
+        case 'personnel':
+          params.gender = document.getElementById('genderFilter').value;
+          params.ageMin = document.getElementById('ageMin').value;
+          params.ageMax = document.getElementById('ageMax').value;
+          params.position = document.getElementById('positionFilter').value;
+          params.yearMin = document.getElementById('yearMinFilter').value;
+          params.yearMax = document.getElementById('yearMaxFilter').value;
+          break;
+        case 'equipment':
+          params.gender = document.getElementById('genderFilter').value;
+          params.hatSize = document.getElementById('hatSizeFilter').value;
+          params.clothingSize = document.getElementById('clothingSizeFilter').value;
+          params.shoeSize = document.getElementById('shoeSizeFilter').value;
+          break;
+        case 'bodySize':
+          params.gender = document.getElementById('genderFilter').value;
+          params.heightMin = document.getElementById('heightMin').value;
+          params.heightMax = document.getElementById('heightMax').value;
+          params.chestMin = document.getElementById('chestMin').value;
+          params.chestMax = document.getElementById('chestMax').value;
+          params.waistMin = document.getElementById('waistMin').value;
+          params.waistMax = document.getElementById('waistMax').value;
+          params.headMin = document.getElementById('headMin').value;
+          params.headMax = document.getElementById('headMax').value;
+          break;
+        case 'changeHistory':
+          params.startDate = document.getElementById('startDate').value;
+          params.endDate = document.getElementById('endDate').value;
+          params.oldTeam = document.getElementById('oldTeamFilter').value;
+          break;
+      }
+
+      // 添加排序参数  
+      params.sortField = document.getElementById('sortField').value;
+      params.sortOrder = document.getElementById('sortOrder').value;
+
+      // 请求报表数据  
+      fetch('/reports/generate?' + new URLSearchParams(params))
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            if (outputFormatElement === 'print') {
+              displayPrintableReport(data.report, reportTypeElement);
+            } else if (outputFormatElement === 'pdf') {
+              downloadReportPDF(data.report, reportTypeElement);
+            } else if (outputFormatElement === 'excel') {
+              downloadReportExcel(data.report, reportTypeElement);
+            }
+          } else {
+            alert('生成报表失败：' + data.error);
+          }
+        })
+        .catch(err => {
+          console.error('报表生成失败:', err);
+          alert('报表生成失败，请稍后重试');
+        });
+
+      // 关闭模态窗口  
+      closeReportModal();
+    }
+
+    // 显示可打印的报表  
+    function displayPrintableReport(report, reportType) {
+      // 创建打印容器  
+      const printContainer = document.createElement('div');
+      printContainer.className = 'print-container';
+      printContainer.id = 'printableReport';
+
+      // 添加报表头部  
+      const header = document.createElement('div');
+      header.className = 'print-header';
+      header.innerHTML = `  
+    <h1>${getReportTitle(reportType)}</h1>  
+  `;
+      printContainer.appendChild(header);
+
+      // 添加报表内容  
+      const content = document.createElement('div');
+      content.className = 'print-content';
+      content.innerHTML = generateReportTable(report, reportType);
+      printContainer.appendChild(content);
+
+      // 添加打印信息（放在表格下方）  
+      const printInfo = document.createElement('div');
+      printInfo.className = 'print-info';
+
+      // 从 EJS 变量中获取当前登录用户的用户名  
+      const username = currentUser.username; // 假设已从后端传递到全局变量
+
+      // 发起请求查询
+      fetch(`/gerenxinxiguanli/fetch?number=${username}`)
+        .then(res => res.json())
+        .then(result => {
+          if (result.success) {
+            // 存在记录，自动填充表单  
+            const data = result.data;
+            if (currentUser && data.name) {
+              printInfo.innerHTML = `  
+    <div class="print-info-container" style="display: flex; gap: 20px;">  
+      <div class="print-date">打印日期：${new Date().toLocaleDateString()}</div>  
+      <div class="print-user">打印人：${data.name || '系统管理员'}</div>  
+    </div>  
+  `;
+              printContainer.appendChild(printInfo);
+              return;
+            }
+          }
+        });
+
+      // 添加报表底部（仅包含操作按钮）  
+      const footer = document.createElement('div');
+      footer.className = 'print-footer';
+      footer.innerHTML = `  
+    <div class="no-print action-buttons">  
+      <button onclick="printReportIframe()" class="button">打印此页</button>  
+      <button onclick="closeReport()" class="button button-secondary">关闭</button>  
+    </div>  
+  `;
+      printContainer.appendChild(footer);
+
+      // 添加必要的样式  
+      const style = document.createElement('style');
+      style.textContent = `  
+  .action-buttons {  
+    display: flex !important;  
+    justify-content: flex-end !important;  
+    gap: 10px;  
+    width: 100%;  
+  }  
+  
+  /* 重置可能影响对齐的样式 */  
+  .print-footer {  
+    width: 100%;  
+    box-sizing: border-box;  
+  }  
+  
+  .no-print {  
+    width: 100%;  
+  }  
+`;
+      document.head.appendChild(style);
+
+
+      // 添加到文档中  
+      document.body.appendChild(printContainer);
+    }
+
+    // 使用iframe打印  
+    function printReportIframe() {
+      // 获取要打印的内容  
+      const printContent = document.getElementById('printableReport');
+
+      // 创建一个新的iframe  
+      const iframe = document.createElement('iframe');
+      iframe.style.display = 'none';
+      document.body.appendChild(iframe);
+
+      // 获取iframe的文档  
+      const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+
+      // 写入基本HTML结构  
+      iframeDoc.write(`  
+    <!DOCTYPE html>  
+    <html>  
+    <head>  
+      <title>${getReportTitle(reportType)}</title>  
+      <style>  
+        /* 重置样式 */  
+        body, html {  
+          margin: 0;  
+          padding: 0;  
+          font-family: Arial, sans-serif;  
+        }  
+        
+        /* 报表样式 */  
+        .print-content {  
+          padding: 10mm;  
+        }  
+        
+        .print-header {  
+          text-align: center;  
+          margin-bottom: 15mm;  
+        }  
+        
+        /* 打印信息样式 - 新增 */  
+        .print-info {  
+          padding: 0 10mm;  
+          margin-top: 10mm;  
+        }  
+        
+        .print-info-container {  
+          display: flex;  
+          justify-content: space-between;  
+          border-top: 1px solid #ddd;  
+          padding-top: 5mm;  
+        }  
+        
+        .print-date, .print-user {  
+          font-size: 10pt;  
+        }  
+        
+        .print-footer {  
+          text-align: center;  
+          margin-top: 10mm;  
+        }  
+        
+        /* 表格样式 */  
+        table {  
+          width: 100%;  
+          border-collapse: collapse;  
+        }  
+        
+        th, td {  
+          border: 1px solid #333;  
+          padding: 3mm;  
+          text-align: center;  
+        }  
+        
+        th {  
+          background-color: #f2f2f2;  
+        }  
+        
+        /* 隐藏不打印的元素 */  
+        .no-print {  
+          display: none;  
+        }  
+        
+        /* 页码样式 */  
+        .page-number {  
+          position: absolute;  
+          bottom: 5mm;  
+          width: 100%;  
+          text-align: center;  
+          font-size: 10pt;  
+        }  
+        
+        /* 控制分页 */  
+        .page-break {  
+          page-break-after: always;  
+        }  
+        
+        @page {  
+          margin: 10mm;  
+        }  
+      </style>  
+    </head>  
+    <body>  
+      ${printContent.innerHTML.replace(/<div class="no-print">.*?<\/div>/g, '')}  
+    </body>  
+    </html>  
+  `);
+
+      iframeDoc.close();
+
+      // 等待图片加载完成  
+      setTimeout(() => {
+        // 打印iframe内容  
+        iframe.contentWindow.focus();
+        iframe.contentWindow.print();
+
+        // 打印后删除iframe  
+        setTimeout(() => {
+          document.body.removeChild(iframe);
+        }, 1000);
+      }, 500);
+    }
+
+    // 关闭报表  
+    function closeReport() {
+      const container = document.getElementById('printableReport');
+      if (container) {
+        document.body.removeChild(container);
+      }
+    }
+
+    // 获取报表标题  
+    function getReportTitle(reportType) {
+      const titles = {
+        'personnel': '人员基本信息表',
+        'equipment': '人员装备配发表',
+        'bodySize': '人员体型尺寸表',
+        'teamSummary': '队伍人员统计表',
+        'changeHistory': '单位变更记录表'
+      };
+      return titles[reportType] || '报表';
+    }
+
+    // 生成报表表格HTML  
+    function generateReportTable(report, reportType) {
+      let tableHTML = '<table class="print-table">';
+
+      // 根据报表类型生成不同的表头  
+      if (reportType === 'personnel') {
+        tableHTML += `  
+      <thead>  
+        <tr>  
+          <th>编号</th>  
+          <th>姓名</th>  
+          <th>性别</th>  
+          <th>年龄</th>  
+          <th>职务</th>  
+          <th>单位</th>  
+          <th>工作年限</th>  
+          <th>可用余额</th>  
+          <th>备注</th>  
+        </tr>  
+      </thead>  
+      <tbody>  
+    `;
+
+        report.forEach(item => {
+          tableHTML += `  
+        <tr>  
+          <td>${item.number || ''}</td>  
+          <td>${item.name || ''}</td>  
+          <td>${item.gender || ''}</td>  
+          <td>${item.age || ''}</td>  
+          <td>${item.position || ''}</td>  
+          <td>${item.team || ''}</td>  
+          <td>${item.year || ''}</td>  
+          <td>${item.keyongyue || ''}</td>  
+          <td>${item.remarks || ''}</td>  
+        </tr>  
+      `;
+        });
+
+      } else if (reportType === 'equipment') {
+        tableHTML += `  
+      <thead>  
+        <tr>  
+          <th>编号</th>  
+          <th>姓名</th>  
+          <th>性别</th>  
+          <th>单位</th>  
+          <th>帽类号</th>  
+          <th>服装号</th>  
+          <th>鞋类号</th>  
+        </tr>  
+      </thead>  
+      <tbody>  
+    `;
+
+        report.forEach(item => {
+          tableHTML += `  
+        <tr>  
+          <td>${item.number || ''}</td>  
+          <td>${item.name || ''}</td>  
+          <td>${item.gender || ''}</td>  
+          <td>${item.team || ''}</td>  
+          <td>${item.maoleihao || ''}</td>  
+          <td>${item.fuzhuanghao || ''}</td>  
+          <td>${item.xieleihao || ''}</td>  
+        </tr>  
+      `;
+        });
+
+      } else if (reportType === 'bodySize') {
+        tableHTML += `  
+      <thead>  
+        <tr>  
+          <th>编号</th>  
+          <th>姓名</th>  
+          <th>性别</th>  
+          <th>单位</th>  
+          <th>身高(CM)</th>  
+          <th>胸围(CM)</th>  
+          <th>腰围(CM)</th>  
+          <th>头围(CM)</th>  
+        </tr>  
+      </thead>  
+      <tbody>  
+    `;
+
+        report.forEach(item => {
+          tableHTML += `  
+        <tr>  
+          <td>${item.number || ''}</td>  
+          <td>${item.name || ''}</td>  
+          <td>${item.gender || ''}</td>  
+          <td>${item.team || ''}</td>  
+          <td>${item.shengao || ''}</td>  
+          <td>${item.xiongwei || ''}</td>  
+          <td>${item.yaowei || ''}</td>  
+          <td>${item.touwei || ''}</td>  
+        </tr>  
+      `;
+        });
+
+      } else if (reportType === 'teamSummary') {
+        tableHTML += `  
+      <thead>  
+        <tr>  
+          <th>单位</th>  
+          <th>总人数</th>  
+          <th>男性</th>  
+          <th>女性</th>  
+          <th>平均年龄</th>  
+        </tr>  
+      </thead>  
+      <tbody>  
+    `;
+
+        report.forEach(item => {
+          tableHTML += `  
+        <tr>  
+          <td>${item.team || ''}</td>  
+          <td>${item.total || 0}</td>  
+          <td>${item.male || 0}</td>  
+          <td>${item.female || 0}</td>  
+          <td>${item.avgAge || 0}</td>  
+        </tr>  
+      `;
+        });
+
+      } else if (reportType === 'changeHistory') {
+        tableHTML += `  
+      <thead>  
+        <tr>  
+          <th>编号</th>  
+          <th>姓名</th>  
+          <th>性别</th>  
+          <th>年龄</th>  
+          <th>原单位</th>  
+          <th>变更单位</th>  
+          <th>变更日期</th>  
+        </tr>  
+      </thead>  
+      <tbody>  
+    `;
+
+        report.forEach(item => {
+          tableHTML += `  
+        <tr>  
+          <td>${item.number || ''}</td>  
+          <td>${item.name || ''}</td>  
+          <td>${item.gender || ''}</td>  
+          <td>${item.age || ''}</td>  
+          <td>${item.oldTeam || ''}</td>  
+          <td>${item.newTeam || ''}</td>  
+          <td>${item.changeDate || ''}</td>  
+        </tr>  
+      `;
+        });
+      }
+
+      tableHTML += '</tbody></table>';
+      return tableHTML;
+    }
+
+
+    // 下载PDF报表  
+    async function downloadReportPDF(report, reportType) {
+      // 创建PDF文档  
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+
+      // 加载字体  
+      const fontPath = '/fonts/SourceHanSans-Regular.ttf'; // 确保字体文件路径正确  
+      const fontRes = await fetch(fontPath);
+      if (!fontRes.ok) throw new Error('字体文件未找到');
+
+      const fontBlob = await fontRes.arrayBuffer();
+
+      // 使用适当的方法转换为 Base64 字符串  
+      const fontBase64 = arrayBufferToBase64(fontBlob); // 转换为 Base64 
+
+      // 添加字体到 jsPDF  
+      doc.addFileToVFS('SourceHanSans-Regular.ttf', fontBase64);
+      doc.addFont('SourceHanSans-Regular.ttf', 'SourceHanSans', 'normal');
+      doc.setFont('SourceHanSans');
+
+
+      // 设置标题  
+      const title = getReportTitle(reportType);
+      doc.setFontSize(18);
+      doc.text(title, 105, 15, { align: 'center' });
+
+      // 设置表格列  
+      let columns = [];
+      let rows = [];
+
+      // 根据不同报表类型设置列  
+      if (reportType === 'personnel') {
+        columns = [
+          { header: '编号', dataKey: 'number' },
+          { header: '姓名', dataKey: 'name' },
+          { header: '性别', dataKey: 'gender' },
+          { header: '年龄', dataKey: 'age' },
+          { header: '职务', dataKey: 'position' },
+          { header: '单位', dataKey: 'team' },
+          { header: '工作年限', dataKey: 'year' },
+          { header: '可用余额', dataKey: 'keyongyue' }
+        ];
+      } else if (reportType === 'equipment') {
+        columns = [
+          { header: '编号', dataKey: 'number' },
+          { header: '姓名', dataKey: 'name' },
+          { header: '性别', dataKey: 'gender' },
+          { header: '单位', dataKey: 'team' },
+          { header: '帽类号', dataKey: 'maoleihao' },
+          { header: '服装号', dataKey: 'fuzhuanghao' },
+          { header: '鞋类号', dataKey: 'xieleihao' }
+        ];
+      } else if (reportType === 'bodySize') {
+        columns = [
+          { header: '编号', dataKey: 'number' },
+          { header: '姓名', dataKey: 'name' },
+          { header: '性别', dataKey: 'gender' },
+          { header: '单位', dataKey: 'team' },
+          { header: '身高(CM)', dataKey: 'shengao' },
+          { header: '胸围(CM)', dataKey: 'xiongwei' },
+          { header: '腰围(CM)', dataKey: 'yaowei' },
+          { header: '头围(CM)', dataKey: 'touwei' }
+        ];
+      } else if (reportType === 'teamSummary') {
+        columns = [
+          { header: '单位', dataKey: 'team' },
+          { header: '总人数', dataKey: 'total' },
+          { header: '男性', dataKey: 'male' },
+          { header: '女性', dataKey: 'female' },
+          { header: '平均年龄', dataKey: 'avgAge' }
+        ];
+      } else if (reportType === 'changeHistory') {
+        columns = [
+          { header: '编号', dataKey: 'number' },
+          { header: '姓名', dataKey: 'name' },
+          { header: '性别', dataKey: 'gender' },
+          { header: '年龄', dataKey: 'age' },
+          { header: '原单位', dataKey: 'oldTeam' },
+          { header: '变更单位', dataKey: 'newTeam' },
+          { header: '变更日期', dataKey: 'changeDate' }
+        ];
+      }
+
+      // 将报表数据转换为行数据  
+      rows = report.map(item => {
+        const row = {};
+        columns.forEach(col => {
+          // 使用nullish合并运算符 (??)，只会在值为null或undefined时使用后面的值  
+          row[col.dataKey] = item[col.dataKey] ?? '';
+        });
+        return row;
+      });
+
+      // 保存上次表格结束的位置  
+      let lastY = 0;
+
+      // 生成PDF表格  
+      doc.autoTable({
+        startY: 35,
+        head: [columns.map(col => col.header)],
+        body: rows.map(row => columns.map(col => row[col.dataKey])),
+        theme: 'grid',
+        headStyles: {
+          fillColor: [41, 128, 185],
+          textColor: 255,
+          fontSize: 12,
+          halign: 'center'
+        },
+        margin: { top: 30 },
+        styles: {
+          font: "SourceHanSans",
+          fontSize: 12,
+          cellPadding: 3,
+          valign: 'middle',
+          halign: 'center'
+        },
+        columnStyles: { text: { cellWidth: 'auto' } },
+        didDrawPage: (data) => {
+          // 保存表格结束位置  
+          lastY = data.cursor.y;
+        }
+      });
+
+      // 添加页脚  
+      const pageCount = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        // 确保设置字体后再添加日期文本  
+        doc.setFont('SourceHanSans');
+        doc.setPage(i);
+        doc.setFontSize(10);
+        doc.text(`第${i}页/共${pageCount}页`, 105, doc.internal.pageSize.height - 10, { align: 'center' });
+
+        // 只在最后一页的表格下方添加日期和打印人信息  
+        if (i === pageCount) {
+          // 确保设置字体  
+          doc.setFont('SourceHanSans');
+          doc.setFontSize(10);
+
+          // 在表格下方添加日期和打印人信息  
+          const footerY = lastY + 15; // 表格结束位置下方15mm  
+
+          // 左侧添加打印日期  
+          doc.text(`打印日期:${new Date().toLocaleDateString()}`, 15, footerY);
+
+
+          // 从 EJS 变量中获取当前登录用户的用户名  
+          const username = currentUser.username; // 假设已从后端传递到全局变量
+
+          // 调用生成函数并在完成后输出PDF  
+          generatePDF(doc, username, footerY).then(finalDoc => {
+            // 下载PDF  
+            finalDoc.save(`${title}-${new Date().toISOString().split('T')[0]}.pdf`);
+          }).catch(error => {
+            console.error('PDF生成过程中出错:', error);
+          });
+        }
+
+      }
+    }
+
+
+    function generatePDF(doc, username, footerY) {
+      return new Promise((resolve, reject) => {
+        // 左侧添加打印日期  
+        doc.text(`打印日期:${new Date().toLocaleDateString()}`, 15, footerY);
+
+        fetch(`/gerenxinxiguanli/fetch?number=${username}`)
+          .then(res => res.json())
+          .then(result => {
+            if (result.success && result.data && result.data.name) {
+              // 右侧添加打印人  
+              doc.text(`打印人:${result.data.name}`, 50, footerY);
+            } else {
+              // 如果没有获取到名字，使用默认名称  
+              doc.text(`打印人:系统管理员`, 50, footerY);
+            }
+            resolve(doc); // 返回修改后的doc对象  
+          })
+          .catch(err => {
+            console.error('获取用户信息失败:', err);
+            // 出错时也添加默认打印人  
+            doc.text(`打印人:系统管理员`, 50, footerY);
+            resolve(doc); // 尽管有错误，仍然返回doc对象  
+          });
+      });
+    }
+
+
+    // 提供转换 ArrayBuffer 为 Base64 字符串的方法  
+    function arrayBufferToBase64(buffer) {
+      let binary = '';
+      const bytes = new Uint8Array(buffer);
+      const len = bytes.byteLength;
+      for (let i = 0; i < len; i++) {
+        binary += String.fromCharCode(bytes[i]);
+      }
+      return window.btoa(binary); // 使用 window.btoa 将字符串转为 Base64  
+    }
+
+
+    // 下载Excel报表  
+    function downloadReportExcel(report, reportType) {
+      // 设置表格标题行  
+      let headers = [];
+      const title = getReportTitle(reportType);
+
+      // 根据不同报表类型设置列  
+      if (reportType === 'personnel') {
+        headers = ['编号', '姓名', '性别', '年龄', '职务', '单位', '工作年限', '可用余额', '备注'];
+      } else if (reportType === 'equipment') {
+        headers = ['编号', '姓名', '性别', '单位', '帽类号', '服装号', '鞋类号'];
+      } else if (reportType === 'bodySize') {
+        headers = ['编号', '姓名', '性别', '单位', '身高(CM)', '胸围(CM)', '腰围(CM)', '头围(CM)'];
+      } else if (reportType === 'teamSummary') {
+        headers = ['单位', '总人数', '男性', '女性', '平均年龄'];
+      } else if (reportType === 'changeHistory') {
+        headers = ['编号', '姓名', '性别', '年龄', '原单位', '变更单位', '变更日期'];
+      }
+
+
+      // 准备数据行，添加标题行  
+      const rows = [];
+
+      // 添加标题行（第一行，后面会合并单元格）  
+      rows.push([title]);
+
+      // 第二行添加表头  
+      rows.push(headers);
+
+      // 根据不同报表类型生成数据行  
+      if (reportType === 'personnel') {
+        report.forEach(item => {
+          rows.push([
+            item.number || '',
+            item.name || '',
+            item.gender || '',
+            item.age || '',
+            item.position || '',
+            item.team || '',
+            item.year || '',
+            item.keyongyue || '',
+            item.remarks || ''
+          ]);
+        });
+      } else if (reportType === 'equipment') {
+        report.forEach(item => {
+          rows.push([
+            item.number || '',
+            item.name || '',
+            item.gender || '',
+            item.team || '',
+            item.maoleihao || '',
+            item.fuzhuanghao || '',
+            item.xieleihao || ''
+          ]);
+        });
+      } else if (reportType === 'bodySize') {
+        report.forEach(item => {
+          rows.push([
+            item.number || '',
+            item.name || '',
+            item.gender || '',
+            item.team || '',
+            item.shengao || '',
+            item.xiongwei || '',
+            item.yaowei || '',
+            item.touwei || ''
+          ]);
+        });
+      } else if (reportType === 'teamSummary') {
+        report.forEach(item => {
+          rows.push([
+            item.team || '',
+            item.total || 0,
+            item.male || 0,
+            item.female || 0,
+            item.avgAge || 0
+          ]);
+        });
+      } else if (reportType === 'changeHistory') {
+        report.forEach(item => {
+          rows.push([
+            item.number || '',
+            item.name || '',
+            item.gender || '',
+            item.age || '',
+            item.oldTeam || '',
+            item.newTeam || '',
+            item.changeDate || ''
+          ]);
+        });
+      }
+
+      // 添加空行  
+      rows.push([]);
+
+      // 为最后一行的每个单元格填充空值以保证所有列都存在  
+      const printInfoRow = [];
+      for (let i = 0; i < headers.length; i++) {
+        printInfoRow.push('');
+      }
+
+      // 设置打印日期和打印人信息  
+      printInfoRow[0] = `打印日期:${new Date().toLocaleDateString()}`;
+      rows.push(printInfoRow);
+
+      // 获取打印人信息 - 使用Promise  
+      const username = currentUser.username; // 假设已从后端传递到全局变量  
+
+      // 使用fetch获取用户信息，并在回调中处理生成Excel  
+      fetch(`/gerenxinxiguanli/fetch?number=${username}`)
+        .then(response => response.json())
+        .then(result => {
+          // 设置打印人信息 - 使用中间位置作为起始点  
+          const halfLength = Math.floor(headers.length / 2);
+          if (result.success && result.data && result.data.name) {
+            rows[rows.length - 1][halfLength] = `打印人:${result.data.name}`;
+          } else {
+            rows[rows.length - 1][halfLength] = `打印人:系统管理员`;
+          }
+
+          // 生成Excel文件(在确保获取到打印人信息后)  
+          generateAndDownloadExcel(rows, headers, title);
+        })
+        .catch(error => {
+          console.error('获取用户信息失败:', error);
+          // 发生错误时设置默认打印人  
+          const halfLength = Math.floor(headers.length / 2);
+          rows[rows.length - 1][halfLength] = `打印人:系统管理员`;
+          // 错误时也能生成Excel  
+          generateAndDownloadExcel(rows, headers, title);
+        });
+
+
+      // 将Excel生成和下载逻辑移到单独的函数  
+      function generateAndDownloadExcel(rows, headers, title) {
+
+        // 创建工作表  
+        const ws = XLSX.utils.aoa_to_sheet(rows);
+        // 设置合并单元格 - 将标题行合并  
+        // 合并区域格式为 {s: {c: 起始列, r: 起始行}, e: {c: 结束列, r: 结束行}}  
+        const merge = {
+          s: { c: 0, r: 0 }, // 起始位置：第1行，第1列  
+          e: { c: headers.length - 1, r: 0 } // 结束位置：第1行，最后一列  
+        };
+
+        // 如果没有合并单元格数组，则创建一个  
+        if (!ws['!merges']) ws['!merges'] = [];
+
+        // 添加合并区域  
+        ws['!merges'].push(merge);
+
+        // 确定打印信息行的行号  
+        const printInfoRow = rows.length - 1;
+
+        // 计算中间位置  
+        const halfLength = Math.floor(headers.length / 2);
+
+        // 设置打印日期的合并单元格（左半部分）  
+        const dateMerge = {
+          s: { c: 0, r: printInfoRow }, // 起始位置：最后一行，第1列  
+          e: { c: halfLength - 1, r: printInfoRow } // 结束位置：最后一行，中间位置-1  
+        };
+        ws['!merges'].push(dateMerge);
+
+        // 设置打印人的合并单元格（右半部分）  
+        const userMerge = {
+          s: { c: halfLength, r: printInfoRow }, // 起始位置：最后一行，中间位置  
+          e: { c: headers.length - 1, r: printInfoRow } // 结束位置：最后一行，最后一列  
+        };
+        ws['!merges'].push(userMerge);
+
+        // === 根据每列内容自动调整列宽 ===  
+        // 初始化列宽数组，每列至少有一个最小宽度  
+        const colWidths = Array(headers.length).fill().map(() => ({ wch: 8 }));
+
+        // 首先考虑表头的宽度  
+        headers.forEach((header, idx) => {
+          const headerWidth = getStringWidth(header);
+          colWidths[idx].wch = headerWidth;
+        });
+
+        // 遍历每一行数据，找出每列中最宽的内容  
+        for (let r = 2; r < rows.length - 1; r++) {  // 从数据行开始，跳过标题和表头  
+          for (let c = 0; c < headers.length; c++) {
+            if (rows[r][c] !== undefined && rows[r][c] !== null) {
+              // 获取内容宽度  
+              const cellWidth = getStringWidth(rows[r][c].toString());
+              // 更新列宽，只有当内容宽度大于当前列宽时才更新  
+              if (cellWidth > colWidths[c].wch) {
+                colWidths[c].wch = cellWidth;
+              }
+            }
+          }
+        }
+
+        // 检查打印信息行的宽度需求  
+        const printDateText = rows[printInfoRow][0] || '';
+        const printUserText = rows[printInfoRow][halfLength] || '';
+
+        // 左半边（打印日期）需要的总宽度  
+        const dateInfoWidth = getStringWidth(printDateText);
+        // 右半边（打印人）需要的总宽度  
+        const userInfoWidth = getStringWidth(printUserText);
+
+        // 计算当前左半边列的总宽度  
+        let leftTotalWidth = 0;
+        for (let i = 0; i < halfLength; i++) {
+          leftTotalWidth += colWidths[i].wch;
+        }
+
+        // 计算当前右半边列的总宽度  
+        let rightTotalWidth = 0;
+        for (let i = halfLength; i < headers.length; i++) {
+          rightTotalWidth += colWidths[i].wch;
+        }
+
+        // 如果打印日期需要更多空间，适当调整左半部分的列宽  
+        if (dateInfoWidth > leftTotalWidth && halfLength > 0) {
+          const extraWidthPerCol = Math.ceil((dateInfoWidth - leftTotalWidth) / halfLength);
+          for (let i = 0; i < halfLength; i++) {
+            colWidths[i].wch += extraWidthPerCol;
+          }
+        }
+
+        // 如果打印人需要更多空间，适当调整右半部分的列宽  
+        if (userInfoWidth > rightTotalWidth && (headers.length - halfLength > 0)) {
+          const extraWidthPerCol = Math.ceil((userInfoWidth - rightTotalWidth) / (headers.length - halfLength));
+          for (let i = halfLength; i < headers.length; i++) {
+            colWidths[i].wch += extraWidthPerCol;
+          }
+        }
+
+        // 为所有列增加一些边距  
+        colWidths.forEach((col) => {
+          col.wch += 4; // 增加4个字符的边距（左右各2个）  
+        });
+
+        // 设置最终的列宽  
+        ws['!cols'] = colWidths;
+
+        // 设置标题单元格样式  
+        // 详细的样式定义  
+        const styles = {
+          title: {
+            font: {
+              name: '宋体',
+              sz: 16,
+              color: { rgb: "FFFFFF" },
+              bold: true
+            },
+            fill: {
+              fgColor: { rgb: "0070C0" }
+            },
+            alignment: {
+              horizontal: "center",
+              vertical: "center"
+            }
+            // 移除了边框样式  
+          },
+          header: {
+            font: {
+              name: '宋体',
+              sz: 12,
+              bold: true
+            },
+            fill: {
+              fgColor: { rgb: "DDDDDD" }
+            },
+            alignment: {
+              horizontal: "center",
+              vertical: "center"
+            },
+            border: {
+              top: { style: "thin", color: { rgb: "000000" } },
+              bottom: { style: "thin", color: { rgb: "000000" } },
+              left: { style: "thin", color: { rgb: "000000" } },
+              right: { style: "thin", color: { rgb: "000000" } }
+            }
+          },
+          cell: {
+            alignment: {
+              horizontal: "center",
+              vertical: "center"
+            },
+            border: {
+              top: { style: "thin", color: { rgb: "000000" } },
+              bottom: { style: "thin", color: { rgb: "000000" } },
+              left: { style: "thin", color: { rgb: "000000" } },
+              right: { style: "thin", color: { rgb: "000000" } }
+            }
+          },
+          footerInfo: {
+            font: {
+              name: '宋体',
+              sz: 10,
+              bold: true
+            },
+            alignment: {
+              horizontal: "left",
+              vertical: "center"
+            }
+          }
+        };
+
+        // 应用样式到单元格  
+        ws['A1'].s = styles.title;
+        // 为表头行（第2行）的每一列设置样式  
+        for (let i = 0; i < headers.length; i++) {
+          // 将列索引转换为Excel列标识 (A2, B2, C2...)  
+          const cellRef = XLSX.utils.encode_cell({ c: i, r: 1 }); // r=1 是第二行
+          // 确保单元格存在  
+          if (!ws[cellRef]) ws[cellRef] = {};
+          if (!ws[cellRef].s) ws[cellRef].s = {};
+          ws[cellRef].s = styles.header;
+        }
+
+        // 为数据行应用样式  
+        for (let row = 3; row < rows.length + 2; row++) {
+          for (let col = 0; col < headers.length; col++) {
+            const cellAddress = XLSX.utils.encode_cell({ r: row - 1, c: col });
+            if (ws[cellAddress]) {
+              ws[cellAddress].s = styles.cell;
+            }
+          }
+        }
+
+        // 为打印信息行的所有单元格应用无边框样式  
+        for (let col = 0; col < headers.length; col++) {
+          const cellAddress = XLSX.utils.encode_cell({ r: printInfoRow, c: col });
+          if (!ws[cellAddress]) ws[cellAddress] = { v: "" };
+          ws[cellAddress].s = styles.footerInfo;
+        }
+
+
+        // 创建工作簿  
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, title);
+
+        // 生成Excel文件并下载  
+        const fileName = `${title}-${new Date().toISOString().split('T')[0]}.xlsx`;
+        XLSX.writeFile(wb, fileName);
+      }
+    }
+
+
+    // === 添加一个辅助函数来计算字符串宽度 ===  
+    function getStringWidth(str) {
+      if (!str) return 0;
+      let width = 0;
+      for (let i = 0; i < str.length; i++) {
+        // 中文字符和全角符号占用更多宽度  
+        if (str.charCodeAt(i) > 127) {
+          width += 2.2;  // 中文字符宽度系数  
+        } else {
+          width += 1.1;  // 英文字符宽度系数  
+        }
+      }
+      // 添加一些内边距  
+      return Math.ceil(width) + 2;
+    }
+
+  </script>
+</body>
+
 </html>

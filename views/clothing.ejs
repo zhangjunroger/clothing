@@ -1,559 +1,2497 @@
-<!DOCTYPE html>  
-<html lang="zh-CN">  
-<head>  
-  <meta charset="UTF-8">  
-  <title>服装管理</title>  
-  <style>  
-    /* 基本样式 */  
-    .container {  
-      width: 90%;  
-      margin: 0 auto;  
-    }  
-    table {  
-      width: 100%;  
-      border-collapse: collapse;  
-    }  
-    table, th, td {  
-      border: 1px solid #ccc;  
-    }  
-    th, td {  
-      padding: 8px;  
-      text-align: center;  
-    }  
-    .modal {  
-      display: none; /* 隐藏模态窗口 */  
-      position: fixed;  
-      z-index: 1;  
-      left: 0;  
-      top: 0;  
-      width: 100%;  
-      height: 100%;  
-      overflow: auto;  
-      background-color: rgba(0,0,0,0.5); /* 半透明背景 */  
-    }  
-    .modal-content {  
-      background-color: #fff;  
-      margin: 10% auto;  
-      padding: 20px;  
-      width: 80%;  
-    }  
-    .modal-header, .modal-footer {  
-      text-align: right;  
-    }  
-    .modal-body {  
-      max-height: 400px;  
-      overflow-y: auto;  
-    }  
-    .button {  
-      padding: 6px 12px;  
-      margin: 5px;  
-    }  
-    /* 错误消息样式 */  
-    .error {  
-      border-color: red;  
-    }  
-    .error-message {  
-      color: red;  
-      font-size: 12px;  
-    }  
-  </style>  
-</head>  
-<body>  
-  <div class="container">  
-    <h1>服装管理</h1>  
+<!DOCTYPE html>
+<html lang="zh-CN">
 
-    <!-- Excel模板下载 + 导入 -->  
-    <section>  
-      <a href="/template/clothing_template.xlsx" class="button">下载Excel模板</a>  
-      <form id="importForm" style="margin-top: 10px;">  
-        <label for="excelFile">上传Excel文件：</label>  
-        <input type="file" id="excelFile" name="excelFile" accept=".xlsx" required>  
-        <button type="submit">导入</button>  
-      </form>  
-    </section>  
+<head>
+  <meta charset="UTF-8">
+  <title>被装管理</title>
+  <script>
+    const currentUser = <%- JSON.stringify(user || {}) %>; // 在页面顶部定义    
+  </script>
+  <!-- 引入Tailwind CSS（仅开发环境示例） -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <!-- 1. 引入某款艺术字体（示例：Amatic SC） -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@700&display=swap" />
 
-    <hr>  
+  <!-- PDF生成库 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
 
-    <!-- 手动添加服装信息表单 -->  
-    <section>  
-      <h2>添加服装信息</h2>  
-      <form id="addClothingForm">  
-        <!-- 表单字段 -->  
-        <div>  
-          <label for="itemNumber">物品编号：</label>  
-          <input type="text" id="itemNumber" name="itemNumber" required>  
-        </div>  
-        <div>  
-          <label for="itemName">物品名称：</label>  
-          <input type="text" id="itemName" name="itemName" required>  
-        </div>  
-        <div>  
-          <label for="specification">规格：</label>  
-          <input type="text" id="specification" name="specification">  
-        </div>  
-        <div>  
-          <label for="quantity">数量：</label>  
-          <input type="number" id="quantity" name="quantity" required>  
-        </div>  
-        <div>  
-          <label for="category">类别：</label>  
-          <input type="text" id="category" name="category">  
-        </div>  
-        <div>  
-          <label for="warehouseLocation">仓库位置：</label>  
-          <input type="text" id="warehouseLocation" name="warehouseLocation">  
-        </div>  
-        <div>  
-          <label for="remarks">备注：</label>  
-          <input type="text" id="remarks" name="remarks">  
-        </div>  
-        <button type="submit">添加</button>  
-      </form>  
-    </section>  
+  <!-- Excel生成库 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
 
-    <hr>  
+<style>
+  /* 基本样式 */
+  /* 背景图片样式 */
+  body {
+    background-image: url('/images/background.jpg');
+    /* 背景图片路径 */
+    background-size: cover;
+    /* 图片适应屏幕大小 */
+    background-repeat: no-repeat;
+    /* 不重复平铺 */
+    background-position: center;
+    /* 居中显示 */
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    /* 占满整个视口高度 */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
 
-    <!-- 服装信息表格展示 -->  
-    <section>  
-      <h2>服装信息列表</h2>  
-      <table id="clothingTable">  
-        <thead>  
-          <tr>  
-            <th>物品编号</th>  
-            <th>物品名称</th>  
-            <th>规格</th>  
-            <th>数量</th>  
-            <th>类别</th>  
-            <th>仓库位置</th>  
-            <th>备注</th>  
-            <th>操作</th>  
-          </tr>  
-        </thead>  
-        <tbody>  
-          <!-- 数据将通过AJAX动态加载 -->  
-        </tbody>  
-      </table>  
-    </section>  
-  </div>  
-
-  <!-- 模态窗口（用于展示导入的Excel数据） -->  
-  <div id="importModal" class="modal">  
-    <div class="modal-content">  
-      <div class="modal-header">  
-        <span id="closeModal" style="cursor:pointer;">&times;</span>  
-      </div>  
-      <div class="modal-body">  
-        <h2>预览导入的数据</h2>  
-        <table id="importPreviewTable">  
-          <!-- 动态生成表格 -->  
-        </table>  
-      </div>  
-      <div class="modal-footer">  
-        <button id="confirmImport" class="button">确认导入</button>  
-        <button id="cancelImport" class="button">取消</button>  
-      </div>  
-    </div>  
-  </div>  
+  .fancy-font {
+    font-family: 'Amatic SC', cursive;
+    /* cursive等用于回退 */
+  }
 
 
-  <div id="editModal" class="modal">  
-    <div class="modal-content">  
-      <h2>修改服装信息</h2>  
-      <form id="editClothingForm">  
-        <!-- 隐藏字段 -->  
-        <input type="hidden" id="ModalclothingId" />  
-  
-        <!-- 物品编号 -->  
-        <div class="form-group">  
-          <label for="ModalitemNumber">物品编号：</label>  
-          <input type="text" id="ModalitemNumber" readonly />  
-        </div>  
-  
-        <!-- 物品名称 -->  
-        <div class="form-group">  
-          <label for="ModalitemName">物品名称：</label>  
-          <input type="text" id="ModalitemName" />  
-        </div>  
-  
-        <!-- 规格 -->  
-        <div class="form-group">  
-          <label for="Modalspecification">规格：</label>  
-          <input type="text" id="Modalspecification" />  
-        </div>  
-  
-        <!-- 数量 -->  
-        <div class="form-group">  
-          <label for="Modalquantity">数量：</label>  
-          <input type="text" id="Modalquantity" />  
-        </div>  
-  
-        <!-- 类别 -->  
-        <div class="form-group">  
-          <label for="Modalcategory">类别：</label>  
-          <input type="text" id="Modalcategory" />  
-        </div>  
-  
-        <!-- 仓库位置 -->  
-        <div class="form-group">  
-          <label for="ModalwarehouseLocation">仓库位置：</label>  
-          <input type="text" id="ModalwarehouseLocation" />  
-        </div>  
-  
-        <!-- 备注 -->  
-        <div class="form-group">  
-          <label for="Modalremarks">备注：</label>  
-          <textarea id="Modalremarks"></textarea>  
-        </div>  
-  
-        <!-- 操作按钮 -->  
-        <div class="form-group">  
-          <button type="button" id="confirmEditButton">确认修改</button>  
-          <button type="button" onclick="closeEditModal()">取消</button>  
-        </div>  
-      </form>  
-    </div>  
+  /* 背景遮罩 */
+  .modal-backdrop {
+    display: none;
+    /* 默认隐藏 */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    /* 过渡动画可选 */
+    z-index: 800;
+  }
+
+  .modal-backdrop.active {
+    display: block;
+  }
+
+  /* 调整模态窗口基础样式 */
+  .modal {
+    display: none;
+    /* 默认隐藏 */
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1000;
+    width: 60%;
+    /* 调整宽度 */
+    max-width: 800px;
+    /* 调整最大宽度 */
+    max-height: 80vh;
+    /* 可选：调整最大高度 */
+    overflow-y: auto;
+  }
+
+  /* 模态内容样式 */
+  .modal-content {
+    width: 100%;
+    padding: 10px;
+    /* 调整内边距，这样内容会紧凑一些 */
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  }
+
+  /* 模态窗口内表单元素自适应 */
+  #editClothingForm {
+    width: 100%;
+  }
+
+  /* 确保行占满空间 */
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  /* 列元素拉伸以占满空间 */
+  .col-md-4,
+  .col-md-6,
+  .col-md-12 {
+    flex-grow: 1;
+    transition: all 0.3s ease;
+    /* 添加过渡效果使尺寸变化更平滑 */
+  }
+
+  /* 输入框自动填充可用空间 */
+  .form-control,
+  .form-select {
+    width: 100%;
+    min-height: 38px;
+    padding: 8px 12px;
+    box-sizing: border-box;
+  }
+
+  /* 标签变大以适应大屏幕 */
+  @media (min-width: 1200px) {
+    .form-label {
+      font-size: 1.1rem;
+    }
+
+    .form-control,
+    .form-select {
+      font-size: 1.05rem;
+      padding: 10px 15px;
+      min-height: 45px;
+    }
+
+    /* 按钮在大屏幕上变大 */
+    .modal-footer .button {
+      padding: 10px 25px;
+      font-size: 1.1rem;
+    }
+  }
+
+  /* 更大屏幕上进一步增大字体和间距 */
+  @media (min-width: 1600px) {
+    .form-label {
+      font-size: 1.2rem;
+      margin-bottom: 10px;
+    }
+
+    .form-control,
+    .form-select {
+      font-size: 1.1rem;
+      padding: 12px 18px;
+      min-height: 50px;
+    }
+
+    .mb-3 {
+      margin-bottom: 1.5rem !important;
+    }
+
+    /* 增大模态标题 */
+    .modal-header h2 {
+      font-size: 2.2rem;
+    }
+
+    /* 增大关闭按钮 */
+    #closeModal {
+      font-size: 2rem;
+    }
+
+    /* 增大关闭按钮 */
+    #closeModalChange {
+      font-size: 2rem;
+    }
+  }
+
+  /* 确保按钮栏始终占满宽度 */
+  .modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+    width: 100%;
+    padding-top: 20px;
+    margin-top: 10px;
+  }
+
+  /* 超宽屏幕进一步扩大元素 */
+  @media (min-width: 2000px) {
+    .modal {
+      max-width: 1800px;
+      /* 超宽屏幕允许更大模态框 */
+    }
+
+    .row {
+      gap: 20px;
+      /* 增加行内元素间距 */
+    }
+  }
+
+  /* 滚动条美化 (可选) */
+  .modal::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .modal::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+  }
+
+  .modal::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+  }
+
+  .modal::-webkit-scrollbar-thumb:hover {
+    background: #555;
+  }
+
+  .modal.active {
+    display: block;
+  }
+
+  /* 模态内容区 */
+  .modal-content {
+    background-color: #f7f7f7;
+    /* 背景带点浅灰 */
+    border: 3px solid #888;
+    /* 边框线加粗 */
+    border-radius: 6px;
+    padding: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  }
+
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .modal-header {
+    border-bottom: 2px solid #ccc;
+    padding-bottom: 8px;
+    margin-bottom: 8px;
+  }
+
+  .modal-header h2 {
+    margin: 0;
+  }
+
+  .modal-header span {
+    font-size: 1.4rem;
+  }
+
+  .modal-body {
+    margin: 16px 0;
+    max-height: 70vh;
+    /* 避免内容过多时超出屏幕 */
+    overflow-y: auto;
+  }
+
+  .modal-footer {
+    border-top: 2px solid #ccc;
+    padding-top: 8px;
+    margin-top: 8px;
+    text-align: right;
+    /* 简单的右对齐 */
+  }
+
+  /* 表单样式 */
+  .form-group {
+    margin-bottom: 15px;
+  }
+
+  .form-label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+    color: #555;
+  }
+
+  .form-control {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .form-control:focus {
+    border-color: #007bff;
+    outline: none;
+    box-shadow: 0 0 3px rgba(0, 123, 255, 0.3);
+  }
+
+  /* 通用按钮样式 */
+  .button {
+    padding: 10px 20px;
+    /* 幅度内边距 */
+    border: none;
+    /* 去掉边框 */
+    border-radius: 5px;
+    /* 圆角 */
+    background-color: #007bff;
+    /* 背景颜色 */
+    color: white;
+    /* 字体颜色 */
+    font-size: 16px;
+    /* 字体大小 */
+    cursor: pointer;
+    /* 鼠标指针 */
+    transition: background-color 0.3s;
+    /* 过渡效果 */
+  }
+
+  /* 按钮悬停样式 */
+  .button:hover {
+    background-color: #0056b3;
+    /* 悬停时的背景颜色 */
+  }
+
+  .button-primary {
+    background-color: #28a745;
+    color: #fff;
+  }
+
+  .button-primary:hover {
+    background-color: #218838;
+    box-shadow: 0 0 8px rgba(40, 167, 69, 0.2);
+  }
+
+  .button-secondary {
+    background-color: #6c757d;
+    color: #fff;
+  }
+
+  .button-secondary:hover {
+    background-color: #5a6268;
+    box-shadow: 0 0 8px rgba(108, 117, 125, 0.2);
+  }
+
+  /* 响应式设计 */
+  @media screen and (max-width: 768px) {
+    .modal {
+      width: 95%;
+      padding: 15px;
+      max-height: 85vh;
+      /* 适当减少最大高度以适应移动设备 */
+    }
+
+    .modal-header h2 {
+      font-size: 1.2rem;
+    }
+  }
+
+  /* 全局容器 */
+  .container {
+    width: 80%;
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 10px 0;
+    /* 可以根据需要添加背景或阴影 */
+  }
+
+  .container h1 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 2.0rem;
+    font-size: 50px;
+  }
+
+  .container h2 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 1.5rem;
+    font-size: 30px;
+  }
+
+
+  /* 三个 section 的通用样式 */
+  section {
+    background-color: #fff;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  }
+
+  /* Excel模板上传表单 & 搜索表单基础样式 */
+  form {
+    display: flex;
+    flex-wrap: wrap;
+    /* 当屏幕宽度较小，自动换行 */
+    align-items: center;
+    gap: 0.5rem;
+    /* 表单元素之间的间距 */
+  }
+
+  label {
+    font-weight: 600;
+    margin-right: 0.5rem;
+  }
+
+  input[type="text"],
+  input[type="number"],
+  input[type="file"],
+  select {
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    flex: 1;
+    /* 让输入框或选择框能够灵活扩展宽度 */
+    min-width: 100px;
+    /* 避免过小 */
+  }
+
+  input[type="file"] {
+    flex: none;
+    /* 上传按钮大小通常固定 */
+  }
+
+  /* 分割线美化 */
+  hr {
+    border: none;
+    border-top: 1px solid #ddd;
+    margin: 2rem 0;
+  }
+
+  .users-table {
+    width: 100%;
+    /* 表格宽度占满父容器 */
+    border-collapse: collapse;
+    /* 去掉单元格间的间隙 */
+    margin-top: 20px;
+    /* 表格顶部留空 */
+    background: #fff;
+    /* 表格背景色 */
+    border-radius: 4px;
+    /* 表格圆角 */
+    overflow: hidden;
+    /* 防止溢出 */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    /* 添加阴影 */
+  }
+
+  .users-table th,
+  .users-table td {
+    border: 1px solid #ddd;
+    /* 单元格边框颜色 */
+    padding: 12px;
+    /* 单元格内边距 */
+    text-align: center;
+    /* 水平居中 */
+    vertical-align: middle;
+    /* 垂直居中 */
+    font-size: 14px;
+    /* 字体大小 */
+    color: #333;
+    /* 字体颜色 */
+    word-wrap: break-word;
+    word-break: break-all;
+  }
+
+  .users-table th {
+    background-color: #f1dbb5;
+    /* 表头背景色 */
+    font-weight: bold;
+    /* 表头加粗 */
+    color: #333;
+    /* 表头字体颜色 */
+  }
+
+  .users-table tr:nth-child(even) {
+    background-color: #f9f9f9;
+    /* 偶数行背景色 */
+  }
+
+  .users-table tr:hover {
+    background-color: #f1f1f1;
+    /* 鼠标悬停时的背景色 */
+  }
+
+  /* 错误提示样式 */
+  .error {
+    border-color: red;
+  }
+
+  .error-message {
+    color: red;
+    font-size: 12px;
+  }
+
+  .btn-delete {
+    background-color: #f44336;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  .btn-delete:hover {
+    background-color: #d32f2f;
+  }
+
+  .btn-change {
+    background-color: #f49236;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  .btn-change:hover {
+    background-color: #f49236;
+  }
+
+
+  /* 报表相关样式 */
+  .date-range {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .radio-group {
+    display: flex;
+    gap: 20px;
+  }
+
+  .print-container {
+    width: 100%;
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px;
+    background: #fff;
+  }
+
+  .print-header {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+
+  .print-header h1 {
+    margin-bottom: 10px;
+  }
+
+  .print-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+  }
+
+  .print-table th,
+  .print-table td {
+    border: 1px solid #000;
+    padding: 8px;
+    text-align: center;
+  }
+
+  .print-table th {
+    background-color: #f0f0f0;
+  }
+
+  .print-footer {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+  }
+
+  @media print {
+    body * {
+      visibility: hidden;
+    }
+
+    .print-container,
+    .print-container * {
+      visibility: visible;
+    }
+
+    .print-container {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      padding: 0;
+    }
+
+    .no-print {
+      display: none !important;
+    }
+  }
+
+  /* 打印专用样式 */
+  @media print {
+
+    /* 基本打印设置 */
+    @page {
+      size: auto;
+      margin: 10mm 10mm 10mm 10mm;
+      /* 减小页面边距 */
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: white;
+    }
+
+    /* 隐藏非打印元素 */
+    .no-print {
+      display: none !important;
+    }
+
+    /* 控制打印容器 */
+    .print-container {
+      width: 100%;
+      margin: 0;
+      padding: 0;
+      page-break-after: avoid;
+      /* 防止容器后自动分页 */
+    }
+
+    /* 控制表格打印 */
+    table {
+      width: 100% !important;
+      page-break-inside: auto;
+      border-collapse: collapse;
+    }
+
+    tr,
+    td,
+    th {
+      page-break-inside: avoid;
+      /* 尽量避免行内分页 */
+    }
+
+    /* 如果按钮在容器中，可以为容器添加样式 */
+    .print-footer .no-print {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      /* 按钮之间的间距 */
+      margin-bottom: 10px;
+      /* 底部留一些空间 */
+    }
+
+    .button-container {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .action-buttons {
+      display: flex !important;
+      justify-content: flex-end !important;
+      gap: 10px;
+      width: 100%;
+    }
+
+    /* 重置可能影响对齐的样式 */
+    .print-footer {
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .no-print {
+      width: 100%;
+    }
+
+    /* 避免元素产生无意义的分页 */
+    * {
+      overflow: visible !important;
+    }
+
+  }
+
+  /* 缩略图样式 */
+  .thumbnail {
+    width: 80px !important;
+    /* 固定宽度 */
+    height: 80px !important;
+    /* 固定高度 */
+    object-fit: cover;
+    /* 自动裁剪，保持比例 */
+    border-radius: 5px;
+    /* 圆角 */
+    border: 1px solid #ccc;
+    /* 添加边框 */
+    cursor: pointer;
+    /* 鼠标悬浮变成手型 */
+    transition: transform 0.2s ease;
+    /* 悬浮动画 */
+  }
+
+  .thumbnail:hover {
+    transform: scale(1.05);
+    /* 悬浮时稍微放大 */
+  }
+
+  /* 响应式样式 */
+  @media screen and (max-width: 768px) {
+    .thumbnail {
+      width: 60px;
+      height: 60px;
+    }
+  }
+
+  @media screen and (max-width: 480px) {
+    .thumbnail {
+      width: 50px;
+      height: 50px;
+    }
+  }
+
+  /* 大图模态框图片样式 */
+  .large-image {
+    max-width: 90vw;
+    /* 最大宽度：视口宽度的 90% */
+    max-height: 90vh;
+    /* 最大高度：视口高度的 90% */
+    margin: auto;
+    display: block;
+  }
+
+  /* 模态框背景 */
+  .modal-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.8);
+    /* 半透明黑色背景 */
+    z-index: 2000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .modal-background-hidden {
+    display: none;
+    /* 隐藏模态框 */
+  }
+</style>
+
+<body>
+
+  <script src="https://unpkg.com/xlsx-js-style@1.2.0/dist/xlsx.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.15/jspdf.plugin.autotable.min.js"></script>
+
+
+  <div class="container">
+    <h1>被装管理</h1>
+
+    <!-- Excel模板下载 + 导入 -->
+    <section>
+      <h2>模版上传被装信息</h2>
+      <form id="importForm"
+        style="display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 15px; margin-top: 20px; margin-bottom: 20px;">
+        <a href="/template/clothing_template.xlsx" class="button" style="white-space: nowrap;">下载Excel模板</a>
+        <label for="excelFile" style="margin: 0 5px; white-space: nowrap;">上传Excel文件：</label>
+        <input type="file" id="excelFile" name="excelFile" accept=".xlsx" required style="margin: 0 5px;">
+        <button type="submit" class="button" style="white-space: nowrap;">导入</button>
+      </form>
+    </section>
+
+    <hr>
+
+    <!-- 服装信息表格展示 -->
+    <section>
+      <h2>被装信息列表</h2>
+      <table id="clothingTable" class="users-table">
+        <thead>
+          <tr>
+            <th><input type="checkbox" id="selectAll" title="全选/取消全选"></th>
+            <th>物品编号</th>
+            <th>物品名称</th>
+            <th>缩略图</th> <!-- 新增缩略图列 -->
+            <th>尺码与数量</th> <!-- 新增尺码列 -->
+            <th>单价</th>
+            <th>类别</th>
+            <th>年份</th>
+            <th>备注</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- 数据将通过AJAX动态加载 -->
+        </tbody>
+      </table>
+    </section>
+  </div>
+
+  <!-- 在搜索表单下方，按钮区域添加批量删除按钮 -->
+  <div style="display: flex; justify-content: center; gap: 15px; margin-top: -40px; margin-bottom: 5px;">
+    <button onclick="showAddClothingModal()" class="button">添加被装</button>
+    <button id="batchDeleteBtn" class="button">批量删除</button>
+    <button onclick="showReportModal()" class="button">打印报表</button>
   </div>
 
 
-  <script>
-      // 页面加载时获取服装列表  
-      document.addEventListener('DOMContentLoaded', function() {  
-        loadClothing();  
-    });  
-  
-    // 加载服装数据并填充表格  
-    function loadClothing() {  
-      fetch('/clothing/list')  
-        .then(response => response.json())  
-        .then(data => {  
-          const tbody = document.querySelector('#clothingTable tbody');  
-          tbody.innerHTML = ''; // 清空当前表格内容  
-          data.forEach(item => {  
-            const tr = document.createElement('tr');  
-            tr.innerHTML = generateTableRow(item);  
-            tbody.appendChild(tr);  
-          });  
-        })  
-        .catch(err => console.error(err));  
-    }  
+  <!-- 模态窗口（用于展示导入的Excel数据） -->
+  <div id="importModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>预览导入的数据</h2>
+        <span id="closeModal" style="cursor:pointer;">&times;</span>
+      </div>
+      <div class="modal-body">
+        <table id="importPreviewTable" class="users-table">
+          <!-- 动态生成表格 -->
+        </table>
+      </div>
+      <div class="modal-footer">
+        <button id="confirmImport" class="button">确认导入</button>
+        <button id="cancelImport" class="button">取消</button>
+      </div>
+    </div>
+  </div>
 
-    // 生成表格行的HTML  
-    function generateTableRow(item) {  
-      return `  
+
+
+  <!-- 背景遮罩 -->
+  <div class="modal-backdrop" id="modalBackdrop"></div>
+  <!-- 模态窗口（用于添加被装信息） -->
+  <div id="addModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="addmodalTitle" class="text-5xl text-center">添加被装信息</h2>
+        <span id="closeModalAdd" style="cursor:pointer;">&times;</span>
+      </div>
+
+      <div class="modal-body">
+        <form id="addClothingForm" enctype="multipart/form-data">
+          <!-- 隐藏字段 -->
+          <input type="hidden" id="addModalclothingId" />
+
+          <!-- 物品编号 -->
+          <div class="row">
+            <div class="col-md-4 mb-3">
+              <label for="itemNumber" class="form-label">物品编号：</label>
+              <input type="text" class="form-control" id="itemNumber" required />
+            </div>
+
+            <!-- 物品名称 -->
+            <div class="col-md-4 mb-3">
+              <label for="itemName" class="form-label">物品名称：</label>
+              <input type="text" class="form-control" id="itemName" required />
+            </div>
+
+            <!-- 缩略图 -->
+            <div class="col-md-4 mb-3">
+              <label class="form-label">缩略图:</label>
+              <img id="itemThumbnail" class="thumbnail" src="/images/nopic.jpg" alt="缩略图" />
+              <input type="file" class="form-control" id="itemPic" name="itemPic" accept="image/*" />
+            </div>
+          </div>
+
+          <!-- 在模态框内，物品名称等字段下面，添加多尺码的编辑区域 -->
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">尺码与数量：</label>
+              <button type="button" id="addSizeButton" class="btn-change">添加尺码</button>
+              <div id="sizesContainer"><!-- 动态生成 --></div>
+            </div>
+
+            <!-- 类别 -->
+            <div class="col-md-6 mb-3">
+              <label for="category" class="form-label">类别：</label>
+              <input type="text" class="form-control" id="category" />
+            </div>
+          </div>
+
+          <!-- 单价 -->
+          <div class="row">
+            <div class="col-md-4 mb-3">
+              <label for="price" class="form-label">单价：</label>
+              <input type="number" class="form-control" id="price" />
+            </div>
+
+
+            <!-- 年份 -->
+            <div class="col-md-4 mb-3">
+              <label for="warehouseLocation" class="form-label">年份：</label>
+              <input type="number" class="form-control" id="warehouseLocation" />
+            </div>
+
+            <!-- 备注 -->
+            <div class="col-md-4 mb-3">
+              <label for="remarks" class="form-label">备注：</label>
+              <input type="text" class="form-control" id="remarks" />
+            </div>
+          </div>
+        </form>
+      </div>
+      <!-- 操作按钮 -->
+      <div class="modal-footer">
+        <button type="submit" id="confirmAddButton" onclick="confirmAdd()" class="button">确认添加</button>
+        <button type="button" onclick="closeAddModal()" class="button">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 背景遮罩 -->
+  <div class="modal-backdrop" id="modalBackdrop"></div>
+  <!-- 模态窗口（用于修改被装信息） -->
+  <div id="editModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modalTitle" class="text-5xl text-center">修改被装信息</h2>
+        <span id="closeModalChange" style="cursor:pointer;">&times;</span>
+      </div>
+
+      <div class="modal-body">
+        <form id="editClothingForm" enctype="multipart/form-data">
+          <!-- 隐藏字段 -->
+          <input type="hidden" id="ModalclothingId" />
+
+          <!-- 物品编号 -->
+          <div class="row">
+            <div class="col-md-4 mb-3">
+              <label for="ModalitemNumber" class="form-label">物品编号：</label>
+              <input type="number" class="form-control" id="ModalitemNumber" readonly />
+            </div>
+
+            <!-- 物品名称 -->
+            <div class="col-md-4 mb-3">
+              <label for="ModalitemName" class="form-label">物品名称：</label>
+              <input type="text" class="form-control" id="ModalitemName" />
+            </div>
+
+            <!-- 缩略图 -->
+            <div class="col-md-4 mb-3">
+              <label class="form-label">缩略图:</label>
+              <img id="ModalPic" class="thumbnail" src="/images/nopic.jpg" alt="缩略图" />
+              <input type="file" class="form-control" id="ModalPicFile" name="ModalPicFile" accept="image/*" />
+            </div>
+          </div>
+
+          <!-- 在模态框内，物品名称等字段下面，添加多尺码的编辑区域 -->
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">尺码与数量：</label>
+              <button type="btn-change" id="ModaladdSizeButton">添加尺码</button>
+              <div id="ModalsizesContainer"><!-- 动态生成 --></div>
+            </div>
+
+            <!-- 类别 -->
+            <div class="col-md-6 mb-3">
+              <label for="Modalcategory" class="form-label">类别：</label>
+              <input type="text" class="form-control" id="Modalcategory" />
+            </div>
+          </div>
+
+          <!-- 单价 -->
+          <div class="row">
+            <div class="col-md-4 mb-3">
+              <label for="Modalprice" class="form-label">单价：</label>
+              <input type="number" class="form-control" id="Modalprice" />
+            </div>
+
+            <!-- 年份 -->
+            <div class="col-md-4 mb-3">
+              <label for="ModalwarehouseLocation" class="form-label">年份：</label>
+              <input type="number" class="form-control" id="ModalwarehouseLocation" />
+            </div>
+
+            <!-- 备注 -->
+            <div class="col-md-4 mb-3">
+              <label for="Modalremarks" class="form-label">备注：</label>
+              <input type="text" class="form-control" id="Modalremarks" />
+            </div>
+          </div>
+        </form>
+      </div>
+      <!-- 操作按钮 -->
+      <div class="modal-footer">
+        <button type="button" id="confirmEditButton" class="button">确认修改</button>
+        <button type="button" onclick="closeEditModal()" class="button">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 模态框大图容器（默认隐藏） -->
+  <div id="largeImageModal" class="modal-background modal-background-hidden" onclick="closeLargeImage()">
+    <img id="largeImage" class="large-image" src="" alt="大图">
+  </div>
+
+
+  <!-- 背景遮罩 -->
+  <div class="modal-backdrop" id="reportModalBackdrop"></div>
+
+  <!-- 报表选择模态窗口 -->
+  <div id="reportModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>打印报表</h2>
+        <span class="close" onclick="closeReportModal()">&times;</span>
+      </div>
+
+      <div class="modal-body">
+        <form id="reportForm">
+
+          <div class="row">
+            <div class="col-md-4 mb-3">
+              <label for="itemNumberSearch">物品编号：</label>
+              <input type="number" id="itemNumberSearch" class="form-control">
+            </div>
+            <div class="col-md-4 mb-3">
+              <label for="itemNameSearch">物品名称：</label>
+              <input type="text" id="itemNameSearch" class="form-control">
+            </div>
+            <div class="col-md-4 mb-3">
+              <label for="itemCategorySearch">类别：</label>
+              <input type="text" id="itemCategorySearch" class="form-control">
+            </div>
+
+          </div>
+
+          <div class="row">
+            <div class="col-md-3 mb-3">
+              <label for="minPriceSearch">最小单价（元）：</label>
+              <input type="number" id="minPriceSearch" class="form-control">
+            </div>
+            <div class="col-md-3 mb-3">
+              <label for="maxPriceSearch">最大单价(元)：</label>
+              <input type="number" id="maxPriceSearch" class="form-control">
+            </div>
+            <div class="col-md-3 mb-3">
+              <label for="itemStartYearSearch">起始年份：</label>
+              <input type="number" id="itemStartYearSearch" class="form-control">
+            </div>
+            <div class="col-md-3 mb-3">
+              <label for="itemEndYearSearch">终止年份：</label>
+              <input type="number" id="itemEndYearSearch" class="form-control">
+            </div>
+          </div>
+
+          <!-- 排序选项 -->
+          <div class="row">
+            <div class="col-md-4 mb-3">
+              <label for="sortField">排序字段：</label>
+              <select id="sortField" class="form-control">
+                <option value="">默认排序</option>
+                <option value="itemNumberNum">按物品编号</option>
+                <option value="itemName">按物品名称</option>
+                <option value="priceNum">按单价</option>
+                <option value="category">按类别</option>
+                <option value="yearNum">按年份</option>
+                <!-- 动态显示基于报表类型的排序选项 -->
+              </select>
+            </div>
+
+            <div class="col-md-4 mb-3">
+              <label for="sortOrder">排序方式：</label>
+              <select id="sortOrder" class="form-control">
+                <option value="asc">升序</option>
+                <option value="desc">降序</option>
+              </select>
+            </div>
+
+            <div class="col-md-4 mb-3">
+              <label>输出格式：</label>
+              <div class="radio-group">
+                <label>
+                  <input type="radio" name="outputFormat" value="print" checked> 打印
+                </label>
+                <label>
+                  <input type="radio" name="outputFormat" value="pdf"> PDF
+                </label>
+                <label>
+                  <input type="radio" name="outputFormat" value="excel"> Excel
+                </label>
+              </div>
+            </div>
+
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button onclick="generateReport()" class="button">生成报表</button>
+        <button onclick="closeReportModal()" class="button">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 页面加载时获取服装列表  
+    document.addEventListener('DOMContentLoaded', function () {
+      loadClothing();
+
+      // 全选/取消全选功能  
+      document.addEventListener('click', function (e) {
+        if (e.target && e.target.id === 'selectAll') {
+          const checkboxes = document.querySelectorAll('.row-checkbox');
+          checkboxes.forEach(checkbox => {
+            checkbox.checked = e.target.checked;
+          });
+        }
+      });
+
+      
+      // 监听表格中的checkbox变化  
+      document.addEventListener('change', function (e) {
+        if (e.target && e.target.classList.contains('row-checkbox')) {
+          // 更新全选框状态  
+          const allCheckboxes = document.querySelectorAll('.row-checkbox');
+          const checkedCount = document.querySelectorAll('.row-checkbox:checked').length;
+          document.getElementById('selectAll').checked = checkedCount === allCheckboxes.length && allCheckboxes.length > 0;
+        }
+      });
+
+      // 批量删除按钮事件  
+      document.getElementById('batchDeleteBtn').addEventListener('click', function () {
+        const selectedRows = document.querySelectorAll('.row-checkbox:checked');
+        batchDeleteClothing();
+      });
+
+      const largeImage = document.getElementById('largeImage');
+      const largeImageContainer = document.getElementById('largeImageModal');
+      // 如果 largeImage.src 为空字符串或是当前网页地址，则隐藏大图  
+      if (!largeImage.src || largeImage.src === window.location.href || largeImage.src === undefined) {
+        largeImageContainer.style.display = 'none';
+        return;
+      }
+    });
+
+    // 动态添加尺码行  
+    document.getElementById('addSizeButton').addEventListener('click', function (event) {
+      event.preventDefault();
+
+      const sizesContainer = document.getElementById('sizesContainer');
+
+      // 创建尺码输入行  
+      const sizeRow = document.createElement('div');
+      sizeRow.className = 'size-row';
+      sizeRow.innerHTML = `  
+    <input type="text" class="size-input" placeholder="尺码" />  
+    <input type="number" class="quantity-input" placeholder="库存数量" />  
+    <button type="button" class="remove-size-btn">删除</button>  
+  `;
+
+      // 添加删除按钮的事件  
+      sizeRow.querySelector('.remove-size-btn').addEventListener('click', () => {
+        sizeRow.remove();
+      });
+
+      // 将尺码行添加到容器中  
+      sizesContainer.appendChild(sizeRow);
+    });
+
+    document.getElementById('ModaladdSizeButton').addEventListener('click', function (event) {
+      event.preventDefault();
+      const sizesContainer = document.getElementById('ModalsizesContainer');
+
+      const row = document.createElement('div');
+      row.innerHTML = `  
+    <input type="text" class="size-input" placeholder="尺码" />  
+    <input type="number" class="quantity-input" placeholder="数量" />  
+    <button type="button" class="remove-size-btn">删除</button>  
+  `;
+      sizesContainer.appendChild(row);
+
+      // 删除行事件  
+      row.querySelector('.remove-size-btn').addEventListener('click', () => {
+        row.remove();
+      });
+    });
+
+
+
+    // 加载服装数据并填充表格  
+    function loadClothing() {
+      fetch('/clothing/list')
+        .then(response => response.json())
+        .then(data => {
+          const tbody = document.querySelector('#clothingTable tbody');
+          tbody.innerHTML = ''; // 清空当前表格内容  
+          data.forEach(item => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = generateTableRow(item);
+            tbody.appendChild(tr);
+          });
+        })
+        .catch(err => console.error(err));
+    }
+
+    // 生成表格行的HTML
+    function generateTableRow(item) {
+      return `
+        <td><input type="checkbox" class="row-checkbox" data-id="${item.objectId}"></td>    
         <td>${item.itemNumber}</td>  
-        <td>${item.itemName}</td>  
-        <td>${item.specification || ''}</td>  
-        <td>${item.quantity || ''}</td>  
+        <td>${item.itemName}</td>
+        <td><img src="${item.itemPic || ''}" alt="缩略图" class="thumbnail" onclick="showLargeImage('${item.itemPic || ''}')" />  </td>  
+        <td>${(item.sizes || []).map(sizeObj => `${sizeObj.size}: ${sizeObj.quantity}`).join('<br>')}</td> 
+        <td>${item.price || ''}</td>          
         <td>${item.category || ''}</td>  
         <td>${item.warehouseLocation || ''}</td>  
         <td>${item.remarks || ''}</td>  
         <td>
-          <button onclick="showEditClothingModal('${item.objectId}')">修改</button>   
-          <button onclick="deleteClothing('${item.objectId}')">删除</button>  
+          <button onclick="showEditClothingModal('${item.objectId}')" class="btn-change">修改</button>   
+          <button onclick="deleteClothing('${item.objectId}')" class="btn-delete">删除</button>  
         </td>  
-      `;  
-    }  
+      `;
+    }
 
-function showEditClothingModal(id) {
-  fetch(`/clothing/get/${id}`)  
-        .then(response => response.json())  
+
+    // 双击缩略图显示大图  
+    function showLargeImage(src) {
+      const modal = document.getElementById('largeImageModal'); // 获取模态框  
+      const largeImage = document.getElementById('largeImage'); // 获取大图显示区域  
+
+      // 如果 src 为空字符串或是当前网页地址，则隐藏大图  
+      if (!src || src === window.location.href || src === undefined) {
+        largeImage.style.display = 'none';
+        return;
+      }
+      // 设置大图的 src  
+      largeImage.src = src;
+      // 显示模态框
+      // 动态显示模态框
+      modal.style.display = 'flex'; // 确保模态框显示
+    }
+
+    // 点击模态框关闭大图  
+    function closeLargeImage() {
+      const modal = document.getElementById('largeImageModal'); // 获取模态框  
+
+      // 隐藏模态框  
+      modal.style.display = 'none'; // 确保模态框显示
+    }
+
+    function showEditClothingModal(id) {
+      fetch(`/clothing/get/${id}`)
+        .then(response => response.json())
         .then(item => {
-            // 将数据填充到模态框中
-            document.getElementById('ModalclothingId').value = item.objectId; 
-            document.getElementById('ModalitemNumber').value = item.itemNumber; 
-            document.getElementById('ModalitemName').value = item.itemName;  
-            document.getElementById('Modalspecification').value = item.specification;  
-            document.getElementById('Modalquantity').value = item.quantity;  
-            document.getElementById('Modalcategory').value = item.category;  
-            document.getElementById('ModalwarehouseLocation').value = item.warehouseLocation;  
-            document.getElementById('Modalremarks').value = item.remarks;  
-            // 显示模态框  
-            document.getElementById('editModal').style.display = 'block';  
+          // 将数据填充到模态框中
+          document.getElementById('ModalclothingId').value = item.objectId;
+          document.getElementById('ModalitemNumber').value = item.itemNumber;
+          document.getElementById('ModalPic').value = item.itemPic;
+
+          // =========== 多尺码部分 ===========  
+          const sizesContainer = document.getElementById('ModalsizesContainer');
+          sizesContainer.innerHTML = ''; // 先清空  
+
+          if (item.sizes && Array.isArray(item.sizes)) {
+            item.sizes.forEach(sizeObj => {
+              // 每个尺码生成一行  
+              const row = document.createElement('div');
+              row.innerHTML = `  
+            <input type="text" class="size-input" placeholder="尺码" value="${sizeObj.size || ''}" />  
+            <input type="number" class="quantity-input" placeholder="数量" value="${sizeObj.quantity || 0}" />  
+            <button type="button" class="remove-size-btn">删除</button>  
+          `;
+              sizesContainer.appendChild(row);
+
+              // 删除行事件  
+              row.querySelector('.remove-size-btn').addEventListener('click', () => {
+                row.remove();
+              });
+            });
+          }
+
+
+          document.getElementById('ModalitemName').value = item.itemName;
+          document.getElementById('Modalprice').value = item.price;
+          document.getElementById('Modalcategory').value = item.category;
+          document.getElementById('ModalwarehouseLocation').value = item.warehouseLocation;
+          document.getElementById('Modalremarks').value = item.remarks;
+
+          // 处理缩略图预览（展示当前图片或默认占位符）  
+          const previewImg = document.getElementById('ModalPic');
+          if (item.itemPic) {
+            previewImg.src = item.itemPic; // 如果有图片，显示图片
+            previewImg.style.cursor = 'pointer'; // 设置为点击可用的样式  
+
+            // 添加点击事件，用于显示大图  
+            previewImg.onclick = () => {
+              showLargeImage(item.itemPic);
+            };
+          } else {
+            previewImg.src = "/images/nopic.jpg"; // 显示默认占位符             
+          }
+
+          // 重置文件上传输入框  
+          document.getElementById('ModalPicFile').value = '';
+
+          // 显示模态框  
+          document.getElementById('editModal').style.display = 'block';
+
+          // 关闭模态窗口事件
+
+          const closeModalChangeBtn = document.getElementById('closeModalChange');
+          const modal = document.getElementById('editModal');
+          closeModalChangeBtn.onclick = () => {
+            modal.style.display = 'none';
+          };
         })
-        .catch(err => console.error(err));     
-      } 
+        .catch(err => console.error(err));
+    }
 
-function closeEditModal() {  
-  document.getElementById('editModal').style.display = 'none';  
-}  
 
-// 提交修改  
-document.getElementById('confirmEditButton').addEventListener('click', async () => {  
-  const id = document.getElementById('ModalclothingId').value;  
+    function showAddClothingModal() {
 
-  // 收集表单数据  
-  const updatedData = {  
-    itemNumber: document.getElementById('ModalitemNumber').value, 
-    itemName: document.getElementById('ModalitemName').value, 
-    specification: document.getElementById('Modalspecification').value,  
-    quantity: document.getElementById('Modalquantity').value,  
-    category: document.getElementById('Modalcategory').value,  
-    warehouseLocation: document.getElementById('ModalwarehouseLocation').value,  
-    remarks: document.getElementById('Modalremarks').value  
-  };  
+      // 显示模态框  
+      document.getElementById('addModal').style.display = 'block';
 
-  try {  
-    const response = await fetch(`/clothing/update/${id}`, {  
-      method: 'PUT',  
-      headers: { 'Content-Type': 'application/json' },  
-      body: JSON.stringify(updatedData)  
-    });  
+      // 关闭模态窗口事件
 
-    const result = await response.json();  
-    if (result.success) {  
-      alert('修改成功！');  
-      closeEditModal(); // 关闭模态框  
-      loadClothing(); // 重新加载列表  
-    } else {  
-      alert(`修改失败：${result.error}`);  
-    }  
-  } catch (err) {  
-    console.error('修改失败：', err);  
-    alert('修改失败！');  
-  }  
-});  
+      const closeModalAddBtn = document.getElementById('closeModalAdd');
+      const modal = document.getElementById('addModal');
+      closeModalAddBtn.onclick = () => {
+        modal.style.display = 'none';
+      };
+    }
+
+
+    function closeEditModal() {
+      document.getElementById('editModal').style.display = 'none';
+    }
+
+    function closeAddModal() {
+      document.getElementById('addModal').style.display = 'none';
+    }
+
+    document.getElementById('largeImageModal').addEventListener('click', (event) => {
+      // 确保只有点击背景区域时才会关闭模态框  
+      if (event.target === event.currentTarget) {
+        closeLargeImage();
+      }
+    });
+
+
+    // 提交修改  
+    document.getElementById('confirmEditButton').addEventListener('click', async () => {
+      const id = document.getElementById('ModalclothingId').value;
+
+      // 创建 FormData 对象  
+      const formData = new FormData();
+      formData.append('itemNumber', document.getElementById('ModalitemNumber').value);
+      formData.append('itemName', document.getElementById('ModalitemName').value);
+      formData.append('price', document.getElementById('Modalprice').value);
+      formData.append('category', document.getElementById('Modalcategory').value);
+      formData.append('warehouseLocation', document.getElementById('ModalwarehouseLocation').value);
+      formData.append('remarks', document.getElementById('Modalremarks').value);
+
+      // =========== 多尺码数据收集 ===========  
+      const sizesContainer = document.getElementById('ModalsizesContainer');
+      const rows = sizesContainer.querySelectorAll('div'); // 每个div是一行尺码  
+      const sizes = [];
+
+      rows.forEach((row) => {
+        const sizeVal = row.querySelector('.size-input').value.trim();
+        const qtyVal = parseInt(row.querySelector('.quantity-input').value, 10) || 0;
+        if (sizeVal) {
+          sizes.push({ size: sizeVal, quantity: qtyVal });
+        }
+      });
+      // 以字符串形式传递  
+      formData.append('sizes', JSON.stringify(sizes));
+
+
+      // 如果用户选择了新图片，追加文件  
+      const newItemPic = document.getElementById('ModalPicFile').files[0];
+      if (newItemPic) {
+        formData.append('itemPic', newItemPic); // 文件附加到 formData  
+      }
+
+
+      try {
+        const response = await fetch(`/clothing/update/${id}`, {
+          method: 'PUT',
+          body: formData, // 使用 FormData 传递文件和普通字段 
+        });
+
+        const result = await response.json();
+        if (result.success) {
+          alert('修改成功！');
+          closeEditModal(); // 关闭模态框  
+          loadClothing(); // 重新加载列表  
+        } else {
+          alert(`修改失败：${result.error}`);
+        }
+      } catch (err) {
+        console.error('修改失败：', err);
+        alert('修改失败！');
+      }
+    });
 
 
     // 删除服装信息  
-    function deleteClothing(id) {  
-      if (!confirm('确定要删除该服装信息吗？')) return;  
+    function deleteClothing(id) {
+      if (!confirm('确定要删除该服装信息吗？')) return;
 
-      fetch(`/clothing/delete/${id}`, { method: 'DELETE' })  
-        .then(response => response.json())  
-        .then(result => {  
-          if (result.success) {  
-            alert('删除成功');  
+      fetch(`/clothing/delete/${id}`, { method: 'DELETE' })
+        .then(response => response.json())
+        .then(result => {
+          if (result.success) {
+            alert('删除成功');
             loadClothing(); // 刷新表格  
-          } else {  
-            alert('删除失败：' + result.error);  
-          }  
-        })  
-        .catch(err => console.error(err));  
-    }  
+          } else {
+            alert('删除失败：' + result.error);
+          }
+        })
+        .catch(err => console.error(err));
+    }
 
-    // 提交表单，添加服装信息  
-    document.getElementById('addClothingForm').addEventListener('submit', function(event) {  
-      event.preventDefault(); // 阻止默认提交行为  
-
-      const form = this; // 获取表单元素  
-      const formData = {};  
-      const inputs = form.querySelectorAll('input, select');  
-      let valid = true; // 表单验证标识  
+    // 提交表单，添加服装信息
+    function confirmAdd() {
+      // 创建 FormData 对象  
+      const formData = new FormData();
+      formData.append('itemNumber', document.getElementById('itemNumber').value);
+      formData.append('itemName', document.getElementById('itemName').value);
+      formData.append('price', document.getElementById('price').value);
+      formData.append('category', document.getElementById('category').value);
+      formData.append('warehouseLocation', document.getElementById('warehouseLocation').value);
+      formData.append('remarks', document.getElementById('remarks').value);
+      let valid = true;
 
       // 清理之前的错误提示  
-      clearErrorMessages();  
+      clearErrorMessages();
 
-      // 提取表单数据并验证  
-      inputs.forEach(input => {  
-        if (input.required && input.value.trim() === '') {  
-          // 验证必填字段  
-          displayErrorMessage(input, `字段 "${input.previousElementSibling.textContent}" 是必填项！`);  
-          valid = false;  
-        } else {  
-          formData[input.name] = input.value.trim(); // 去掉多余空格  
-        }  
-      });  
+      // =========== 多尺码数据收集 ===========  
+      const sizesContainer = document.getElementById('sizesContainer');
+      const rows = sizesContainer.querySelectorAll('div'); // 每个div是一行尺码  
+      const sizes = [];
 
-      if (!valid) return; // 不通过验证则退出  
+      rows.forEach((row) => {
+        const sizeVal = row.querySelector('.size-input').value.trim();
+        const qtyVal = parseInt(row.querySelector('.quantity-input').value, 10) || 0;
+        if (sizeVal) {
+          sizes.push({ size: sizeVal, quantity: qtyVal });
+        }
+      });
+      // 以字符串形式传递  
+      formData.append('sizes', JSON.stringify(sizes));
 
+
+      // 如果用户选择了新图片，追加文件  
+      const newItemPic = document.getElementById('itemPic').files[0];
+      if (newItemPic) {
+        formData.append('itemPic', newItemPic); // 文件附加到 formData  
+      }
+
+      // 获取必填字段  
+      const itemNumber1 = document.getElementById('itemNumber').value.trim();
+      const itemName1 = document.getElementById('itemName').value.trim();
+
+      // 检查必填项是否填写  
+      if (!itemNumber1 || !itemName1) {
+        alert("请确保物品编号和物品名称都已填写！");
+        valid = false;
+        return; // 终止表单提交  
+      }
+
+      if (!valid) {
+        alert('请检查必填项！');
+        return;
+      }
+
+      console.log(formData);
       // 提交数据到后端  
-      const submitButton = form.querySelector('[type="submit"]');  
+      const submitButton = document.getElementById('confirmAddButton');
       submitButton.disabled = true; // 禁用提交按钮，防止重复提交  
 
-      fetch('/clothing/add', {  
-        method: 'POST',  
-        headers: {  
-          'Content-Type': 'application/json'  
-        },  
-        body: JSON.stringify(formData)  
-      })  
-        .then(response => {  
-          if (!response.ok) {  
-            // 检查 HTTP 响应状态码  
-            throw new Error(`HTTP 状态码错误：${response.status}`);  
-          }  
-          return response.json();  
-        })  
-        .then(result => {  
-          if (result.success) {  
+      fetch('/clothing/add', {
+        method: 'POST',
+        body: formData // 传递 FormData 对象  
+      })
+        .then(response => {
+          if (!response.ok) {
+            return response.json().then(err => {
+              throw new Error(`${err.error}`);
+            });
+          }
+          return response.json();
+        })
+        .then(result => {
+          if (result.success) {
             // 添加成功  
-            alert('添加成功！');  
-            form.reset(); // 重置表单  
-
+            alert('添加成功！');
             // 动态添加新服装数据到表格  
-            const tbody = document.querySelector('#clothingTable tbody');  
-            const tr = document.createElement('tr');  
+            const tbody = document.querySelector('#clothingTable tbody');
+            const tr = document.createElement('tr');
             tr.innerHTML = generateTableRow(result.data); // 格式化返回数据  
-            tbody.appendChild(tr);  
+            tbody.appendChild(tr);
+            closeAddModal();
 
-          } else {  
-            // 添加失败：处理后端返回的错误信息  
-            if (result.error.includes("物品编号")) {  
+          } else {
+            // 添加失败：处理后端返回的错误信息
+            alert(`添加失败：${result.error}`);  // 提示用户错误信息               
+            if (result.error.includes("物品编号")) {
               // 如果错误信息中提到物品编号  
-              const numberInput = form.querySelector('[name="itemNumber"]');  
+              const numberInput = document.getElementById("itemNumber");
               displayErrorMessage(numberInput, result.error); // 在编号字段下显示错误提示  
-            } else {  
+            } else {
               alert(`添加失败：${result.error}`); // 普通错误弹窗  
-            }  
-          }  
-        })  
-        .catch(err => {  
-          console.error('请求失败：', err);  
-          alert('添加服装时发生错误，请稍后重试！');  
-        })  
-        .finally(() => {  
+            }
+          }
+        })
+        .catch(err => {
+          alert(`${err}`);
+        })
+        .finally(() => {
           submitButton.disabled = false; // 恢复提交按钮  
-        });  
-    });  
+        });
+    };
 
     // 显示字段错误信息  
-    function displayErrorMessage(input, message) {  
+    function displayErrorMessage(input, message) {
       input.classList.add('error'); // 给输入框加错误样式  
-      const errorSpan = document.createElement('span');  
-      errorSpan.className = 'error-message';  
-      errorSpan.textContent = message;  
+      const errorSpan = document.createElement('span');
+      errorSpan.className = 'error-message';
+      errorSpan.textContent = message;
       input.parentNode.appendChild(errorSpan); // 在输入框父容器中添加错误提示  
-    }  
+    }
 
     // 清理所有错误提示  
-    function clearErrorMessages() {  
-      const errorMessages = document.querySelectorAll('.error-message');  
+    function clearErrorMessages() {
+      const errorMessages = document.querySelectorAll('.error-message');
       errorMessages.forEach(msg => msg.remove()); // 删除错误信息  
-      const errorInputs = document.querySelectorAll('.error');  
+      const errorInputs = document.querySelectorAll('.error');
       errorInputs.forEach(input => input.classList.remove('error')); // 移除错误标识  
-    }  
+    }
 
     // 导入Excel文件表单提交  
-    document.getElementById('importForm').addEventListener('submit', function(event) {  
-      event.preventDefault();  
+    document.getElementById('importForm').addEventListener('submit', function (event) {
+      event.preventDefault();
 
-      const fileInput = document.getElementById('excelFile');  
-      const file = fileInput.files[0];  
-      if (!file) {  
-        alert('请选择Excel文件');  
-        return;  
-      }  
+      const fileInput = document.getElementById('excelFile');
+      const file = fileInput.files[0];
+      if (!file) {
+        alert('请选择Excel文件');
+        return;
+      }
 
-      const formData = new FormData();  
-      formData.append('excelFile', file);  
+      const formData = new FormData();
+      formData.append('excelFile', file);
 
-      fetch('/clothing/import-preview', {  
-        method: 'POST',  
-        body: formData  
-      })  
-      .then(response => response.json())  
-      .then(data => {  
-        if (data.success) {  
-          // 显示模态窗口并展示预览数据  
-          showImportModal(data.previewData);  
-        } else {  
-          alert('预览失败：' + data.error);  
-        }  
-      })  
-      .catch(err => console.error(err));  
-    });  
+      fetch('/clothing/import-preview', {
+        method: 'POST',
+        body: formData
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            // 显示模态窗口并展示预览数据  
+            showImportModal(data.previewData);
+          } else {
+            alert('预览失败：' + data.error);
+          }
+        })
+        .catch(err => console.error(err));
+    });
 
     // 显示导入模态窗口  
-    function showImportModal(previewData) {  
-      const modal = document.getElementById('importModal');  
-      const closeModalBtn = document.getElementById('closeModal');  
-      const confirmBtn = document.getElementById('confirmImport');  
-      const cancelBtn = document.getElementById('cancelImport');  
-      const previewTable = document.getElementById('importPreviewTable');  
+    function showImportModal(previewData) {
+      const modal = document.getElementById('importModal');
+      const closeModalBtn = document.getElementById('closeModal');
+      const confirmBtn = document.getElementById('confirmImport');
+      const cancelBtn = document.getElementById('cancelImport');
+      const previewTable = document.getElementById('importPreviewTable');
 
       // 清空预览表格内容  
-      previewTable.innerHTML = '';  
+      previewTable.innerHTML = '';
 
-      if (previewData.length === 0) {  
-        previewTable.innerHTML = '<p>没有可预览的数据。</p>';  
-        return;  
-      }  
+      if (previewData.length === 0) {
+        previewTable.innerHTML = '<p>没有可预览的数据。</p>';
+        return;
+      }
 
       // 动态生成表格头  
-      const headers = Object.keys(previewData[0]);  
-      const thead = document.createElement('thead');  
-      const headerRow = document.createElement('tr');  
-      headers.forEach(header => {  
-        const th = document.createElement('th');  
-        th.textContent = header;  
-        headerRow.appendChild(th);  
-      });  
-      thead.appendChild(headerRow);  
-      previewTable.appendChild(thead);  
+      const headers = Object.keys(previewData[0]);
+      const thead = document.createElement('thead');
+      const headerRow = document.createElement('tr');
+      headers.forEach(header => {
+        const th = document.createElement('th');
+        th.textContent = header;
+        headerRow.appendChild(th);
+      });
+      thead.appendChild(headerRow);
+      previewTable.appendChild(thead);
 
       // 动态生成表格体  
-      const tbody = document.createElement('tbody');  
-      previewData.forEach(item => {  
-        const tr = document.createElement('tr');  
-        headers.forEach(header => {  
-          const td = document.createElement('td');  
-          td.textContent = item[header] !== undefined ? item[header] : '';  
-          tr.appendChild(td);  
-        });  
-        tbody.appendChild(tr);  
-      });  
-      previewTable.appendChild(tbody);  
+      const tbody = document.createElement('tbody');
+      previewData.forEach(item => {
+        const tr = document.createElement('tr');
+        headers.forEach(header => {
+          const td = document.createElement('td');
+          td.textContent = item[header] !== undefined ? item[header] : '';
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      });
+      previewTable.appendChild(tbody);
 
       // 显示模态窗口  
-      modal.style.display = 'block';  
+      modal.style.display = 'block';
 
       // 关闭模态窗口事件  
-      closeModalBtn.onclick = () => {  
-        modal.style.display = 'none';  
-      };  
-      cancelBtn.onclick = () => {  
-        modal.style.display = 'none';  
-      };  
+      closeModalBtn.onclick = () => {
+        modal.style.display = 'none';
+      };
+      cancelBtn.onclick = () => {
+        modal.style.display = 'none';
+      };
 
       // 确认导入事件  
-      confirmBtn.onclick = () => {  
-        fetch('/clothing/import-confirm', {  
-          method: 'POST',  
-          headers: { 'Content-Type': 'application/json' },  
-          body: JSON.stringify({ data: previewData })  
-        })  
-        .then(response => response.json())  
-        .then(result => {  
-          if (result.success) {  
-            // 构建详细反馈信息  
-            const message = `  
+      confirmBtn.onclick = () => {
+        fetch('/clothing/import-confirm', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ data: previewData })
+        })
+          .then(response => response.json())
+          .then(result => {
+            if (result.success) {
+              // 构建详细反馈信息  
+              const message = `  
               导入完成：  
               成功导入：${result.saved} 条记录。  
               跳过：${result.skipped} 条记录。  
-            `;  
+            `;
 
-            // 显示跳过记录详情  
-            if (result.skipped > 0) {  
-              const skippedDetails = result.details.skipped.map(item => {  
-                return `物品编号: ${item.data.itemNumber || '未知'}, 原因: ${item.reason}`;  
-              }).join('\n');  
+              // 显示跳过记录详情  
+              if (result.skipped > 0) {
+                const skippedDetails = result.details.skipped.map(item => {
+                  return `物品编号: ${item.data.itemNumber || '未知'}, 原因: ${item.reason}`;
+                }).join('\n');
 
-              alert(`${message}\n跳过详情：\n${skippedDetails}`);  
-            } else {  
-              alert(message);  
-            }  
+                alert(`${message}\n跳过详情：\n${skippedDetails}`);
+              } else {
+                alert(message);
+              }
 
-            // 隐藏模态窗口，重新加载列表  
-            modal.style.display = 'none';  
-            loadClothing(); // 调用现有的列表加载逻辑  
-          } else {  
-            alert('导入失败：' + result.error);  
-          }  
-        })  
-        .catch(err => console.error('导入请求失败：', err));  
-      };  
-    }  
-
-    // 页面加载时获取服装列表  
-    document.addEventListener('DOMContentLoaded', loadClothing);  
+              // 隐藏模态窗口，重新加载列表  
+              modal.style.display = 'none';
+              loadClothing(); // 调用现有的列表加载逻辑  
+            } else {
+              alert('导入失败：' + result.error);
+            }
+          })
+          .catch(err => console.error('导入请求失败：', err));
+      };
+    }
 
     // 点击模态窗口外部关闭模态窗口  
-    window.onclick = function(event) {  
-      const modal = document.getElementById('importModal');  
-      if (event.target == modal) {  
-        modal.style.display = 'none';  
-      }  
-    };  
-  </script>  
-</body>  
+    window.onclick = function (event) {
+      const modal = document.getElementById('importModal');
+      const modal2 = document.getElementById('editModal');
+      const modal3 = document.getElementById('addModal');
+      const modal4 = document.getElementById('reportModal');
+      if (event.target == modal) {
+        modal.style.display = 'none';
+      }
+      if (event.target == modal2) {
+        modal2.style.display = 'none';
+      }
+      if (event.target == modal3) {
+        modal3.style.display = 'none';
+      }
+      if (event.target == modal4) {
+        modal4.style.display = 'none';
+      }
+    };
+
+    function batchDeleteClothing() {
+      const selectedIds = Array.from(document.querySelectorAll('.row-checkbox:checked'))
+        .map(checkbox => checkbox.getAttribute('data-id'));
+
+      if (selectedIds.length === 0) {
+        alert('请至少选择一项进行删除');
+        return;
+      }
+
+      if (confirm(`确定要删除选中的 ${selectedIds.length} 条服装信息记录吗？`)) {
+        fetch('/clothing/batch-delete', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ ids: selectedIds }),
+        })
+          .then(response => response.json())
+          .then(result => {
+            if (result.success) {
+              alert(`成功删除 ${result.deletedCount} 条记录`);
+              loadClothing(); // 刷新表格  
+            } else {
+              alert('删除失败：' + result.error);
+            }
+          })
+          .catch(err => {
+            console.error(err);
+            alert('操作失败，请稍后重试');
+          });
+      }
+    }
+
+
+    // 显示报表模态窗口  
+    function showReportModal() {
+      document.getElementById('reportModal').style.display = 'block';
+      document.getElementById('modalBackdrop').style.display = 'block';
+    }
+
+
+
+    // 关闭报表模态窗口  
+    function closeReportModal() {
+      document.getElementById('reportModal').style.display = 'none';
+      document.getElementById('modalBackdrop').style.display = 'none';
+    }
+
+
+    // 生成报表时收集所有筛选条件  
+    function generateReport() {
+      const outputFormatElement = document.querySelector('input[name="outputFormat"]:checked').value;
+      // 基本参数 
+      const params = {};
+      params.number = document.getElementById('itemNumberSearch').value;
+      params.name = document.getElementById('itemNameSearch').value;
+      params.category = document.getElementById('itemCategorySearch').value;
+      params.startyear = document.getElementById('itemStartYearSearch').value;
+      params.endyear = document.getElementById('itemEndYearSearch').value;
+      params.minprice = document.getElementById('minPriceSearch').value;
+      params.maxprice = document.getElementById('maxPriceSearch').value;
+
+
+      // 添加排序参数  
+      params.sortField = document.getElementById('sortField').value;
+      params.sortOrder = document.getElementById('sortOrder').value;
+
+      // 请求报表数据  
+      fetch('/clothing_reports/generate?' + new URLSearchParams(params))
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            if (outputFormatElement === 'print') {
+              displayPrintableReport(data.report);
+            } else if (outputFormatElement === 'pdf') {
+              downloadReportPDF(data.report);
+            } else if (outputFormatElement === 'excel') {
+              downloadReportExcel(data.report);
+            }
+          } else {
+            alert('生成报表失败：' + data.error);
+          }
+        })
+        .catch(err => {
+          console.error('报表生成失败:', err);
+          alert('报表生成失败，请稍后重试');
+        });
+
+      // 关闭模态窗口  
+      closeReportModal();
+    }
+
+    // 显示可打印的报表  
+    function displayPrintableReport(report) {
+      // 创建打印容器  
+      const printContainer = document.createElement('div');
+      printContainer.className = 'print-container';
+      printContainer.id = 'printableReport';
+
+      // 添加报表头部  
+      const header = document.createElement('div');
+      header.className = 'print-header';
+      header.innerHTML = `  
+    <h1>被装信息统计表</h1>  
+  `;
+      printContainer.appendChild(header);
+
+      // 添加报表内容  
+      const content = document.createElement('div');
+      content.className = 'print-content';
+      content.innerHTML = generateReportTable(report);
+      printContainer.appendChild(content);
+
+      // 添加打印信息（放在表格下方）  
+      const printInfo = document.createElement('div');
+      printInfo.className = 'print-info';
+
+      // 从 EJS 变量中获取当前登录用户的用户名  
+      const username = currentUser.username; // 假设已从后端传递到全局变量
+
+      // 发起请求查询
+      fetch(`/gerenxinxiguanli/fetch?number=${username}`)
+        .then(res => res.json())
+        .then(result => {
+          if (result.success) {
+            // 存在记录，自动填充表单  
+            const data = result.data;
+            if (currentUser && data.name) {
+              printInfo.innerHTML = `  
+    <div class="print-info-container" style="display: flex; gap: 20px;">  
+      <div class="print-date">打印日期：${new Date().toLocaleDateString()}</div>  
+      <div class="print-user">打印人：${data.name || '系统管理员'}</div>  
+    </div>  
+  `;
+              printContainer.appendChild(printInfo);
+              return;
+            }
+          }
+        });
+
+      // 添加报表底部（仅包含操作按钮）  
+      const footer = document.createElement('div');
+      footer.className = 'print-footer';
+      footer.innerHTML = `  
+    <div class="no-print action-buttons">  
+      <button onclick="printReportIframe()" class="button">打印此页</button>  
+      <button onclick="closeReport()" class="button button-secondary">关闭</button>  
+    </div>  
+  `;
+      printContainer.appendChild(footer);
+
+      // 添加必要的样式  
+      const style = document.createElement('style');
+      style.textContent = `  
+  .action-buttons {  
+    display: flex !important;  
+    justify-content: flex-end !important;  
+    gap: 10px;  
+    width: 100%;  
+  }  
+  
+  /* 重置可能影响对齐的样式 */  
+  .print-footer {  
+    width: 100%;  
+    box-sizing: border-box;  
+  }  
+  
+  .no-print {  
+    width: 100%;  
+  }  
+`;
+      document.head.appendChild(style);
+
+
+      // 添加到文档中  
+      document.body.appendChild(printContainer);
+    }
+
+    // 使用iframe打印  
+    function printReportIframe() {
+      // 获取要打印的内容  
+      const printContent = document.getElementById('printableReport');
+
+      // 创建一个新的iframe  
+      const iframe = document.createElement('iframe');
+      iframe.style.display = 'none';
+      document.body.appendChild(iframe);
+
+      // 获取iframe的文档  
+      const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+
+      // 写入基本HTML结构  
+      iframeDoc.write(`  
+    <!DOCTYPE html>  
+    <html>  
+    <head>  
+      <title>被装信息统计表</title>  
+      <style>  
+        /* 重置样式 */  
+        body, html {  
+          margin: 0;  
+          padding: 0;  
+          font-family: Arial, sans-serif;  
+        }  
+        
+        /* 报表样式 */  
+        .print-content {  
+          padding: 10mm;  
+        }  
+        
+        .print-header {  
+          text-align: center;  
+          margin-bottom: 15mm;  
+        }  
+        
+        /* 打印信息样式 - 新增 */  
+        .print-info {  
+          padding: 0 10mm;  
+          margin-top: 10mm;  
+        }  
+        
+        .print-info-container {  
+          display: flex;  
+          justify-content: space-between;  
+          border-top: 1px solid #ddd;  
+          padding-top: 5mm;  
+        }  
+        
+        .print-date, .print-user {  
+          font-size: 10pt;  
+        }  
+        
+        .print-footer {  
+          text-align: center;  
+          margin-top: 10mm;  
+        }  
+        
+        /* 表格样式 */  
+        table {  
+          width: 100%;  
+          border-collapse: collapse;  
+        }  
+        
+        th, td {  
+          border: 1px solid #333;  
+          padding: 3mm;  
+          text-align: center;  
+        }  
+        
+        th {  
+          background-color: #f2f2f2;  
+        }  
+        
+        /* 隐藏不打印的元素 */  
+        .no-print {  
+          display: none;  
+        }  
+        
+        /* 页码样式 */  
+        .page-number {  
+          position: absolute;  
+          bottom: 5mm;  
+          width: 100%;  
+          text-align: center;  
+          font-size: 10pt;  
+        }  
+        
+        /* 控制分页 */  
+        .page-break {  
+          page-break-after: always;  
+        }  
+        
+        @page {  
+          margin: 10mm;  
+        }  
+      </style>  
+    </head>  
+    <body>  
+      ${printContent.innerHTML.replace(/<div class="no-print">.*?<\/div>/g, '')}  
+    </body>  
+    </html>  
+  `);
+
+      iframeDoc.close();
+
+      // 等待图片加载完成  
+      setTimeout(() => {
+        // 打印iframe内容  
+        iframe.contentWindow.focus();
+        iframe.contentWindow.print();
+
+        // 打印后删除iframe  
+        setTimeout(() => {
+          document.body.removeChild(iframe);
+        }, 1000);
+      }, 500);
+    }
+
+    // 关闭报表  
+    function closeReport() {
+      const container = document.getElementById('printableReport');
+      if (container) {
+        document.body.removeChild(container);
+      }
+    }
+
+
+    // 生成报表表格HTML  
+    function generateReportTable(report) {
+      let tableHTML = '<table class="print-table">';
+
+      // 根据报表生成表头  
+      tableHTML += `  
+      <thead>  
+        <tr> 
+            <th>物品编号</th>
+            <th>物品名称</th>
+            <th>尺码与数量</th>
+            <th>单价</th>
+            <th>类别</th>
+            <th>年份</th>
+            <th>备注</th> 
+        </tr>  
+      </thead>  
+      <tbody>  
+    `;
+
+      report.forEach(item => {
+        tableHTML += `  
+        <tr> 
+        <td>${item.itemNumber}</td>  
+        <td>${item.itemName}</td>
+        <td>${(item.sizes || []).map(sizeObj => `${sizeObj.size}: ${sizeObj.quantity}`).join('<br>')}</td> 
+        <td>${item.price || ''}</td>          
+        <td>${item.category || ''}</td>  
+        <td>${item.warehouseLocation || ''}</td>  
+        <td>${item.remarks || ''}</td>  
+        </tr>  
+      `;
+      });
+
+      tableHTML += '</tbody></table>';
+      return tableHTML;
+    }
+
+    // 下载PDF报表  
+    async function downloadReportPDF(report) {
+      // 创建PDF文档  
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+
+      // 加载字体  
+      const fontPath = '/fonts/SourceHanSans-Regular.ttf'; // 确保字体文件路径正确  
+      const fontRes = await fetch(fontPath);
+      if (!fontRes.ok) throw new Error('字体文件未找到');
+
+      const fontBlob = await fontRes.arrayBuffer();
+
+      // 使用适当的方法转换为 Base64 字符串  
+      const fontBase64 = arrayBufferToBase64(fontBlob); // 转换为 Base64 
+
+      // 添加字体到 jsPDF  
+      doc.addFileToVFS('SourceHanSans-Regular.ttf', fontBase64);
+      doc.addFont('SourceHanSans-Regular.ttf', 'SourceHanSans', 'normal');
+      doc.setFont('SourceHanSans');
+
+
+      // 设置标题  
+      const title = '被装信息统计表';
+      doc.setFontSize(18);
+      doc.text(title, 105, 15, { align: 'center' });
+
+      // 设置表格列  
+      let columns = [];
+      let rows = [];
+      columns = [
+        { header: '物品编号', dataKey: 'itemNumber' },
+        { header: '物品名称', dataKey: 'itemName' },
+        { header: '尺码与数量', dataKey: 'sizes' },
+        { header: '单价', dataKey: 'price' },
+        { header: '类别', dataKey: 'category' },
+        { header: '年份', dataKey: 'warehouseLocation' },
+        { header: '备注', dataKey: 'remarks' }
+      ];
+
+
+      // 将报表数据转换为行数据  
+      rows = report.map(item => {
+        const row = {};
+        columns.forEach(col => {
+          // 使用nullish合并运算符 (??)，只会在值为null或undefined时使用后面的值
+          if (col.dataKey == 'sizes') {
+            // 转换为指定格式  
+            const formattedOutput = item[col.dataKey].map(items => `${items.size}:${items.quantity}`).join('\n');
+            row[col.dataKey] = formattedOutput
+          } else {
+            row[col.dataKey] = item[col.dataKey] ?? '';
+          }
+        });
+        return row;
+      });
+
+      // 保存上次表格结束的位置  
+      let lastY = 0;
+
+      // 生成PDF表格  
+      doc.autoTable({
+        startY: 35,
+        head: [columns.map(col => col.header)],
+        body: rows.map(row => columns.map(col => row[col.dataKey])),
+        theme: 'grid',
+        headStyles: {
+          fillColor: [41, 128, 185],
+          textColor: 255,
+          fontSize: 12,
+          halign: 'center'
+        },
+        margin: { top: 30 },
+        styles: {
+          font: "SourceHanSans",
+          fontSize: 12,
+          cellPadding: 3,
+          valign: 'middle',
+          halign: 'center'
+        },
+        columnStyles: { text: { cellWidth: 'auto' } },
+        didDrawPage: (data) => {
+          // 保存表格结束位置  
+          lastY = data.cursor.y;
+        }
+      });
+
+      // 添加页脚  
+      const pageCount = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        // 确保设置字体后再添加日期文本  
+        doc.setFont('SourceHanSans');
+        doc.setPage(i);
+        doc.setFontSize(10);
+        doc.text(`第${i}页/共${pageCount}页`, 105, doc.internal.pageSize.height - 10, { align: 'center' });
+
+        // 只在最后一页的表格下方添加日期和打印人信息  
+        if (i === pageCount) {
+          // 确保设置字体  
+          doc.setFont('SourceHanSans');
+          doc.setFontSize(10);
+
+          // 在表格下方添加日期和打印人信息  
+          const footerY = lastY + 15; // 表格结束位置下方15mm  
+
+          // 左侧添加打印日期  
+          doc.text(`打印日期:${new Date().toLocaleDateString()}`, 15, footerY);
+
+
+          // 从 EJS 变量中获取当前登录用户的用户名  
+          const username = currentUser.username; // 假设已从后端传递到全局变量
+
+          // 调用生成函数并在完成后输出PDF  
+          generatePDF(doc, username, footerY).then(finalDoc => {
+            // 下载PDF  
+            finalDoc.save(`${title}-${new Date().toISOString().split('T')[0]}.pdf`);
+          }).catch(error => {
+            console.error('PDF生成过程中出错:', error);
+          });
+        }
+
+      }
+    }
+
+
+    function generatePDF(doc, username, footerY) {
+      return new Promise((resolve, reject) => {
+        // 左侧添加打印日期  
+        doc.text(`打印日期:${new Date().toLocaleDateString()}`, 15, footerY);
+
+        fetch(`/gerenxinxiguanli/fetch?number=${username}`)
+          .then(res => res.json())
+          .then(result => {
+            if (result.success && result.data && result.data.name) {
+              // 右侧添加打印人  
+              doc.text(`打印人:${result.data.name}`, 50, footerY);
+            } else {
+              // 如果没有获取到名字，使用默认名称  
+              doc.text(`打印人:系统管理员`, 50, footerY);
+            }
+            resolve(doc); // 返回修改后的doc对象  
+          })
+          .catch(err => {
+            console.error('获取用户信息失败:', err);
+            // 出错时也添加默认打印人  
+            doc.text(`打印人:系统管理员`, 50, footerY);
+            resolve(doc); // 尽管有错误，仍然返回doc对象  
+          });
+      });
+    }
+
+
+    // 提供转换 ArrayBuffer 为 Base64 字符串的方法  
+    function arrayBufferToBase64(buffer) {
+      let binary = '';
+      const bytes = new Uint8Array(buffer);
+      const len = bytes.byteLength;
+      for (let i = 0; i < len; i++) {
+        binary += String.fromCharCode(bytes[i]);
+      }
+      return window.btoa(binary); // 使用 window.btoa 将字符串转为 Base64  
+    }
+
+
+    // 下载Excel报表  
+    function downloadReportExcel(report) {
+      // 设置表格标题行  
+      let headers = [];
+      const title = '被装信息统计表';
+
+      headers = ['物品编号', '物品名称', '尺码与数量', '单价', '类别', '年份', '备注'];
+
+      // 准备数据行，添加标题行  
+      const rows = [];
+
+      // 添加标题行（第一行，后面会合并单元格）  
+      rows.push([title]);
+
+      // 第二行添加表头  
+      rows.push(headers);
+
+      report.forEach(item => {
+
+        const formattedOutput = item.sizes.map(items => `${items.size}：${items.quantity}`).join('\n');
+        
+        rows.push([
+          item.itemNumber || '',
+          item.itemName || '',
+          formattedOutput || '',
+          item.price || '',
+          item.category || '',
+          item.warehouseLocation || '',
+          item.remarks || ''
+        ]);
+      });
+
+      // 添加空行  
+      rows.push([]);
+
+      // 为最后一行的每个单元格填充空值以保证所有列都存在  
+      const printInfoRow = [];
+      for (let i = 0; i < headers.length; i++) {
+        printInfoRow.push('');
+      }
+
+      // 设置打印日期和打印人信息  
+      printInfoRow[0] = `打印日期:${new Date().toLocaleDateString()}`;
+      rows.push(printInfoRow);
+
+      // 获取打印人信息 - 使用Promise  
+      const username = currentUser.username; // 假设已从后端传递到全局变量  
+
+      // 使用fetch获取用户信息，并在回调中处理生成Excel  
+      fetch(`/gerenxinxiguanli/fetch?number=${username}`)
+        .then(response => response.json())
+        .then(result => {
+          // 设置打印人信息 - 使用中间位置作为起始点  
+          const halfLength = Math.floor(headers.length / 2);
+          if (result.success && result.data && result.data.name) {
+            rows[rows.length - 1][halfLength] = `打印人:${result.data.name}`;
+          } else {
+            rows[rows.length - 1][halfLength] = `打印人:系统管理员`;
+          }
+
+          // 生成Excel文件(在确保获取到打印人信息后)  
+          generateAndDownloadExcel(rows, headers, title);
+        })
+        .catch(error => {
+          console.error('获取用户信息失败:', error);
+          // 发生错误时设置默认打印人  
+          const halfLength = Math.floor(headers.length / 2);
+          rows[rows.length - 1][halfLength] = `打印人:系统管理员`;
+          // 错误时也能生成Excel  
+          generateAndDownloadExcel(rows, headers, title);
+        });
+
+
+      // 将Excel生成和下载逻辑移到单独的函数  
+      function generateAndDownloadExcel(rows, headers, title) {
+
+        // 创建工作表  
+        const ws = XLSX.utils.aoa_to_sheet(rows);
+        // 设置合并单元格 - 将标题行合并  
+        // 合并区域格式为 {s: {c: 起始列, r: 起始行}, e: {c: 结束列, r: 结束行}}  
+        const merge = {
+          s: { c: 0, r: 0 }, // 起始位置：第1行，第1列  
+          e: { c: headers.length - 1, r: 0 } // 结束位置：第1行，最后一列  
+        };
+
+        // 如果没有合并单元格数组，则创建一个  
+        if (!ws['!merges']) ws['!merges'] = [];
+
+        // 添加合并区域  
+        ws['!merges'].push(merge);
+
+        // 确定打印信息行的行号  
+        const printInfoRow = rows.length - 1;
+
+        // 计算中间位置  
+        const halfLength = Math.floor(headers.length / 2);
+
+        // 设置打印日期的合并单元格（左半部分）  
+        const dateMerge = {
+          s: { c: 0, r: printInfoRow }, // 起始位置：最后一行，第1列  
+          e: { c: halfLength - 1, r: printInfoRow } // 结束位置：最后一行，中间位置-1  
+        };
+        ws['!merges'].push(dateMerge);
+
+        // 设置打印人的合并单元格（右半部分）  
+        const userMerge = {
+          s: { c: halfLength, r: printInfoRow }, // 起始位置：最后一行，中间位置  
+          e: { c: headers.length - 1, r: printInfoRow } // 结束位置：最后一行，最后一列  
+        };
+        ws['!merges'].push(userMerge);
+
+        // === 根据每列内容自动调整列宽 ===  
+        // 初始化列宽数组，每列至少有一个最小宽度  
+        const colWidths = Array(headers.length).fill().map(() => ({ wch: 8 }));
+
+        // 首先考虑表头的宽度  
+        headers.forEach((header, idx) => {
+          const headerWidth = getStringWidth(header);
+          colWidths[idx].wch = headerWidth;
+        });
+
+        // 遍历每一行数据，找出每列中最宽的内容  
+        for (let r = 2; r < rows.length - 1; r++) {  // 从数据行开始，跳过标题和表头  
+          for (let c = 0; c < headers.length; c++) {
+            if (rows[r][c] !== undefined && rows[r][c] !== null) {
+              // 获取内容宽度  
+              const cellWidth = getStringWidth(rows[r][c].toString());
+              // 更新列宽，只有当内容宽度大于当前列宽时才更新  
+              if (cellWidth > colWidths[c].wch) {
+                colWidths[c].wch = cellWidth;
+              }
+            }
+          }
+        }
+
+        // 检查打印信息行的宽度需求  
+        const printDateText = rows[printInfoRow][0] || '';
+        const printUserText = rows[printInfoRow][halfLength] || '';
+
+        // 左半边（打印日期）需要的总宽度  
+        const dateInfoWidth = getStringWidth(printDateText);
+        // 右半边（打印人）需要的总宽度  
+        const userInfoWidth = getStringWidth(printUserText);
+
+        // 计算当前左半边列的总宽度  
+        let leftTotalWidth = 0;
+        for (let i = 0; i < halfLength; i++) {
+          leftTotalWidth += colWidths[i].wch;
+        }
+
+        // 计算当前右半边列的总宽度  
+        let rightTotalWidth = 0;
+        for (let i = halfLength; i < headers.length; i++) {
+          rightTotalWidth += colWidths[i].wch;
+        }
+
+        // 如果打印日期需要更多空间，适当调整左半部分的列宽  
+        if (dateInfoWidth > leftTotalWidth && halfLength > 0) {
+          const extraWidthPerCol = Math.ceil((dateInfoWidth - leftTotalWidth) / halfLength);
+          for (let i = 0; i < halfLength; i++) {
+            colWidths[i].wch += extraWidthPerCol;
+          }
+        }
+
+        // 如果打印人需要更多空间，适当调整右半部分的列宽  
+        if (userInfoWidth > rightTotalWidth && (headers.length - halfLength > 0)) {
+          const extraWidthPerCol = Math.ceil((userInfoWidth - rightTotalWidth) / (headers.length - halfLength));
+          for (let i = halfLength; i < headers.length; i++) {
+            colWidths[i].wch += extraWidthPerCol;
+          }
+        }
+
+        // 为所有列增加一些边距  
+        colWidths.forEach((col) => {
+          col.wch += 4; // 增加4个字符的边距（左右各2个）  
+        });
+
+        // 设置最终的列宽  
+        ws['!cols'] = colWidths;
+
+        // 设置标题单元格样式  
+        // 详细的样式定义  
+        const styles = {
+          title: {
+            font: {
+              name: '宋体',
+              sz: 16,
+              color: { rgb: "FFFFFF" },
+              bold: true
+            },
+            fill: {
+              fgColor: { rgb: "0070C0" }
+            },
+            alignment: {
+              horizontal: "center",
+              vertical: "center"
+            }
+            // 移除了边框样式  
+          },
+          header: {
+            font: {
+              name: '宋体',
+              sz: 12,
+              bold: true
+            },
+            fill: {
+              fgColor: { rgb: "DDDDDD" }
+            },
+            alignment: {
+              horizontal: "center",
+              vertical: "center"
+            },
+            border: {
+              top: { style: "thin", color: { rgb: "000000" } },
+              bottom: { style: "thin", color: { rgb: "000000" } },
+              left: { style: "thin", color: { rgb: "000000" } },
+              right: { style: "thin", color: { rgb: "000000" } }
+            }
+          },
+          cell: {
+            alignment: {
+              horizontal: "center",
+              vertical: "center"
+            },
+            border: {
+              top: { style: "thin", color: { rgb: "000000" } },
+              bottom: { style: "thin", color: { rgb: "000000" } },
+              left: { style: "thin", color: { rgb: "000000" } },
+              right: { style: "thin", color: { rgb: "000000" } }
+            }
+          },
+          footerInfo: {
+            font: {
+              name: '宋体',
+              sz: 10,
+              bold: true
+            },
+            alignment: {
+              horizontal: "left",
+              vertical: "center"
+            }
+          }
+        };
+
+        // 应用样式到单元格  
+        ws['A1'].s = styles.title;
+        // 为表头行（第2行）的每一列设置样式  
+        for (let i = 0; i < headers.length; i++) {
+          // 将列索引转换为Excel列标识 (A2, B2, C2...)  
+          const cellRef = XLSX.utils.encode_cell({ c: i, r: 1 }); // r=1 是第二行
+          // 确保单元格存在  
+          if (!ws[cellRef]) ws[cellRef] = {};
+          if (!ws[cellRef].s) ws[cellRef].s = {};
+          ws[cellRef].s = styles.header;
+        }
+
+        // 为数据行应用样式  
+        for (let row = 3; row < rows.length + 2; row++) {
+          for (let col = 0; col < headers.length; col++) {
+            const cellAddress = XLSX.utils.encode_cell({ r: row - 1, c: col });
+            if (ws[cellAddress]) {
+              ws[cellAddress].s = styles.cell;
+            }
+          }
+        }
+
+        // 为打印信息行的所有单元格应用无边框样式  
+        for (let col = 0; col < headers.length; col++) {
+          const cellAddress = XLSX.utils.encode_cell({ r: printInfoRow, c: col });
+          if (!ws[cellAddress]) ws[cellAddress] = { v: "" };
+          ws[cellAddress].s = styles.footerInfo;
+        }
+
+
+        // 创建工作簿  
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, title);
+
+        // 生成Excel文件并下载  
+        const fileName = `${title}-${new Date().toISOString().split('T')[0]}.xlsx`;
+        XLSX.writeFile(wb, fileName);
+      }
+    }
+
+
+    // === 添加一个辅助函数来计算字符串宽度 ===  
+    function getStringWidth(str) {
+      if (!str) return 0;
+      let width = 0;
+      for (let i = 0; i < str.length; i++) {
+        // 中文字符和全角符号占用更多宽度  
+        if (str.charCodeAt(i) > 127) {
+          width += 2.2;  // 中文字符宽度系数  
+        } else {
+          width += 1.1;  // 英文字符宽度系数  
+        }
+      }
+      // 添加一些内边距  
+      return Math.ceil(width) + 2;
+    }
+
+
+
+  </script>
+</body>
+
 </html>

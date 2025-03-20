@@ -83,6 +83,32 @@ router.get('/dashboard', (req, res) => {
     res.render('dashboard', { user: req.session.user });  
 });  
 
+// 实力管理页面  
+router.get('/firefighters', (req, res) => {  
+    if (!req.session.user) {  
+        return res.redirect('/login');  
+    }  
+    res.render('firefighters', { user: req.session.user });  
+});  
+
+// 物品管理页面  
+router.get('/clothing', (req, res) => {  
+    if (!req.session.user) {  
+        return res.redirect('/login');  
+    }  
+    res.render('clothing', { user: req.session.user });  
+});
+
+
+// 审核管理页面  
+router.get('/shenhe', (req, res) => {  
+    if (!req.session.user) {  
+        return res.redirect('/login');  
+    }  
+    res.render('shenhe', { user: req.session.user });  
+});  
+
+
 // 退出登录  
 router.get('/logout', (req, res) => {  
     req.session.destroy();  

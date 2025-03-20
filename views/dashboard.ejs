@@ -1,526 +1,944 @@
-<!DOCTYPE html>  
-<html lang="zh-CN">  
-<head>  
-    <meta charset="UTF-8">  
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">  
-    <title>服装管理系统</title>  
-    <link rel="stylesheet" href="/css/style.css">  
-</head>  
+<!DOCTYPE html>
+<html lang="zh-CN">
 
-<style>  
-    /* 重置默认样式 */  
-    * {  
-      margin: 0;  
-      padding: 0;  
-      box-sizing: border-box;  
-    }  
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>被装管理系统</title>
+  <script>
+    const currentUser = <%- JSON.stringify(user || {}) %>; // 在页面顶部定义    
+  </script>
+  <!-- 引入Tailwind CSS（仅开发环境示例） -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <!-- 1. 引入某款艺术字体（示例：Amatic SC） -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@700&display=swap" />
+</head>
 
-    body {  
-      font-family: Arial, sans-serif;  
-      background-color: #f2f2f2;  
-      padding: 20px;  
-    }  
+<style>
+  /* 背景图片样式 */
+  body {
+    background-image: url('/images/background.jpg');
+    /* 背景图片路径 */
+    background-size: cover;
+    /* 图片适应屏幕大小 */
+    background-repeat: no-repeat;
+    /* 不重复平铺 */
+    background-position: center;
+    /* 居中显示 */
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    /* 占满整个视口高度 */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
 
-    /* 按钮样式 */  
-    .open-modal-btn {  
-      display: inline-block;  
-      padding: 10px 20px;  
-      background-color: #007bff;  
-      color: white;  
-      text-decoration: none;  
-      border-radius: 4px;  
-      cursor: pointer;  
-      transition: background-color 0.3s;  
-    }  
+  .fancy-font {
+    font-family: 'Amatic SC', cursive;
+    /* cursive等用于回退 */
+  }
 
-    .open-modal-btn:hover {  
-      background-color: #0056b3;  
-    }  
+  /* 背景遮罩 */
+  .modal-backdrop {
+    display: none;
+    /* 默认隐藏 */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    /* 过渡动画可选 */
+    z-index: 999;
+  }
 
-    /* 模态框背景遮罩 */  
-    .modal-backdrop {  
-      display: none; /* 默认隐藏 */  
-      position: fixed;  
-      top: 0;  
-      left: 0;  
-      width: 100%;  
-      height: 100%;  
-      background-color: rgba(0, 0, 0, 0.5);  
-      z-index: 999;  
-    }  
+  .modal-backdrop.active {
+    display: block;
+  }
 
-    /* 模态框样式 */  
-    .modal {  
-      display: none; /* 默认隐藏 */  
-      position: fixed;  
-      top: 50%;  
-      left: 50%;  
-      transform: translate(-50%, -50%);  
-      background-color: #fff;  
-      padding: 20px;  
-      border-radius: 8px;  
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);  
-      width: 80%;  
-      max-width: 600px;  
-      max-height: 90vh; /* 最大高度为视口高度的90% */  
-      overflow-y: auto; /* 内容超出时显示滚动条 */  
-      z-index: 1000;  
-    }  
+  /* 表单样式 */
+  .form-group {
+    margin-bottom: 15px;
+  }
 
-    /* 模态框头部 */  
-    .modal-header {  
-      display: flex;  
-      justify-content: space-between;  
-      align-items: center;  
-      margin-bottom: 20px;  
-    }  
+  .form-label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+    color: #555;
+  }
 
-    .modal-header h2 {  
-      font-size: 1.5rem;  
-      color: #333;  
-    }  
+  .form-control {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
 
-    .modal-close {  
-      background: none;  
-      border: none;  
-      font-size: 1.5rem;  
-      cursor: pointer;  
-      color: #aaa;  
-      transition: color 0.3s;  
-    }  
+  .form-control:focus {
+    border-color: #007bff;
+    outline: none;
+    box-shadow: 0 0 3px rgba(0, 123, 255, 0.3);
+  }
 
-    .modal-close:hover {  
-      color: #000;  
-    }  
+  /* 通用按钮样式 */
+  .button {
+    padding: 10px 20px;
+    /* 幅度内边距 */
+    border: none;
+    /* 去掉边框 */
+    border-radius: 5px;
+    /* 圆角 */
+    background-color: #007bff;
+    /* 背景颜色 */
+    color: white;
+    /* 字体颜色 */
+    font-size: 16px;
+    /* 字体大小 */
+    cursor: pointer;
+    /* 鼠标指针 */
+    transition: background-color 0.3s;
+    /* 过渡效果 */
+  }
 
-    /* 模态框主体 */  
-    .modal-body {  
-      margin-bottom: 20px;  
-    }  
+  /* 按钮悬停样式 */
+  .button:hover {
+    background-color: #0056b3;
+    /* 悬停时的背景颜色 */
+  }
 
-    /* 表单样式 */  
-    .form-group {  
-      margin-bottom: 15px;  
-    }  
+  .button-primary {
+    background-color: #28a745;
+    color: #fff;
+  }
 
-    .form-label {  
-      display: block;  
-      margin-bottom: 5px;  
-      font-weight: bold;  
-      color: #555;  
-    }  
+  .button-primary:hover {
+    background-color: #218838;
+    box-shadow: 0 0 8px rgba(40, 167, 69, 0.2);
+  }
 
-    .form-control {  
-      width: 100%;  
-      padding: 8px 12px;  
-      border: 1px solid #ddd;  
-      border-radius: 4px;  
-      font-size: 14px;  
-      transition: border-color 0.2s;  
-    }  
+  .button-secondary {
+    background-color: #6c757d;
+    color: #fff;
+  }
 
-    .form-control:focus {  
-      border-color: #007bff;  
-      outline: none;  
-    }  
+  .button-secondary:hover {
+    background-color: #5a6268;
+    box-shadow: 0 0 8px rgba(108, 117, 125, 0.2);
+  }
 
-    /* 模态框底部 */  
-    .modal-footer {  
-      display: flex;  
-      justify-content: flex-end;  
-      gap: 10px;  
-    }  
+/* 模态窗口基础样式 */  
+.modal {  
+  display: none; /* 默认隐藏 */  
+  position: fixed;  
+  top: 50%;  
+  left: 50%;  
+  transform: translate(-50%, -50%);  
+  z-index: 1000;  
+  width: 80%;   
+  max-width: 1200px; /* 增大最大宽度，让大屏幕显示更多内容 */  
+  max-height: 90vh;  
+  overflow-y: auto;  
+}  
 
-    /* 按钮样式 */  
-    .button {  
-      padding: 8px 16px;  
-      border: none;  
-      border-radius: 4px;  
-      cursor: pointer;  
-      font-size: 14px;  
-      transition: background-color 0.3s;  
-    }  
+/* 模态内容样式 */  
+.modal-content {  
+  width: 100%;  
+  padding: 20px;  
+  background-color: #fff;  
+  border-radius: 8px;  
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);  
+}  
 
-    .button-primary {  
-      background-color: #28a745;  
-      color: white;  
-    }  
+/* 模态窗口内表单元素自适应 */  
+#gerenxinxiguanliForm {  
+  width: 100%;  
+}  
 
-    .button-primary:hover {  
-      background-color: #218838;  
-    }  
+/* 确保行占满空间 */  
+.row {  
+  display: flex;  
+  flex-wrap: wrap;  
+  width: 100%;  
+  margin-left: 0;  
+  margin-right: 0;  
+}  
 
-    .button-secondary {  
-      background-color: #6c757d;  
-      color: white;  
-    }  
+/* 列元素拉伸以占满空间 */  
+.col-md-4, .col-md-6, .col-md-12 {  
+  flex-grow: 1;  
+  transition: all 0.3s ease; /* 添加过渡效果使尺寸变化更平滑 */  
+}  
 
-    .button-secondary:hover {  
-      background-color: #5a6268;  
-    }  
+/* 输入框自动填充可用空间 */  
+.form-control, .form-select {  
+  width: 100%;  
+  min-height: 38px;  
+  padding: 8px 12px;  
+  box-sizing: border-box;  
+}  
 
-    /* 响应式设计 */  
-    @media screen and (max-width: 768px) {  
-      .modal {  
-        width: 95%;  
-        padding: 15px;  
-        max-height: 85vh; /* 适当减少最大高度以适应移动设备 */  
-      }  
-
-      .modal-header h2 {  
-        font-size: 1.2rem;  
-      }  
-
-      .button {  
-        padding: 6px 12px;  
-        font-size: 12px;  
-      }  
-    }  
-  </style>  
+/* 标签变大以适应大屏幕 */  
+@media (min-width: 1200px) {  
+  .form-label {  
+    font-size: 1.1rem;  
+  }  
   
+  .form-control, .form-select {  
+    font-size: 1.05rem;  
+    padding: 10px 15px;  
+    min-height: 45px;  
+  }  
+  
+  /* 按钮在大屏幕上变大 */  
+  .modal-footer .button {  
+    padding: 10px 25px;  
+    font-size: 1.1rem;  
+  }  
+}  
+
+/* 更大屏幕上进一步增大字体和间距 */  
+@media (min-width: 1600px) {  
+  .form-label {  
+    font-size: 1.2rem;  
+    margin-bottom: 10px;  
+  }  
+  
+  .form-control, .form-select {  
+    font-size: 1.1rem;  
+    padding: 12px 18px;  
+    min-height: 50px;  
+  }  
+  
+  .mb-3 {  
+    margin-bottom: 1.5rem !important;  
+  }  
+  
+  /* 增大模态标题 */  
+  .modal-header h2 {  
+    font-size: 2.2rem;  
+  }  
+  
+  /* 增大关闭按钮 */  
+  #closeModal {  
+    font-size: 2rem;  
+  }  
+}  
+
+/* 确保按钮栏始终占满宽度 */  
+.modal-footer {  
+  display: flex;  
+  justify-content: flex-end;  
+  gap: 15px;  
+  width: 100%;  
+  padding-top: 20px;  
+  margin-top: 10px;  
+}  
+
+/* 超宽屏幕进一步扩大元素 */  
+@media (min-width: 2000px) {  
+  .modal {  
+    max-width: 1800px; /* 超宽屏幕允许更大模态框 */  
+  }  
+  
+  .row {  
+    gap: 20px; /* 增加行内元素间距 */  
+  }  
+}
+
+.container {  
+  max-width: 1200px;  
+  margin: 0 auto;  
+  padding: 0 15px;  
+}  
+
+.navbar {  
+  padding: 0;  
+  margin: 0;  
+}  
+
+.sidebar-navbar {  
+  margin: 0;  
+  padding: 15px 0;  
+}  
+
+.content-area {  
+  margin: 0;  
+  padding: 15px;  
+}  
+
+.sidebar-nav .button {  
+  text-align: center;  
+  vertical-align: middle;  
+  display: flex;  
+  justify-content: center;  
+  align-items: center;  
+}  
+
+</style>
 
 
-<body>
-      <!-- 添加背景遮罩 -->  
-  <div id="modalBackdrop" class="modal-backdrop"></div>    
-    <div class="container">  
-        <h1>欢迎, <%= user.username %></h1>  
-        <div class="dashboard-content">  
-            <p>角色: <%= user.role %></p>  
-            <nav class="dashboard-nav">  
-                <!-- 管理员入口 -->  
-                <% if (user.role === 'admin') { %>  
-                    <a href="/admin/users" class="nav-item">用户管理</a>
-                    <a href="/firefighters" class="nav-item">消防员管理</a>  
-                    <a href="/clothing" class="nav-item">物品管理</a>  
-                    <a href="/inventory" class="nav-item">库存管理</a> 
-                    <a href="/shenhe" class="nav-item">物品申领审核管理</a>                  
-                <% } %>  
-                <a href="/gerenxinxiguanli" id="personalInfoLink" class="nav-item">个人信息管理</a>   
-                <a href="/shenling" class="nav-item">物品申领</a>                  
-            </nav>  
-            <div class="action-buttons">  
-                <a href="/logout" class="btn-logout">退出登录</a>  
-            </div>  
-        </div>  
-    </div>  
+<body class="bg-gray-100 min-h-screen">
+
+  <!-- 将 nav 放入与内容区相同的 container 中 -->
+  <div class="container mx-auto mt-8">
+    <!-- 顶部导航栏 -->
+    <nav class="bg-white drop-shadow p-4 flex grid grid-cols-3 items-center w-full">
+       <!-- 左侧留空 -->  
+  <div></div>  
+        <h1 class="fancy-font text-7xl text-center font-bold mb-4 text-indigo-600 drop-shadow-md">被装管理系统</h1>
+      <div class="flex items-center justify-end space-x-5">
+        <div>
+          <span class="font-medium text-2xl" id="welcome"></span>
+          <span class="text-gray-500 ml-2 text-2xl" style="color: rgb(0, 0, 0); font-size: 20px; ">（角色: <%= user.role %>）</span>
+        </div>
+        <a href="/logout" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
+          退出登录
+        </a>
+      </div>
+    </nav>
+
+    <!-- 主体内容：依然用 grid 来拆分侧边和主内容，也放在同一个 container 中 -->
+    <div class="mx-auto mt-8 grid grid-cols-12 gap-8 items-stretch">
+      <!-- 侧边导航 -->
+      <aside class="col-span-3 bg-white p-6 rounded drop-shadow">
+        <h2 class="text-lg font-semibold mb-4">导航菜单</h2>
+        <div class="flex flex-col space-y-2">
+          <% if (user.role==='admin' ) { %>
+            <a href="/admin/users" class="px-4 py-2 rounded bg-blue-500 text-center text-white hover:bg-blue-600">
+              用户管理
+            </a>
+            <a href="/firefighters" class="px-4 py-2 rounded bg-blue-500 text-center text-white hover:bg-blue-600">
+              实力管理
+            </a>
+            <a href="/clothing" class="px-4 py-2 rounded bg-blue-500 text-center text-white hover:bg-blue-600">
+              物品管理
+            </a>
+            <a href="/shenling" class="px-4 py-2 rounded bg-blue-500 text-center text-white hover:bg-blue-600">
+              物品申领
+            </a>
+            <a href="/shenhe" class="px-4 py-2 rounded bg-blue-500 text-center text-white hover:bg-blue-600">
+              物品申领审核管理
+            </a>
+            <a href="/gerenxinxiguanli" id="personalInfoLink"
+              class="px-4 py-2 rounded bg-blue-500 text-center text-white hover:bg-blue-600">
+              个人信息管理
+            </a>
+            <% } else { %>
+              <a href="/shenling" class="px-4 py-2 rounded bg-blue-500 text-center text-white hover:bg-blue-600">
+                物品申领
+              </a>
+              <a href="/gerenxinxiguanli" id="personalInfoLink"
+                class="open-modal-btn px-4 py-2 rounded bg-blue-500 text-center text-white hover:bg-blue-600">
+                个人信息管理
+              </a>
+              <% } %>
+        </div>
+      </aside>
+
+      <!-- 主要内容区 -->
+      <main class="col-span-9">
+        <div class="bg-white p-6 rounded drop-shadow h-full">
+          <h2 class="text-xl font-semibold mb-4">公告信息</h2>
+
+          <!-- 公告展示区 -->
+          <p class="text-gray-700" id="announcementText"></p>
+
+          <!-- 编辑区域（仅管理员可见，JS动态控制） -->
+          <div id="announcementEditor" class="hidden mt-4">
+            <label for="announcementInput" class="block text-gray-700 font-semibold mb-2">编辑公告:</label>
+            <textarea id="announcementInput" class="border rounded w-full p-2" rows="5"></textarea>
+
+            <!-- 底部操作按钮 -->
+            <div class="flex justify-end space-x-2 mt-2">
+              <button id="cancelAnnouncement" class="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400">
+                取消
+              </button>
+              <button id="saveAnnouncement" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                保存
+              </button>
+            </div>
+          </div>
+        </div>
+      </main>
+
+    </div>
+  </div>
+
+  <!-- 背景遮罩 -->
+  <div class="modal-backdrop" id="modalBackdrop"></div>
+  <!-- 模态窗口（用于保存消防员信息） -->
+  <div id="gerenxinxiguanliModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modalTitle" class="text-5xl text-center">个人信息管理</h2>
+        <span id="closeModal" style="cursor:pointer;">&times;</span>
+      </div>
+      <div class="modal-body">
+        <form id="gerenxinxiguanliForm">
+          <input type="hidden" id="gerenxinxiguanliId" name="id">
+          <!-- 编号 -->
+          <div class="row">
+            <div class="col-md-12 mb-3">
+              <label for="modalNumber" class="form-label">编号</label>
+              <input type="text" class="form-control" id="modalNumber" name="number" required readonly>
+            </div>
+          </div>
+
+          <div class="row">
+            <!-- 姓名 -->
+            <div class="col-md-4 mb-3">
+              <label for="modalName" class="form-label">姓名</label>
+              <input type="text" class="form-control" id="modalName" name="name" required>
+            </div>
+            <!-- 性别 -->
+            <div class="col-md-4 mb-3">
+              <label for="modalGender" class="form-label">性别</label>
+              <select class="form-select" id="modalGender" name="gender">
+                <option value="">请选择性别</option>
+                <option value="男">男</option>
+                <option value="女">女</option>
+              </select>
+            </div>
+            <!-- 身高 -->
+            <div class="col-md-4 mb-3">
+              <label for="modalShengao" class="form-label">身高</label>
+              <input type="number" class="form-control" id="modalShengao" name="shengao">
+            </div>
+          </div>
+
+          <div class="row">
+            <!-- 出生年月 -->
+            <div class="col-md-4 mb-3">
+              <label for="modalBirthDate" class="form-label">出生年月</label>
+              <input type="date" class="form-control" id="modalBirthDate" name="birthDate">
+            </div>
+            <!-- 年龄 -->
+            <div class="col-md-4 mb-3">
+              <label for="modalAge" class="form-label">年龄</label>
+              <input type="number" class="form-control" id="modalAge" name="age" readonly>
+            </div>
+            <!-- 职务 -->
+            <div class="col-md-4 mb-3">
+              <label for="modalPosition" class="form-label">职务</label>
+              <select class="form-select" id="modalPosition" name="position">
+                <option value="">请选择职务</option>
+                <option value="专职消防员">专职消防员</option>
+                <option value="文职雇员">文职雇员</option>
+                <option value="其它">其它</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="row">
+            <!-- 单位 -->
+            <div class="col-md-6 mb-3">
+              <label for="modalTeam" class="form-label">单位</label>
+              <select class="form-select" id="modalTeam" name="team">
+                <option value="">请选择单位</option>
+                <option value="司令部">司令部</option>
+                <option value="政治部组织干部科">政治部组织干部科</option>
+                <option value="财务科">财务科</option>
+                <option value="防火监督科">防火监督科</option>
+                <option value="综合指导科">综合指导科</option>
+                <option value="战勤保障科">战勤保障科</option>
+                <option value="作战训练科">作战训练科</option>
+                <option value="装备科">装备科</option>
+                <option value="政治部队务督察科">政治部队务督察科</option>
+                <option value="指挥中心">指挥中心</option>
+                <option value="办公室">办公室</option>
+                <option value="公用">公用</option>
+                <option value="太子河大队">太子河大队</option>
+                <option value="白塔大队">白塔大队</option>
+                <option value="宏伟区消防救援大队">宏伟区消防救援大队</option>
+                <option value="灯塔市消防救援大队">灯塔市消防救援大队</option>
+                <option value="文圣区消防救援大队">文圣区消防救援大队</option>
+                <option value="辽阳县大队">辽阳县大队</option>
+                <option value="弓长岭区消防救援大队">弓长岭区消防救援大队</option>
+                <option value="雷锋街消防救援站">雷锋街消防救援站</option>
+                <option value="汤泉谷消防救援站">汤泉谷消防救援站</option>
+                <option value="佟二堡消防站">佟二堡消防站</option>
+                <option value="兆麟西路消防站">兆麟西路消防站</option>
+                <option value="铧子消防站">铧子消防站</option>
+                <option value="万和一路消防救援站">万和一路消防救援站</option>
+                <option value="安康路消防救援站">安康路消防救援站</option>
+                <option value="文昌街消防站">文昌街消防站</option>
+                <option value="腾飞街">腾飞街</option>
+                <option value="刘二堡消防救援站">刘二堡消防救援站</option>
+                <option value="黄泥洼消防救援站">黄泥洼消防救援站</option>
+                <option value="下达河消防救援站">下达河消防救援站</option>
+                <option value="备用">备用</option>
+                <option value="其它">其它</option>
+              </select>
+            </div>
+            <!--工作年限 -->
+            <div class="col-md-6 mb-3">
+              <label for="modalYear" class="form-label">工作年限</label>
+              <select class="form-select" id="modalYear" name="year">
+                <option value="">请选择工作年限</option>
+                <option value="1年">1年</option>
+                <option value="2年">2年</option>
+                <option value="3年">3年</option>
+                <option value="4年">4年</option>
+                <option value="5年">5年</option>
+                <option value="6年">6年</option>
+                <option value="7年">7年</option>
+                <option value="8年">8年</option>
+                <option value="9年">9年</option>
+                <option value="10年含以上">10年含以上</option>
+                <option value="其它">其它</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="row">
+            <!-- 胸围 -->
+            <div class="col-md-4 mb-3">
+              <label for="modalXiongwei" class="form-label">胸围</label>
+              <select class="form-select" id="modalXiongwei" name="xiongwei">
+                <option value="">请选择胸围</option>
+                <option value="84">84</option>
+                <option value="88">88</option>
+                <option value="92">92</option>
+                <option value="96">96</option>
+                <option value="100">100</option>
+                <option value="104">104</option>
+                <option value="108">108</option>
+                <option value="112">112</option>
+                <option value="116">116</option>
+                <option value="120">120</option>
+                <option value="124">124</option>
+                <option value="其它">其它</option>
+              </select>
+            </div>
+            <!-- 腰围 -->
+            <div class="col-md-4 mb-3">
+              <label for="modalYaowei" class="form-label">腰围</label>
+              <select class="form-select" id="modalYaowei" name="yaowei">
+                <option value="">请选择腰围</option>
+                <option value="74">74</option>
+                <option value="80">80</option>
+                <option value="86">86</option>
+                <option value="92">92</option>
+                <option value="96">96</option>
+                <option value="100">100</option>
+                <option value="104">104</option>
+                <option value="108">108</option>
+                <option value="112">112</option>
+                <option value="116">116</option>
+                <option value="120">120</option>
+                <option value="124">124</option>
+                <option value="其它">其它</option>
+              </select>
+            </div>
+            <!-- 头围 -->
+            <div class="col-md-4 mb-3">
+              <label for="modalTouwwei" class="form-label">头围</label>
+              <select class="form-select" id="modalTouwei" name="touwei">
+                <option value="">请选择头围</option>
+                <option value="54">54</option>
+                <option value="55">55</option>
+                <option value="56">56</option>
+                <option value="57">57</option>
+                <option value="58">58</option>
+                <option value="59">59</option>
+                <option value="60">60</option>
+                <option value="61">61</option>
+                <option value="62">62</option>
+                <option value="其它">其它</option>
+              </select>
+            </div>
+          </div>
 
 
-  <!-- 模态窗口（用于保存消防员信息） -->  
-  <div id="gerenxinxiguanliModal" class="modal">  
-    <div class="modal-content">  
-      <div class="modal-header">  
-        <h2 id="modalTitle">个人信息管理</h2>  
-        <span id="closeModal" style="cursor:pointer;">&times;</span>  
-      </div>  
-      <div class="modal-body">  
-        <form id="gerenxinxiguanliForm">  
-          <input type="hidden" id="gerenxinxiguanliId" name="id">  
-          <!-- 编号 -->  
-          <div class="mb-3">  
-            <label for="modalNumber" class="form-label">编号</label>  
-            <input type="text" class="form-control" id="modalNumber" name="number" required>  
-          </div>  
-          <!-- 姓名 -->  
-          <div class="mb-3">  
-            <label for="modalName" class="form-label">姓名</label>  
-            <input type="text" class="form-control" id="modalName" name="name" required>  
-          </div>  
-          <!-- 性别 -->  
-          <div class="mb-3">  
-            <label for="modalGender" class="form-label">性别</label>  
-            <select class="form-select" id="modalGender" name="gender">  
-              <option value="">请选择性别</option>  
-              <option value="男">男</option>  
-              <option value="女">女</option>  
-            </select>  
-          </div>  
-          <!-- 出生年月 -->  
-          <div class="mb-3">  
-            <label for="modalBirthDate" class="form-label">出生年月</label>  
-            <input type="date" class="form-control" id="modalBirthDate" name="birthDate">  
-          </div>  
-          <!-- 年龄 -->  
-          <div class="mb-3">  
-            <label for="modalAge" class="form-label">年龄</label>  
-            <input type="number" class="form-control" id="modalAge" name="age">  
-          </div>  
-          <!-- 职务 -->  
-          <div class="mb-3">  
-            <label for="modalPosition" class="form-label">职务</label>  
-            <input type="text" class="form-control" id="modalPosition" name="position">  
-          </div>  
-          <!-- 中队 -->  
-          <div class="mb-3">  
-            <label for="modalTeam" class="form-label">中队</label>  
-            <input type="text" class="form-control" id="modalTeam" name="team">  
-          </div>  
-          <!-- 警衔 -->  
-          <div class="mb-3">  
-            <label for="modalRank" class="form-label">警衔</label>  
-            <input type="text" class="form-control" id="modalRank" name="rank">  
-          </div>  
-          <!-- 气候区 -->  
-          <div class="mb-3">  
-            <label for="modalClimateZone" class="form-label">气候区</label>  
-            <input type="text" class="form-control" id="modalClimateZone" name="climateZone">  
-          </div>  
-          <!-- 帽类号 -->  
-          <div class="mb-3">  
-            <label for="modalMaoleihao" class="form-label">帽类号</label>  
-            <input type="text" class="form-control" id="modalMaoleihao" name="maoleihao">  
-          </div>  
-          <!-- 服装号 -->  
-          <div class="mb-3">  
-            <label for="modalFuzhuanghao" class="form-label">服装号</label>  
-            <input type="text" class="form-control" id="modalFuzhuanghao" name="fuzhuanghao">  
-          </div>  
-          <!-- 鞋类号 -->  
-          <div class="mb-3">  
-            <label for="modalXieleihao" class="form-label">鞋类号</label>  
-            <input type="text" class="form-control" id="modalXieleihao" name="xieleihao">  
-          </div>  
-          <!-- 作训冬帽号 -->  
-          <div class="mb-3">  
-            <label for="modalZuoxundongmaohao" class="form-label">作训冬帽号</label>  
-            <input type="text" class="form-control" id="modalZuoxundongmaohao" name="zuoxundongmaohao">  
-          </div>  
-          <!-- 毛衣冬服号 -->  
-          <div class="mb-3">  
-            <label for="modalMaoyidongfuhao" class="form-label">毛衣冬服号</label>  
-            <input type="text" class="form-control" id="modalMaoyidongfuhao" name="maoyidongfuhao">  
-          </div>  
-          <!-- 大衣冬鞋号 -->  
-          <div class="mb-3">  
-            <label for="modalDayidongxiehao" class="form-label">大衣冬鞋号</label>  
-            <input type="text" class="form-control" id="modalDayidongxiehao" name="dayidongxiehao">  
-          </div>  
-          <!-- 衬衣号 -->  
-          <div class="mb-3">  
-            <label for="modalChenyihao" class="form-label">衬衣号</label>  
-            <input type="text" class="form-control" id="modalChenyihao" name="chenyihao">  
-          </div>  
-          <!-- 肩章号 -->  
-          <div class="mb-3">  
-            <label for="modalJianzhanghao" class="form-label">肩章号</label>  
-            <input type="text" class="form-control" id="modalJianzhanghao" name="jianzhanghao">  
-          </div>  
-          <!-- 雨衣体服号 -->  
-          <div class="mb-3">  
-            <label for="modalYuyitifuhao" class="form-label">雨衣体服号</label>  
-            <input type="text" class="form-control" id="modalYuyitifuhao" name="yuyitifuhao">  
-          </div>  
-          <!-- 礼服 -->  
-          <div class="mb-3">  
-            <label for="modalLiufu" class="form-label">礼服</label>  
-            <input type="text" class="form-control" id="modalLifu" name="lifu">  
-          </div>  
-          <!-- 常服 -->  
-          <div class="mb-3">  
-            <label for="modalChangfu" class="form-label">常服</label>  
-            <input type="text" class="form-control" id="modalChangfu" name="changfu">  
-          </div>  
-          <!-- 裤裙 -->  
-          <div class="mb-3">  
-            <label for="modalKuku" class="form-label">裤裙</label>  
-            <input type="text" class="form-control" id="modalKuqun" name="kuqun">  
-          </div>  
-          <!-- 身高 -->  
-          <div class="mb-3">  
-            <label for="modalShengao" class="form-label">身高</label>  
-            <input type="number" class="form-control" id="modalShengao" name="shengao">  
-          </div>  
-          <!-- 胸围 -->  
-          <div class="mb-3">  
-            <label for="modalXiongwei" class="form-label">胸围</label>  
-            <input type="number" class="form-control" id="modalXiongwei" name="xiongwei">  
-          </div>  
-          <!-- 腰围 -->  
-          <div class="mb-3">  
-            <label for="modalYaowei" class="form-label">腰围</label>  
-            <input type="number" class="form-control" id="modalYaowei" name="yaowei">  
-          </div>  
-          <!-- 头围 -->  
-          <div class="mb-3">  
-            <label for="modalTouwwei" class="form-label">头围</label>  
-            <input type="number" class="form-control" id="modalTouwei" name="touwei">  
-          </div>  
-          <!-- 领围 -->  
-          <div class="mb-3">  
-            <label for="modalLingwei" class="form-label">领围</label>  
-            <input type="number" class="form-control" id="modalLingwei" name="lingwei">  
-          </div>  
-          <!-- 脚长 -->  
-          <div class="mb-3">  
-            <label for="modalJiaochang" class="form-label">脚长</label>  
-            <input type="number" class="form-control" id="modalJiaochang" name="jiaochang">  
-          </div>  
-          <!-- 趾围 -->  
-          <div class="mb-3">  
-            <label for="modalZhiwei" class="form-label">趾围</label>  
-            <input type="number" class="form-control" id="modalZhiwei" name="zhiwei">  
-          </div>  
-          <!-- 入伍日期 -->  
-          <div class="mb-3">  
-            <label for="modalRuwuriqi" class="form-label">入伍日期</label>  
-            <input type="date" class="form-control" id="modalRuwuriqi" name="ruwuriqi">  
-          </div>  
-          <!-- 一级士官 -->  
-          <div class="mb-3">  
-            <label for="modalYijishiguan" class="form-label">一级士官</label>  
-            <input type="date" class="form-control" id="modalYijishiguan" name="yijishiguan">  
-          </div>  
-          <!-- 二级士官 -->  
-          <div class="mb-3">  
-            <label for="modalErjishiguan" class="form-label">二级士官</label>  
-            <input type="date" class="form-control" id="modalErjishiguan" name="erjishiguan">  
-          </div>  
-          <!-- 提干日期 -->  
-          <div class="mb-3">  
-            <label for="modalTiganriqi" class="form-label">提干日期</label>  
-            <input type="date" class="form-control" id="modalTiganriqi" name="tiganriqi">  
-          </div>  
-          <!-- 现职日期 -->  
-          <div class="mb-3">  
-            <label for="modalXianzhiriqi" class="form-label">现职日期</label>  
-            <input type="date" class="form-control" id="modalXianzhiriqi" name="xianzhiriqi">  
-          </div>  
-          <!-- 现衔日期 -->  
-          <div class="mb-3">  
-            <label for="modalXianxianriqi" class="form-label">现衔日期</label>  
-            <input type="date" class="form-control" id="modalXianxianriqi" name="xianxianriqi">  
-          </div>  
-          <!-- 职级 -->  
-          <div class="mb-3">  
-            <label for="modalZhiji" class="form-label">职级</label>  
-            <input type="text" class="form-control" id="modalZhiji" name="zhiji">  
-          </div>  
-          <!-- 性类 -->  
-          <div class="mb-3">  
-            <label for="modalXinglei" class="form-label">形类</label>  
-            <input type="text" class="form-control" id="modalXinglei" name="xinglei">  
-          </div>  
-          <!-- 备注 -->  
-          <div class="mb-3">  
-            <label for="modalRemarks" class="form-label">备注</label>  
-            <textarea class="form-control" id="modalRemarks" name="remarks" rows="3"></textarea>  
-          </div>  
+          <div class="row">
+            <!-- 鞋类号 -->
+            <div class="col-md-4 mb-3">
+              <label for="modalXieleihao" class="form-label">鞋类号</label>
+              <select class="form-select" id="modalXieleihao" name="xieleihao">
+                <option value="">请选择鞋号</option>
+                <option value="220">220</option>
+                <option value="225">225</option>
+                <option value="230">230</option>
+                <option value="235">235</option>
+                <option value="240">240</option>
+                <option value="245">245</option>
+                <option value="250">250</option>
+                <option value="255">255</option>
+                <option value="260">260</option>
+                <option value="265">265</option>
+                <option value="270">270</option>
+                <option value="275">275</option>
+                <option value="280">280</option>
+                <option value="285">285</option>
+                <option value="290">290</option>
+                <option value="其它">其它</option>
+              </select>
+            </div>
+            <!-- 服装号 -->
+            <div class="col-md-4 mb-3">
+              <label for="modalFuzhuanghao" class="form-label">服装号</label>
+              <select class="form-select" id="modalFuzhuanghao" name="fuzhuanghao">
+                <option value="">请选择服装号</option>  
+                <option value="160/84">160/84</option>  
+                <option value="160/88">160/88</option>  
+                <option value="160/92">160/92</option>  
+                <option value="165/88">165/88</option>  
+                <option value="165/92">165/92</option>  
+                <option value="165/92-96">165/92-96</option>  
+                <option value="165/96">165/96</option>  
+                <option value="165/100">165/100</option>  
+                <option value="165/104">165/104</option>  
+                <option value="165/108">165/108</option>  
+                <option value="170/88">170/88</option>  
+                <option value="170/92">170/92</option>  
+                <option value="170/92-96">170/92-96</option>  
+                <option value="170/96">170/96</option>  
+                <option value="170/100">170/100</option>  
+                <option value="170/104-108">170/104-108</option>  
+                <option value="175/88">175/88</option>  
+                <option value="175/92">175/92</option>  
+                <option value="175/92-96">175/92-96</option>  
+                <option value="175/96">175/96</option>  
+                <option value="175/100">175/100</option>  
+                <option value="175/104">175/104</option>  
+                <option value="175/104-108">175/104-108</option>  
+                <option value="175/108">175/108</option>  
+                <option value="175/120-124">175/120-124</option>  
+                <option value="180/92-96">180/92-96</option>  
+                <option value="180/96">180/96</option>  
+                <option value="180/100">180/100</option>  
+                <option value="180/100-104">180/100-104</option>  
+                <option value="180/104">180/104</option>  
+                <option value="180/104-108">180/104-108</option>  
+                <option value="180/108">180/108</option>  
+                <option value="180/112-116">180/112-116</option>  
+                <option value="180/116">180/116</option>  
+                <option value="180/120">180/120</option>  
+                <option value="180/124">180/124</option>  
+                <option value="185/92-96">185/92-96</option>  
+                <option value="185/96">185/96</option>  
+                <option value="185/100">185/100</option>  
+                <option value="185/100-104">185/100-104</option>  
+                <option value="185/104">185/104</option>  
+                <option value="185/104-108">185/104-108</option>  
+                <option value="185/108">185/108</option>  
+                <option value="185/112">185/112</option>  
+                <option value="185/112-116">185/112-116</option>  
+                <option value="185/116">185/116</option>  
+                <option value="185/120">185/120</option>  
+                <option value="185/124">185/124</option>  
+                <option value="190/104">190/104</option>  
+                <option value="195/112-116">195/112-116</option>  
+                <option value="195/136">195/136</option>  
+                <option value="其它">其它</option>
+              </select>
+            </div>
+            <!-- 帽类号 -->
+            <div class="col-md-4 mb-3">
+              <label for="modalMaoleihao" class="form-label">帽类号</label>
+              <select class="form-select" id="modalMaoleihao" name="maoleihao">
+                <option value="">请选择帽号</option>
+                <option value="55">55</option>
+                <option value="56">56</option>
+                <option value="57">57</option>
+                <option value="58">58</option>
+                <option value="59">59</option>
+                <option value="60">60</option>
+                <option value="61">61</option>
+                <option value="62">62</option>
+                <option value="其它">其它</option>
+              </select>
+            </div>
+
+          </div>
+          <div class="row">
+            <!-- 备注 -->
+            <div class="col-md-12 mb-3">
+              <label for="modalRemarks" class="form-label">备注</label>
+              <input class="form-control" id="modalRemarks" name="remarks">
+            </div>
+          </div>
         </form>
-      </div>  
-      <div class="modal-footer">  
-        <button id="cancelModal" class="button">取消</button>  
-        <button id="savegerenxinxiguanli" class="button">保存</button>  
-      </div>  
-    </div>  
-  </div>  
+      </div>
+      <div class="modal-footer">
+        <button id="cancelModal" class="button">取消</button>
+        <button id="savegerenxinxiguanli" class="button">保存</button>
+      </div>
+    </div>
+  </div>
 
-  <script>  
- 
- personalInfoLink.addEventListener('click', (e) => {  
-  e.preventDefault();  
-  // 填充用户信息到表单  
-  document.getElementById('gerenxinxiguanliModal').style.display = 'block';  
-});
-        
+  <script>
+
+    // 页面加载时获取用户信息
+    document.addEventListener('DOMContentLoaded', function () {
+
+      // 从 EJS 变量中获取当前登录用户的用户名  
+      const username = currentUser.username; // 假设已从后端传递到全局变量
+      const welcomeEl = document.getElementById('welcome');
+      // 发起请求查询  
+      fetch(`/gerenxinxiguanli/fetch?number=${username}`)
+        .then(res => res.json())
+        .then(result => {
+          if (result.success) {
+            // 存在记录，自动填充表单  
+            const data = result.data;
+            if (currentUser && data.name) {
+              welcomeEl.innerHTML =  `<span class="font-medium text-2xl" style="color: black; font-size: 20px;">欢迎，</span><span class="font-medium text-2xl" style="color: red; font-size: 20px; font-weight: bold;">${data.name}</span>`;
+              return;
+            }
+          }
+        });
+    });
+
+
+    const openModalBtn = document.getElementById('personalInfoLink');
+    const closeModalBtn = document.getElementById('closeModal');
+    const cancelModalBtn = document.getElementById('cancelModal');
+
+    const modal = document.getElementById('gerenxinxiguanliModal');
+    const backdrop = document.getElementById('modalBackdrop');
+
+
+    // 将编号设置到编号输入框中  
+    personalInfoLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      // 填充用户信息到表单  
+      modal.style.display = 'block';
+      backdrop.style.display = 'block';
+      // 从 EJS 变量中获取当前登录用户的用户名  
+      const username = currentUser.username; // 假设已从后端传递到全局变量 
+      // 将编号设置到编号输入框中  
+      document.getElementById("modalNumber").value = username;
+
+      // 发起请求查询  
+      fetch(`/gerenxinxiguanli/fetch?number=${username}`)
+        .then(res => res.json())
+        .then(result => {
+          if (result.success) {
+            // 存在记录，自动填充表单  
+            const data = result.data;
+            document.getElementById('modalNumber').value = data.number || '';
+            document.getElementById('modalName').value = data.name || '';
+            document.getElementById('modalGender').value = data.gender || '';
+            document.getElementById('modalBirthDate').value = data.birthDate || '';
+            document.getElementById('modalAge').value = data.age || '';
+            document.getElementById('modalPosition').value = data.position || '';
+            document.getElementById('modalTeam').value = data.team || '';
+            document.getElementById('modalYear').value = data.year || '';
+            document.getElementById('modalMaoleihao').value = data.maoleihao || '';
+            document.getElementById('modalFuzhuanghao').value = data.fuzhuanghao || '';
+            document.getElementById('modalXieleihao').value = data.xieleihao || '';
+            document.getElementById('modalShengao').value = data.shengao || '';
+            document.getElementById('modalXiongwei').value = data.xiongwei || '';
+            document.getElementById('modalYaowei').value = data.yaowei || '';
+            document.getElementById('modalTouwei').value = data.touwei || '';
+            document.getElementById('modalRemarks').value = data.remarks || '';
+
+          } else {
+            // 说明数据库里没查到记录：要么提示用户“未找到信息”，要么清空表单以便创建  
+            alert(result.error || '暂时没有个人信息，请录入');
+          }
+
+          // 不管有没有查到，都弹出模态框，供用户查看或编辑  
+          modal.style.display = 'block';
+          backdrop.style.display = 'block';
+        })
+        .catch(err => {
+          console.error(err);
+          alert('查询信息失败，请稍后重试');
+        });
+    });
+
     // 清空模态窗口表单数据  
-    function clearModalForm() {  
-      document.getElementById('gerenxinxiguanliForm').reset();  
+    function clearModalForm() {
+      document.getElementById('gerenxinxiguanliForm').reset();
       // 清除错误提示  
-      clearErrorMessages();  
-    }  
+      clearErrorMessages();
+    }
 
-    // 关闭模态窗口  
-    document.getElementById('closeModal').onclick = function() {  
-      document.getElementById('gerenxinxiguanliModal').style.display = 'none';  
-    };  
-    document.getElementById('cancelModal').onclick = function() {  
-      document.getElementById('gerenxinxiguanliModal').style.display = 'none';  
-    };  
 
-    // 保存消防员信息 
-    document.getElementById('savegerenxinxiguanli').onclick = function() {  
-      const form = document.getElementById('gerenxinxiguanliForm');  
-      const formData = {};  
-      const inputs = form.querySelectorAll('input, select');  
-      let valid = true;  
+    // 关闭模态  
+    function hideModal() {
+      modal.style.display = 'none';
+      backdrop.style.display = 'none';
+    }
+
+    closeModalBtn.addEventListener('click', hideModal);
+    cancelModalBtn.addEventListener('click', hideModal);
+    backdrop.addEventListener('click', hideModal);
+
+
+
+    // 保存或修改消防员信息 
+    document.getElementById('savegerenxinxiguanli').onclick = function () {
+      const form = document.getElementById('gerenxinxiguanliForm');
+      const formData = {};
+      const inputs = form.querySelectorAll('input, select');
+      let valid = true;
 
       // 清理之前的错误提示  
-      clearErrorMessages();  
+      clearErrorMessages();
 
       // 1. 提取表单数据并验证  
-      inputs.forEach(input => {  
-        if (input.required && input.value.trim() === '') {  
-            alert(`字段 "${input.previousElementSibling.innerText}" 是必填项！`);  
-          valid = false;  
-        } else {  
-          formData[input.name] = input.value.trim();  
-        }  
-      });  
+      inputs.forEach(input => {
+        if (input.required && input.value.trim() === '') {
+          alert(`字段 "${input.previousElementSibling.innerText}" 是必填项！`);
+          valid = false;
+        } else {
+          formData[input.name] = input.value.trim();
+        }
+      });
 
-      if (!valid) return;  
+      if (!valid) return;
 
-      let url, method;  
+      let url, method;
       // 添加  
-      url = '/gerenxinxiguanli/add';  
-      method = 'POST';  
-    
+      url = '/gerenxinxiguanli/add';
+      method = 'POST';
 
-      fetch(url, {  
-        method: method,  
-        headers: {  
-          'Content-Type': 'application/json',  
-        },  
-        body: JSON.stringify(formData),  
-      })  
-        .then(response => response.json())  
-        .then(result => {  
-          if (result.success) {  
-            alert('保存成功');  
-            document.getElementById('gerenxinxiguanliModal').style.display = 'none';  
-            loadFirefighters();  
-          } else {  
-            // 处理编号重复的错误  
-            if (result.error.includes('编号')) {  
-                alert(result.error);  
-            } else {  
-              alert('保存失败：' + result.error);  
-            }  
-          }  
-        })  
-        .catch(err => console.error(err));  
-    };  
+      console.log(formData);
+      console.log(JSON.stringify(formData));
+
+      fetch(url, {
+        method: method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      })
+        .then(response => response.json())
+        .then(result => {
+          if (result.success) {
+            alert('保存成功');
+            modal.style.display = 'none';
+            backdrop.style.display = 'none';
+          } else {
+            alert('保存失败：' + result.error);
+          }
+        })
+        .catch(err => console.error(err));
+    };
 
     // 显示字段错误信息  
-    function displayErrorMessage(input, message) {  
+    function displayErrorMessage(input, message) {
       input.classList.add('error'); // 给输入框加错误样式  
-      const errorSpan = document.createElement('span');  
-      errorSpan.className = 'error-message';  
-      errorSpan.textContent = message;  
+      const errorSpan = document.createElement('span');
+      errorSpan.className = 'error-message';
+      errorSpan.textContent = message;
       input.parentNode.appendChild(errorSpan); // 在输入框父容器中添加错误提示  
-    }  
+    }
 
     // 清理所有错误提示  
-    function clearErrorMessages() {  
-      const errorMessages = document.querySelectorAll('.error-message');  
+    function clearErrorMessages() {
+      const errorMessages = document.querySelectorAll('.error-message');
       errorMessages.forEach(msg => msg.remove()); // 删除错误信息  
-      const errorInputs = document.querySelectorAll('.error');  
+      const errorInputs = document.querySelectorAll('.error');
       errorInputs.forEach(input => input.classList.remove('error')); // 移除错误标识  
-    }  
+    }
 
 
     // 点击模态窗口外部关闭模态窗口  
-    window.onclick = function(event) {  
-      const firefighterModal = document.getElementById('firefighterModal');  
-      const importModal = document.getElementById('importModal');  
-      if (event.target == firefighterModal) {  
-        firefighterModal.style.display = 'none';  
-      }  
-      if (event.target == importModal) {  
-        importModal.style.display = 'none';  
-      }  
-    };  
-  </script>  
+    window.onclick = function (event) {
+      if (event.target == modal) {
+        modal.style.display = 'none';
+        backdrop.style.display = 'none';
+      }
+    };
+
+    // 设置公告的默认内容（同样也可以由后端传递）  
+    let announcementContent = "公告内容！";
+
+    // 获取DOM元素  
+    const announcementText = document.getElementById("announcementText");
+    const announcementEditor = document.getElementById("announcementEditor");
+    const announcementInput = document.getElementById("announcementInput");
+
+    const cancelBtn = document.getElementById("cancelBtn");
+    const saveBtn = document.getElementById("saveBtn");
+
+    // 初始化公告文本  
+    announcementText.textContent = announcementContent;
+
+    if (currentUser.role === "admin") {
+      // 鼠标指针样式 + hover效果  
+      announcementText.classList.add("cursor-pointer", "hover:text-blue-600");
+      // 点击时显示编辑表单，并填入当前公告  
+      announcementText.addEventListener("click", () => {
+        // 如果是管理员，则显示编辑输入区，并填入当前公告内容  
+        announcementEditor.classList.remove("hidden");
+        announcementInput.value = announcementContent;
+      });
+    }
+
+    // 取消修改 -> 隐藏编辑区，还原内容  
+    document.getElementById("cancelAnnouncement").addEventListener("click", () => {
+      announcementEditor.classList.add("hidden");
+    });
+
+    // 保存修改 -> 更新公告文本 + 可向后台发送请求  
+    document.getElementById("saveAnnouncement").addEventListener("click", () => {
+      announcementContent = announcementInput.value.trim() || "无";
+
+      announcementText.textContent = announcementContent;
+
+      // 这里可以写Ajax或fetch请求，把新公告内容提交到服务端  
+      alert("公告已保存: " + announcementContent);
+
+      announcementEditor.classList.add("hidden");
+    });
 
 
-</body>  
+    // 获取出生日期输入框  
+    const birthDateInput = document.getElementById("modalBirthDate");
+    // 获取年龄输入框  
+    const ageInput = document.getElementById("modalAge");
+
+    // 注册监听事件：当日期发生变动时  
+    birthDateInput.addEventListener("change", () => {
+      const birthDateValue = birthDateInput.value; // 形如 "2023-03-05"  
+
+      if (!birthDateValue) {
+        // 清空或保留  
+        ageInput.value = "";
+        return;
+      }
+
+      const birthDate = new Date(birthDateValue);
+      if (isNaN(birthDate)) {
+        // 非法日期（理论上不太会发生，但可做防御性处理）  
+        ageInput.value = "";
+        return;
+      }
+
+      const today = new Date();
+      let age = today.getFullYear() - birthDate.getFullYear();
+
+      // 计算是否过了生日（月份或日期）  
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+      const dayDiff = today.getDate() - birthDate.getDate();
+      if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
+        age--;
+      }
+
+      // 若年龄小于0，可根据需要设为0或空字符串  
+      if (age < 0) {
+        age = 0;
+      }
+
+      // 写回到年龄输入框  
+      ageInput.value = age;
+    });
+
+
+  </script>
+</body>
+
 </html>

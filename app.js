@@ -32,7 +32,8 @@ app.use(session({
     secret: process.env.SESSION_SECRET || 'your-secret-key',  
     resave: false,  
     saveUninitialized: true  
-}));  
+})); 
+
 
 // 设置视图引擎  
 app.set('views', path.join(__dirname, 'views'));  
@@ -51,12 +52,11 @@ const adminRouter = require('./routes/admin');
 const usersRouter = require('./routes/users');
 const firefightersRouter = require('./routes/firefighters');  
 const clothingRouter = require('./routes/clothing');  
-const inventoryRouter = require('./routes/inventory');  
 const reportsRouter = require('./routes/reports');
 const gerenxinxiguanliRouter = require('./routes/gerenxinxiguanli');   
 const shenlingRouter = require('./routes/shenling'); 
 const shenheRouter = require('./routes/shenhe'); 
-
+const passwordResetRoutes = require('./routes/password-reset');
 
 app.use('/', usersRouter); 
 app.use('/', indexRouter);  
@@ -64,16 +64,16 @@ app.use('/admin', adminRouter);
 // 挂载路由  
 app.use('/', firefightersRouter); // 消防员管理模块  
 app.use('/', clothingRouter);         // 服装管理模块  
-app.use('/', inventoryRouter);       // 库存管理模块  
 app.use('/', reportsRouter);           // 统计报表模块
 app.use('/', gerenxinxiguanliRouter);           // 个人信息管理模块  
 app.use('/', shenlingRouter);           // 申领模块  
 app.use('/', shenheRouter);           // 审核模块
-
+app.use('/', passwordResetRoutes);           // 忘记密码模块
 
 
 app.use('/firefighters/template', express.static(path.join(__dirname, 'public/template')));
 app.use('/clothing/template', express.static(path.join(__dirname, 'public/template')));
+app.use('/clothing/nopic', express.static(path.join(__dirname, 'public/images')));
 
 // 404 处理  
 app.use((req, res, next) => {  

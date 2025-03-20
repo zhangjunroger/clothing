@@ -3,7 +3,12 @@ const router = express.Router();
 const AV = require('leancloud-storage');  
 
 // 统计报表页面  
-router.get('/', (req, res) => {  
+router.get('/', (req, res) => {
+    
+    if (!req.session.user) {  
+        return res.redirect('/login');  
+    }  
+    
     res.render('reports', { user: req.session.user });  
 });  
 

@@ -1,234 +1,464 @@
-/* 基本样式 */  
+/* 背景图片样式 */  
 body {  
+  background-image: url('/images/background.jpg'); /* 背景图片路径 */  
+  background-size: cover; /* 图片适应屏幕大小 */  
+  background-repeat: no-repeat; /* 不重复平铺 */  
+  background-position: center; /* 居中显示 */  
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;  
-  background-color: #f5f5f5;  
   margin: 0;  
   padding: 0;  
-  min-height: 100vh;  
+  min-height: 100vh; /* 占满整个视口高度 */  
   display: flex;  
-  align-items: center;  
+  flex-direction: column;  
   justify-content: center;  
+  align-items: center;  
 }  
 
-.container {  
-  background-color: #ffffff;  
+/* 登录表单的容器样式 */  
+.login-container {  
+  background-color: rgba(255, 255, 255, 0.9); /* 半透明白色背景 */  
   padding: 2rem;  
   border-radius: 8px;  
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);  
-  width: 100%;  
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);  
   max-width: 400px;  
-}  
-
-h1 {  
-  text-align: center;  
-  color: #333;  
-  margin-bottom: 1.5rem;  
-}  
-
-/* 表单样式 */  
-.form-group {  
-  margin-bottom: 1rem;  
-}  
-
-label {  
-  display: block;  
-  margin-bottom: 0.5rem;  
-  color: #555;  
-  font-weight: 500;  
-}  
-
-input[type="text"],  
-input[type="password"],  
-input[type="email"],  
-select {  
   width: 100%;  
-  padding: 0.75rem;  
-  border: 1px solid #ddd;  
-  border-radius: 4px;  
-  box-sizing: border-box;  
-  font-size: 1rem;  
-  transition: border-color 0.2s;  
+  text-align: center;  
+}
+
+/* LOGO 样式 */  
+.logo {  
+  display: block; /* 居中显示 */  
+  width: 100%; /* 宽度与登录框一致 */  
+  max-width: 400px; /* 跟容器的 max-width 保持一致 */  
+  height: auto; /* 按比例缩放 */  
+  margin: 0 auto; /* 居中 */  
 }  
 
-input[type="text"]:focus,  
+
+h1 {
+  text-align: center;
+  color: #333;
+  margin-bottom: 1.5rem;
+  font-size: 50px;
+}
+
+h2 {
+  text-align: center;
+  color: #333;
+  margin-bottom: 1.0rem;
+  font-size: 30px;
+}
+
+/* 表单样式 */
+.form-group {
+  margin-bottom: 1rem;
+}
+
+label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #555;
+  font-weight: 500;
+}
+
+input[type="text"],
+input[type="password"],
+input[type="email"],
+select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-sizing: border-box;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+
+input[type="text"]:focus,
 input[type="password"]:focus,
-input[type="email"]:focus,   
-select:focus {  
-  border-color: #4CAF50;  
-  outline: none;  
-  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.1);  
+input[type="email"]:focus,
+select:focus {
+  border-color: #4CAF50;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.1);
+}
+
+/* 按钮样式 */
+.btn-reset {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-submit {
+  background-color: #4CAF50;
+  color: white;
+  margin-right: 0.5rem;
+}
+
+.btn-reset {
+  background-color: #f44336;
+  color: white;
+}
+
+.btn-submit:hover {
+  background-color: #45a049;
+}
+
+.btn-reset:hover {
+  background-color: #da190b;
+}
+
+/* 动作按钮容器样式 */  
+.action-buttons {  
+  display: flex;  
+  justify-content: center; /* 水平居中 */  
+  gap: 20px; /* 按钮间距 */  
+  margin: 20px 0; /* 上下间距 */  
 }  
 
 /* 按钮样式 */  
-.btn-submit,  
-.btn-reset {  
-  padding: 0.75rem 1.5rem;  
-  border: none;  
-  border-radius: 4px;  
-  font-size: 1rem;  
-  cursor: pointer;  
-  transition: background-color 0.2s;  
+.btn-action {  
+  padding: 10px 20px; /* 幅度内边距 */  
+  border: none; /* 去掉边框 */  
+  border-radius: 5px; /* 圆角 */  
+  background-color: #007bff; /* 背景颜色 */  
+  color: white; /* 字体颜色 */  
+  font-size: 16px; /* 字体大小 */  
+  cursor: pointer; /* 鼠标指针 */  
+  transition: background-color 0.3s; /* 过渡效果 */  
 }  
 
-.btn-submit {  
-  background-color: #4CAF50;  
-  color: white;  
-  margin-right: 0.5rem;  
+/* 按钮悬停样式 */  
+.btn-action:hover {  
+  background-color: #0056b3; /* 悬停时的背景颜色 */  
 }  
 
-.btn-reset {  
-  background-color: #f44336;  
-  color: white;  
-}  
-
-.btn-submit:hover {  
-  background-color: #45a049;  
-}  
-
-.btn-reset:hover {  
-  background-color: #da190b;  
-}  
-
-/* 错误消息样式 */  
-.error-message {  
-  background-color: #ffebee;  
-  color: #c62828;  
-  padding: 0.75rem;  
-  border-radius: 4px;  
-  margin-bottom: 1rem;  
-  font-size: 0.9rem;  
-}  
-
-/* 页脚链接样式 */  
-.form-footer {  
-  text-align: center;  
-  margin-top: 1.5rem;  
-  padding-top: 1rem;  
-  border-top: 1px solid #eee;  
-}  
-
-.form-footer a {  
-  color: #4CAF50;  
-  text-decoration: none;  
-}  
-
-.form-footer a:hover {  
-  text-decoration: underline;  
-}
-
-.container {  
-  max-width: 800px;  
-  margin: 20px auto;  
-  padding: 10px;  
-}  
-
+/* 表格样式 */  
 .users-table {  
-  width: 100%;  
-  border-collapse: collapse;  
-  margin-top: 20px;  
+  width: 100%; /* 占满宽度 */  
+  border-collapse: collapse; /* 合并边框 */  
+  margin-top: 20px; /* 表格顶部边距 */  
 }  
 
-.users-table th,  
-.users-table td {  
-  padding: 12px;  
-  text-align: left;  
-  border-bottom: 1px solid #ddd;  
-  font-size: 14px;  
+.users-table th, .users-table td {  
+  border: 1px solid #ddd; /* 边框 */  
+  padding: 8px; /* 内边距 */  
+  text-align: left; /* 文本左对齐 */  
 }  
 
 .users-table th {  
-  background-color: #f5f5f5;  
-  font-weight: bold;  
+  background-color: #f2f2f2; /* 表头背景色 */  
 }  
 
-.btn-delete {  
-  background-color: #f44336;  
-  color: white;  
-  border: none;  
-  padding: 6px 12px;  
-  border-radius: 4px;  
-  cursor: pointer;  
+/* 用户列表加载提示 */  
+#usersList p {  
+  text-align: center; /* 居中 */  
 }  
 
-.btn-delete:hover {  
-  background-color: #d32f2f;  
+/* 错误消息样式 */
+.error-message {
+  background-color: #ffebee;
+  color: #c62828;
+  padding: 0.75rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
 }
 
-.btn-regist {  
-  background-color: #3656f4;  
-  color: white;  
-  border: none;  
-  padding: 6px 12px;  
-  border-radius: 4px;  
-  cursor: pointer;  
-}  
-
-.btn-regist:hover {  
-  background-color: #2f45d3;  
+/* 页脚链接样式 */
+.form-footer {
+  text-align: center;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #eee;
 }
 
-/* 模态框基础样式 */  
-.modal {  
-  display: none; /* 默认隐藏 */  
+.form-footer a {
+  color: #4CAF50;
+  text-decoration: none;
+}
+
+.form-footer a:hover {
+  text-decoration: underline;
+}
+
+.container {
+  max-width: 800px;
+  margin: 20px auto;
+  padding: 10px;
+}
+
+.users-table {  
+  width: 100%; /* 表格宽度占满父容器 */  
+  border-collapse: collapse; /* 去掉单元格间的间隙 */  
+  margin-top: 20px; /* 表格顶部留空 */  
+  background: #fff; /* 表格背景色 */  
+  border-radius: 4px; /* 表格圆角 */  
+  overflow: hidden; /* 防止溢出 */  
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); /* 添加阴影 */  
+}  
+
+.users-table th, .users-table td {  
+  border: 1px solid #ddd; /* 单元格边框颜色 */  
+  padding: 12px; /* 单元格内边距 */  
+  text-align: center; /* 水平居中 */  
+  vertical-align: middle; /* 垂直居中 */  
+  font-size: 14px; /* 字体大小 */  
+  color: #333; /* 字体颜色 */ 
+  word-wrap: break-word;  
+  word-break: break-all;    
+}  
+
+.users-table th {  
+  background-color: #f1dbb5; /* 表头背景色 */  
+  font-weight: bold; /* 表头加粗 */  
+  color: #333; /* 表头字体颜色 */  
+}  
+
+.users-table tr:nth-child(even) {  
+  background-color: #f9f9f9; /* 偶数行背景色 */  
+}  
+
+.users-table tr:hover {  
+  background-color: #f1f1f1; /* 鼠标悬停时的背景色 */  
+}  
+
+.btn-delete {
+  background-color: #f44336;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn-delete:hover {
+  background-color: #d32f2f;
+}
+
+.btn-change {
+  background-color: #65f436;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn-change:hover {
+  background-color: #65f436;
+}
+
+.btn-regist {
+  background-color: #3656f4;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn-regist:hover {
+  background-color: #2f45d3;
+}
+
+/* 模态框基础样式 */
+.modal {
+  display: none;
+  /* 默认隐藏 */
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 500px;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+  padding: 20px;
+  z-index: 999;
+}
+
+.modal-content {
+  width: 100%;
+}
+
+/* 表单分组 */
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 14px;
+}
+
+.form-group button {
+  padding: 10px 15px;
+  font-size: 16px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+/* 大图模态框图片样式 */
+.large-image {
+  max-width: 90vw;
+  /* 最大宽度：视口宽度的 90% */
+  max-height: 90vh;
+  /* 最大高度：视口高度的 90% */
+  margin: auto;
+  display: block;
+}
+
+/* 模态框背景 */
+.modal-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.8);
+  /* 半透明黑色背景 */
+  z-index: 1100;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-background-hidden {
+  display: none;
+  /* 隐藏模态框 */
+}
+
+#confirmEditButton {
+  background-color: #4caf50;
+  color: white;
+  margin-right: 10px;
+}
+
+#confirmEditButton:hover {
+  background-color: #45a049;
+}
+
+button[onclick="closeEditModal()"] {
+  background-color: #f44336;
+  color: white;
+}
+
+button[onclick="closeEditModal()"]:hover {
+  background-color: #da190b;
+}
+
+/* 打印容器的基本样式 */  
+.print-container {  
   position: fixed;  
-  top: 50%;  
-  left: 50%;  
-  transform: translate(-50%, -50%);  
-  width: 500px;  
-  background: #fff;  
-  border-radius: 10px;  
-  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);  
-  padding: 20px;  
-  z-index: 999;  
-}  
-
-.modal-content {  
+  top: 0;  
+  left: 0;  
   width: 100%;  
+  height: 100%;  
+  background: white;  
+  z-index: 9999;  
+  overflow: auto;  
+  padding: 20px;  
 }  
 
-/* 表单分组 */  
-.form-group {  
-  margin-bottom: 15px;  
+.print-header {  
+  text-align: center;  
+  margin-bottom: 20px;  
 }  
 
-.form-group label {  
-  display: block;  
-  font-weight: bold;  
+.print-header h1 {  
   margin-bottom: 5px;  
 }  
 
-.form-group input,  
-.form-group textarea {  
+.print-content {  
+  margin-bottom: 30px;  
+}  
+
+.report-table {  
   width: 100%;  
+  border-collapse: collapse;  
+}  
+
+.report-table th, .report-table td {  
+  border: 1px solid #ddd;  
   padding: 8px;  
-  border: 1px solid #ccc;  
-  border-radius: 5px;  
-  font-size: 14px;  
+  text-align: center;  
 }  
 
-.form-group button {  
-  padding: 10px 15px;  
-  font-size: 16px;  
-  border: none;  
-  border-radius: 5px;  
-  cursor: pointer;  
+.report-table th {  
+  background-color: #f2f2f2;  
 }  
 
-#confirmEditButton {  
-  background-color: #4caf50;  
-  color: white;  
-  margin-right: 10px;  
+/* 如果按钮在容器中，可以为容器添加样式 */  
+.print-footer .no-print {  
+  display: flex;  
+  justify-content: flex-end;  
+  gap: 10px; /* 按钮之间的间距 */  
+  margin-bottom: 10px; /* 底部留一些空间 */  
 }  
 
-#confirmEditButton:hover {  
-  background-color: #45a049;  
-}  
-
-button[onclick="closeEditModal()"] {  
-  background-color: #f44336;  
-  color: white;  
-}  
-
-button[onclick="closeEditModal()"]:hover {  
-  background-color: #da190b;  
+.button-container {  
+  display: flex;  
+  justify-content: flex-end;  
+  gap: 10px;  
 }
+
+  /* 确保filter-group不会影响栅格布局 */  
+  .filter-group {  
+    width: 100%;  
+    padding: 0;  
+    margin: 0;  
+  }  
+  
+  /* 确保每个row是flex布局并且填充整个宽度 */  
+  .filter-group .row {  
+    display: flex;  
+    width: 100%;  
+    margin-left: 0;  
+    margin-right: 0;  
+  }  
+  
+  /* 关键修复：确保col-md-4实际占用33.33%的宽度 */  
+  .filter-group .col-md-4 {  
+    width: 33.33%;  
+    flex: 0 0 33.33%;  
+    max-width: 33.33%;  
+    box-sizing: border-box;  
+  }  
+  
+  /* 确保表单元素填充整个列宽 */  
+  .filter-group .form-control {  
+    width: 100%;  
+    box-sizing: border-box;  
+  }  
+  
+  /* 确保标签不会影响布局 */  
+  .filter-group label {  
+    display: block;  
+    width: 100%;  
+    box-sizing: border-box;  
+  }  
+  
+  /* 如果需要，可以添加媒体查询以确保在小屏幕上正确显示 */  
+  @media (max-width: 768px) {  
+    .filter-group .col-md-4 {  
+      width: 100%;  
+      flex: 0 0 100%;  
+      max-width: 100%;  
+    }  
+  }  
