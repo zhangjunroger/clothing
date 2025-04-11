@@ -55,8 +55,8 @@ router.post('/users', async (req, res) => {
         const { username, password, email, role } = req.body;  
 
         // 验证字段  
-        if (!username || !password || !email) {  
-            return res.status(400).json({ error: '用户名、密码和邮箱为必填项' });  
+        if (!username || !password) {  
+            return res.status(400).json({ error: '用户名、密码为必填项' });  
         }  
 
         const user = new AV.User();  

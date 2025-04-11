@@ -8,6 +8,18 @@
   <script>
     const currentUser = <%- JSON.stringify(user || {}) %>; // 在页面顶部定义    
   </script>
+
+<!-- 引入 LeanCloud JS SDK -->  
+<script src="https://unpkg.com/leancloud-storage/dist/av-min.js"></script>  
+<script> 
+// 初始化LeanCloud应用 
+AV.init({  
+  appId: 'ap1jWf86xdNQTqMhv2qk8GYL-gzGzoHsz',  
+  appKey: 'ozFs9SEQnA7xosBbyOaSO6Fx',
+  masterKey: '7fjqvsZqmJeo5NXCJcis6oYU', 
+  serverURL: 'https://avoscloud.com' // 如果有自定义域名  
+});
+</script>   
   <!-- 引入Tailwind CSS（仅开发环境示例） -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
@@ -346,7 +358,7 @@
       <!-- 主要内容区 -->
       <main class="col-span-9">
         <div class="bg-white p-6 rounded drop-shadow h-full">
-          <h2 class="text-xl font-semibold mb-4">公告信息</h2>
+          <h2 id="gonggaotitle" class="text-xl font-semibold mb-4">公告信息</h2>
 
           <!-- 公告展示区 -->
           <p class="text-gray-700" id="announcementText"></p>
@@ -854,24 +866,27 @@
     };
 
     // 设置公告的默认内容（同样也可以由后端传递）  
-    let announcementContent = "公告内容！";
+    let announcementContent = "";
 
     // 获取DOM元素  
     const announcementText = document.getElementById("announcementText");
     const announcementEditor = document.getElementById("announcementEditor");
     const announcementInput = document.getElementById("announcementInput");
+    const gonggaotitleText = document.getElementById("gonggaotitle");
+    
 
     const cancelBtn = document.getElementById("cancelBtn");
     const saveBtn = document.getElementById("saveBtn");
 
-    // 初始化公告文本  
-    announcementText.textContent = announcementContent;
+    // 初始化公告文本
+
+    loadAnnouncementFromLeanCloud(); 
 
     if (currentUser.role === "admin") {
       // 鼠标指针样式 + hover效果  
-      announcementText.classList.add("cursor-pointer", "hover:text-blue-600");
+      gonggaotitleText.classList.add("cursor-pointer", "hover:text-blue-600");
       // 点击时显示编辑表单，并填入当前公告  
-      announcementText.addEventListener("click", () => {
+      gonggaotitleText.addEventListener("click", () => {
         // 如果是管理员，则显示编辑输入区，并填入当前公告内容  
         announcementEditor.classList.remove("hidden");
         announcementInput.value = announcementContent;
@@ -885,15 +900,60 @@
 
     // 保存修改 -> 更新公告文本 + 可向后台发送请求  
     document.getElementById("saveAnnouncement").addEventListener("click", () => {
-      announcementContent = announcementInput.value.trim() || "无";
+      announcementContent = announcementInput.value.trim();
 
       announcementText.textContent = announcementContent;
+
+      // 调用保存函数  
+      saveAnnouncementToLeanCloud(announcementContent);
 
       // 这里可以写Ajax或fetch请求，把新公告内容提交到服务端  
       alert("公告已保存: " + announcementContent);
 
       announcementEditor.classList.add("hidden");
     });
+
+// 保存公告到 LeanCloud  
+function saveAnnouncementToLeanCloud(newAnnouncementContent) {  
+  const query = new AV.Query("Gonggao1");  
+  
+  query.first().then((announcementObj) => {  
+    if (announcementObj) {  
+      // 更新现有公告  
+      console.log("查询到已有记录:", announcementObj);  
+    } else {  
+      // 新建公告  
+      const Announcement = AV.Object.extend("Gonggao1");  
+      announcementObj = new Announcement();  
+      console.log("新建公告:", announcementObj);  
+    }  
+    announcementObj.set("content", newAnnouncementContent);  
+    return announcementObj.save(); // 返回 Promise  
+  }).then((savedObj) => {  
+    console.log("公告已保存:", savedObj);  
+  }).catch((error) => {  
+    console.error("保存公告时出错:", error);  
+  });  
+}  
+
+
+function loadAnnouncementFromLeanCloud() {  
+  const query = new AV.Query("Gonggao1");  
+
+  query.first().then((result) => {  
+    if (result) {  
+      const content = result.get("content");  
+      announcementText.textContent = content;  
+      announcementContent = content;  
+    } else {  
+      announcementText.textContent = "";  
+      announcementContent = "";  
+    }  
+  }).catch((error) => {  
+    console.error("获取公告时出错:", error);  
+  });  
+}  
+
 
 
     // 获取出生日期输入框  

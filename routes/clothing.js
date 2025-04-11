@@ -323,8 +323,8 @@ router.post('/clothing/import-confirm', async (req, res) => {
         if (key == 'sizes') {
           // 解析尺码字符串，保存为数组形式  
           const sizesString = item[key]; // 获取原始字符串  
-          const sizesArray = sizesString.split('\r\n').map(sizePair => {
-            const [size, quantity] = sizePair.split(': ');
+          const sizesArray = sizesString.split(/\r?\n/).filter(line => line.includes(':')).map(sizePair => {
+            const [size, quantity] = sizePair.split(':');
             return { size: size.trim(), quantity: parseInt(quantity.trim(), 10) }; // 创建对象  
           });
           clothing.set('sizes', sizesArray); // 保存为 JSON 对象 

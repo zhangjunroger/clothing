@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>服装管理系统</title>
+    <title>被装管理系统</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="min-h-screen bg-gray-100">
@@ -13,12 +13,12 @@
                 <!-- Logo 和主导航 -->
                 <div class="flex">
                     <div class="flex-shrink-0 flex items-center">
-                        <a href="/" class="text-xl font-bold text-gray-800">服装管理系统</a>
+                        <a href="/" class="text-xl font-bold text-gray-800">被装管理系统</a>
                     </div>
                     <div class="hidden md:ml-6 md:flex md:space-x-8">
                         <a href="/" class="<%= path === '/' ? 'border-b-2 border-blue-500' : '' %> inline-flex items-center px-1 pt-1 text-gray-700 hover:text-gray-900">首页</a>
                         <% if (currentUser) { %>
-                            <a href="/clothes" class="<%= path === '/clothes' ? 'border-b-2 border-blue-500' : '' %> inline-flex items-center px-1 pt-1 text-gray-700 hover:text-gray-900">服装管理</a>
+                            <a href="/clothes" class="<%= path === '/clothes' ? 'border-b-2 border-blue-500' : '' %> inline-flex items-center px-1 pt-1 text-gray-700 hover:text-gray-900">被装管理</a>
                             <% if (currentUser.role === 'admin') { %>
                                 <a href="/users" class="<%= path === '/users' ? 'border-b-2 border-blue-500' : '' %> inline-flex items-center px-1 pt-1 text-gray-700 hover:text-gray-900">用户管理</a>
                             <% } %>
@@ -50,7 +50,7 @@
             <div class="px-2 pt-2 pb-3 space-y-1">
                 <a href="/" class="<%= path === '/' ? 'bg-gray-100' : '' %> block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">首页</a>
                 <% if (currentUser) { %>
-                    <a href="/clothes" class="<%= path === '/clothes' ? 'bg-gray-100' : '' %> block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">服装管理</a>
+                    <a href="/clothes" class="<%= path === '/clothes' ? 'bg-gray-100' : '' %> block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">被装管理</a>
                     <% if (currentUser.role === 'admin') { %>
                         <a href="/users" class="<%= path === '/users' ? 'bg-gray-100' : '' %> block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">用户管理</a>
                     <% } %>

@@ -38,7 +38,7 @@ router.get('/shenling', async (req, res) => {
     const keyongyue = firefighter_data['keyongyue'] ? parseFloat(firefighter_data['keyongyue']).toFixed(2) : '0.00';
     res.render('shenling', { user, keyongyue }); // 将用户数据传递到模板   
   } catch (err) {
-    console.error('获取当前用户信息失败：', err);
+    console.error('获取当前用户信息失败，请重新登录或刷新重试：', err);
     res.status(500).json({ error: '服务器错误，请稍后重试！' });
   }
 });

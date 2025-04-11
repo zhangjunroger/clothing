@@ -820,7 +820,29 @@
   border: 2px solid transparent;  /* 添加透明边框 */  
   border-radius: 4px;            /* 可选：圆角边框 */  
   transition: background-color 0.3s; /* 添加过渡效果 */ 
-}  
+}
+
+    /* ========== 新增：为表格外层加一个固定高度+滚动条容器 ========== */  
+    .table-container {  
+      max-height: 400px; /* 根据实际需求调整表格容器的最大高度*/  
+      overflow-y: auto;  /* 当内容超过最大高度时出现垂直滚动条*/  
+      border: 1px solid #ccc;  
+      margin: 16px 0;  
+    }  
+    /* 搜索区域 */  
+    .search-container {  
+      margin-bottom: 12px;  
+    }  
+    .search-container input {  
+      width: 200px;  
+      padding: 6px;  
+    }  
+    .search-container button {  
+      padding: 6px 12px;  
+      margin-left: 8px;  
+      cursor: pointer;  
+    }  
+
   </style>
 </head>
 
@@ -849,6 +871,21 @@
   <!-- 服装信息表格展示 -->
   <section>
     <h2>被装信息列表</h2>
+    <div id="total-amount-container" style="margin-top: 20px; font-size: 30px; text-align: center;">
+      当前选中物品总额：<span id="total-amounttop" style="color: red; font-size: 30px; font-weight: bold;">0.00</span> 元
+    </div>
+    <div style="display: flex; justify-content: center; gap: 15px; margin-top: 20px; margin-bottom: 5px;">
+      <button id="checkoutBtntop" class="button">申领</button>
+    </div>
+<!-- 搜索框 -->  
+<div class="search-container">  
+  <input type="text" id="searchInput" placeholder="输入关键字搜索..." />  
+  <button id="searchBtn">搜索</button>  
+  <button id="resetBtn">重置</button>  
+</div>  
+
+<!-- ========== 新增：外层容器 .table-container，带滚动条 ========== -->  
+  <div class="table-container">    
     <table id="clothingTable" class="users-table">
       <thead>
         <tr>
@@ -868,8 +905,8 @@
         <!-- 数据将通过AJAX动态加载 -->
       </tbody>
     </table>
+  </div>
   </section>
-
   <hr>
 
   <section>
@@ -880,8 +917,6 @@
       <button id="checkoutBtn" class="button">申领</button>
     </div> 
   </section>
-
-
 
 
   <hr>
@@ -950,28 +985,52 @@
           }
         });
 
-
       let totalAmount = 0; // 用于存储当前总额  
 
       const container = document.getElementById('clothingTable');
       const totalAmountElement = document.getElementById('total-amount');    // 总额展示区域
+      const totalAmountElementtop = document.getElementById('total-amounttop');    // 总额展示区域
+
+
+      document.getElementById('clothingTable').addEventListener('click', function(e) {  
+    if (e.target.classList.contains('qty-decrease')) {  
+      const itemNumber = e.target.dataset.number;  
+      const quantityInput = document.getElementById(`quantity-${itemNumber}`);  
+      const currentValue = parseInt(quantityInput.value) || 1;  
+      if (currentValue > 1) {  
+        quantityInput.value = currentValue - 1;  
+      }  
+      // 如果需要更新总额，则调用更新方法  
+      updateTotalAmount();  
+    } else if (e.target.classList.contains('qty-increase')) {  
+      const itemNumber = e.target.dataset.number;  
+      const quantityInput = document.getElementById(`quantity-${itemNumber}`);  
+      const currentValue = parseInt(quantityInput.value) || 1;  
+      quantityInput.value = currentValue + 1;  
+      // 如果需要更新总额，则调用更新方法  
+      updateTotalAmount();  
+    }  
+  });  
 
 
       // 监听所有子元素的 change 事件  
       container.addEventListener('change', function (event) {
         const target = event.target;
         // 如果是产品选择框或尺码选择框，则执行你的逻辑  
-        if (target.classList.contains('item-checkbox') || target.classList.contains('size-checkbox') || (target.tagName === 'INPUT' && target.type === 'number')) {
+        if (target.classList.contains('item-checkbox') || target.classList.contains('size-select') || (target.tagName === 'INPUT' && target.type === 'number')) {
           updateTotalAmount();  // 计算总金额  
         }
       });
+
+
+
+
 
       // 更新总额的方法  
       function updateTotalAmount() {
         let newTotal = 0;
 
-        const productCheckboxes = container.querySelectorAll('.item-checkbox'); // 产品选择框  
-        const sizeCheckboxes = container.querySelectorAll('.size-checkbox');   // 尺码选择框  
+        const productCheckboxes = container.querySelectorAll('.item-checkbox'); // 产品选择框 
 
         // 遍历所有产品选择框  
         productCheckboxes.forEach((productCheckbox) => {
@@ -979,38 +1038,37 @@
             const itemNumber = productCheckbox.dataset.itemnumber; // 获取产品编号            
             const productPrice = parseFloat(productCheckbox.dataset.price); // 获取产品价格
 
-            // 遍历所有尺码选择框  
-            sizeCheckboxes.forEach((sizeCheckbox) => {
-              if (
-                sizeCheckbox.checked &&
-                sizeCheckbox.dataset.number === itemNumber // 同一个产品的尺码框  
-              ) {
-                const sizeQuantity_str = document.getElementById(`quantity-${itemNumber}`);
-                const sizeQuantity = Number(sizeQuantity_str.value);  // 将输入值转换为数字
+            // 找到对应的下拉框  
+            const sizeSelect = container.querySelector(`.size-select[data-number="${itemNumber}"]`);
 
-                // 获取当前尺寸的库存数量 
-                const maxAllowedQuantity = Number(sizeCheckbox.dataset.quantity); // 获取库存值
+            if (sizeSelect) {  
+              const selectedOption = sizeSelect.options[sizeSelect.selectedIndex];  
+              // 该尺码对应的可用库存  
+              const maxAllowedQuantity = parseFloat(selectedOption.getAttribute('data-quantity'));
+              const sizeQuantity_str = document.getElementById(`quantity-${itemNumber}`);
+              const sizeQuantity = Number(sizeQuantity_str.value);  // 将输入值转换为数字
 
-                // 校验申领个数是否满足条件：1 到所有尺寸库存的最小值  
-                if (sizeQuantity < 1 || sizeQuantity > maxAllowedQuantity) {
-                  alert(
-                    `申领个数必须在 1 到当前库存 ${maxAllowedQuantity} 范围内！`
-                  );
-                  return; // 退出当前循环，避免继续计算总金额  
-                }
+              // 校验申领个数是否满足条件：1 到所有尺寸库存的最小值  
+              if (sizeQuantity < 1 || sizeQuantity > maxAllowedQuantity) {
+                alert(
+                  `申领个数必须在 1 到当前库存 ${maxAllowedQuantity} 范围内！`
+                );
+                return; // 退出当前循环，避免继续计算总金额  
+              }
 
                 newTotal += productPrice * sizeQuantity; // 计算并增加总额  
-              }
-            });
+            }
           }
         });
 
         // 更新总额  
         totalAmount = newTotal;
-        totalAmountElement.textContent = totalAmount.toFixed(2); // 保留两位小数 
+        totalAmountElement.textContent = totalAmount.toFixed(2); // 保留两位小数
+        totalAmountElementtop.textContent = totalAmount.toFixed(2); // 保留两位小数  
       }    
 
       document.getElementById('checkoutBtn').addEventListener('click', handleCheckout);
+      document.getElementById('checkoutBtntop').addEventListener('click', handleCheckout);
 
       function handleCheckout() {
         // 读取当前余额  
@@ -1027,23 +1085,25 @@
           const itemName = checkbox.getAttribute('data-itemname');
           const price = parseFloat(checkbox.getAttribute('data-price'));
 
-          // 遍历所有勾选的尺码  
-          const specContainer = checkbox.closest('tr').querySelectorAll('.size-checkbox:checked');
-          specContainer.forEach(spec => {
-            const specification = spec.getAttribute('data-size');
-            const maxQuantity = parseFloat(spec.getAttribute('data-quantity'));
+          // 找到对应的下拉框  
+          const sizeSelect = checkbox.closest('tr').querySelector('.size-select');  
+          if (!sizeSelect) return;  
 
-            // 获取用户输入的数量  
-            const quantityInput = document.getElementById(`quantity-${itemNumber}`);
-            const quantity = parseFloat(quantityInput.value);
+          const selectedOption = sizeSelect.options[sizeSelect.selectedIndex];  
+          const specification = selectedOption.value; // 尺码  
+          const maxQuantity = parseFloat(selectedOption.getAttribute('data-quantity'));  
 
-            // 校验数量是否有效  
-            if (quantity <= 0 || quantity > maxQuantity) {
+          // 获取用户输入的数量  
+          const quantityInput = document.getElementById(`quantity-${itemNumber}`);
+          const quantity = parseFloat(quantityInput.value);
+
+          // 校验数量是否有效  
+          if (quantity <= 0 || quantity > maxQuantity) {
               alert(`物品 [${itemName}] 尺码 [${specification}] 的申领数量 [${quantity}] 超出有效范围！`);
               return;
-            }
+          }
 
-            selectedItems.push({
+          selectedItems.push({
               itemNumber,
               itemName,
               specification,
@@ -1051,7 +1111,6 @@
               quantity
             });
           });
-        });
 
         // 如果没有选中任何物品  
         if (selectedItems.length === 0) {
@@ -1109,8 +1168,9 @@
             if (result.success) {
               alert('申领成功！');
               // 更新前端余额  
-              document.getElementById('currentBalance').textContent = result.newBalance;
+              document.getElementById('currentBalance').textContent = result.newBalance.toFixed(2);
               document.getElementById('total-amount').textContent = 0.00;
+              document.getElementById('total-amounttop').textContent = 0.00;
               // 清空勾选  
               checkboxes.forEach(checkbox => checkbox.checked = false);
               // 刷新申领列表
@@ -1226,27 +1286,52 @@ function formatDate(date) {
           onclick="showLargeImage('${item.itemPic || ''}')" />  
       </td>  
       <td>  
-        ${(item.sizes || []).map(sizeObj => `  
-          <div style="display: flex; align-items: center; gap: 8px;">  
-            <input  
-              type="checkbox"  
-              class="size-checkbox"  
-              data-size="${sizeObj.size}"  
-              data-quantity="${sizeObj.quantity}"
-              data-number="${item.itemNumber}"  
-            />  
-            <label>${sizeObj.size}: ${sizeObj.quantity}</label>  
-          </div>  
-        `).join('')}  
+  <select class="size-select" data-number="${item.itemNumber}">  
+    ${(item.sizes || []).map(sizeObj => `  
+      <option value="${sizeObj.size}"  data-size="${sizeObj.size}" data-quantity="${sizeObj.quantity}">  
+        ${sizeObj.size}: ${sizeObj.quantity}  
+      </option>  
+    `).join('')}  
+  </select>  
       </td>  
       <td>${item.price || ''}</td>  
       <td>${item.category || ''}</td>  
       <td>${item.warehouseLocation || ''}</td>  
       <td>${item.remarks || ''}</td>  
-      <td>  
-        <input type="number" id="quantity-${item.itemNumber}" min="1"   
-          placeholder="输入数量" />  
-      </td>
+<td>  
+  <div style="display: flex; align-items: center; gap: 8px;">  
+    <button type="button" class="qty-decrease" data-number="${item.itemNumber}" style="  
+        width: 40px;  
+        height: 40px;  
+        font-size: 20px;       /* 字体大小 */  
+        font-weight: bold;     /* 字体加粗 */  
+        color: #fff;           /* 字体颜色白色 */  
+        background-color: #d9534f; /* 红色背景，可自行调整 */  
+        border: none;  
+        border-radius: 4px;  
+        cursor: pointer;  
+      ">-</button>  
+    <input  
+      type="number"  
+      class="qty-input"  
+      id="quantity-${item.itemNumber}"  
+      min="1"  
+      value="1"  
+      style="width: 60px; text-align: center;"  
+    />  
+    <button type="button" class="qty-increase" data-number="${item.itemNumber}" style="  
+        width: 40px;  
+        height: 40px;  
+        font-size: 20px;  
+        font-weight: bold;  
+        color: #fff;  
+        background-color: #5cb85c; /* 绿色背景，可自行调整 */  
+        border: none;  
+        border-radius: 4px;  
+        cursor: pointer;  
+      ">+</button>  
+  </div>  
+</td>  
     </tr>  
   `;
     }
