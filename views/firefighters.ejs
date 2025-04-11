@@ -864,6 +864,7 @@
             <th>腰围</th>
             <th>头围</th>
             <th>可用余额</th>
+            <th>经费来源</th>
             <th>备注</th>
             <th>操作</th>
           </tr>
@@ -1174,9 +1175,18 @@
 
           <div class="row">
             <!-- 可用余额 -->
-            <div class="col-md-12 mb-3">
+            <div class="col-md-6 mb-3">
               <label for="modalKeyongyue" class="form-label">可用余额</label>
               <input class="form-control" id="modalKeyongyue" name="keyongyue">
+            </div>
+            <div class="col-md-12 mb-3">
+              <label for="modalJingfeilaiyuan" class="form-label">经费来源</label>
+              <select class="form-select" id="modalJingfeilaiyuan" name="jingfeilaiyuan">
+                <option value="">请选择经费来源</option>
+                <option value="支队经费">支队经费</option>
+                <option value="大队经费">大队经费</option>
+                <option value="其它">其它</option>
+              </select>
             </div>
           </div>
 
@@ -1756,7 +1766,8 @@
         <td>${item.xiongwei || ''}</td>  
         <td>${item.yaowei || ''}</td>  
         <td>${item.touwei || ''}</td>  
-        <td>${item.keyongyue || ''}</td>   
+        <td>${item.keyongyue || ''}</td>
+        <td>${item.jingfeilaiyuan || ''}</td>           
         <td>${item.remarks || ''}</td>  
         <td>  
           <button onclick="showEditFirefighterModal('${item.objectId}')" class="btn-change" style="margin-bottom: 5px;">修改</button>  
@@ -1831,6 +1842,7 @@
       document.getElementById('modalYaowei').value = item.yaowei || '';
       document.getElementById('modalTouwei').value = item.touwei || '';
       document.getElementById('modalKeyongyue').value = item.keyongyue || '';
+      document.getElementById('modalJingfeilaiyuan').value = item.jingfeilaiyuan || '';
       document.getElementById('modalRemarks').value = item.remarks || '';
     }
 
@@ -2736,7 +2748,8 @@
           <th>职务</th>  
           <th>单位</th>  
           <th>工作年限</th>  
-          <th>可用余额</th>  
+          <th>可用余额</th>
+          <th>经费来源</th>            
           <th>备注</th>  
         </tr>  
       </thead>  
@@ -2753,7 +2766,8 @@
           <td>${item.position || ''}</td>  
           <td>${item.team || ''}</td>  
           <td>${item.year || ''}</td>  
-          <td>${item.keyongyue || ''}</td>  
+          <td>${item.keyongyue || ''}</td>
+          <td>${item.jingfeilaiyuan || ''}</td>            
           <td>${item.remarks || ''}</td>  
         </tr>  
       `;
@@ -2924,7 +2938,8 @@
           { header: '职务', dataKey: 'position' },
           { header: '单位', dataKey: 'team' },
           { header: '工作年限', dataKey: 'year' },
-          { header: '可用余额', dataKey: 'keyongyue' }
+          { header: '可用余额', dataKey: 'keyongyue' },
+          { header: '经费来源', dataKey: 'jingfeilaiyuan' }
         ];
       } else if (reportType === 'equipment') {
         columns = [
@@ -3092,7 +3107,7 @@
 
       // 根据不同报表类型设置列  
       if (reportType === 'personnel') {
-        headers = ['编号', '姓名', '性别', '年龄', '职务', '单位', '工作年限', '可用余额', '备注'];
+        headers = ['编号', '姓名', '性别', '年龄', '职务', '单位', '工作年限', '可用余额', '经费来源', '备注'];
       } else if (reportType === 'equipment') {
         headers = ['编号', '姓名', '性别', '单位', '帽类号', '服装号', '鞋类号'];
       } else if (reportType === 'bodySize') {
@@ -3125,6 +3140,7 @@
             item.team || '',
             item.year || '',
             item.keyongyue || '',
+            item.jingfeilaiyuan || '',
             item.remarks || ''
           ]);
         });

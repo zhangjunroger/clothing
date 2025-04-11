@@ -23,6 +23,7 @@ const columnMapping = {
   "腰围": "yaowei",
   "头围": "touwei",
   "可用余额": "keyongyue",
+  "经费来源": "经费来源",
   "备注": "remarks"
 };
 
