@@ -134,16 +134,39 @@
     .btn-change:hover {
         background-color: #f49236;
     }
+    
+    /* ========== 新增：为表格外层加一个固定高度+滚动条容器 ========== */  
+    .table-container {  
+      max-height: 400px; /* 根据实际需求调整表格容器的最大高度*/  
+      overflow-y: auto;  /* 当内容超过最大高度时出现垂直滚动条*/  
+      border: 1px solid #ccc;  
+      margin: 16px 0;  
+    }  
+    /* 搜索区域 */  
+    .search-container {  
+      margin-bottom: 12px;  
+    }  
+    .search-container input {  
+      width: 200px;  
+      padding: 6px;  
+    }  
+    .search-container button {  
+      padding: 6px 12px;  
+      margin-left: 8px;  
+      cursor: pointer;  
+    }  
 </style>
 
 <body>
     <div class="container">
         <h1>用户管理（管理员 Admin 权限）</h1>
+        <div class="table-container">
 
         <!-- 用户列表 -->
         <div id="usersList">
             <p>正在加载用户列表...</p>
         </div>
+    </div>        
 
         <!-- 导出和打印按钮 -->
         <div class="action-buttons">

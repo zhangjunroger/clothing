@@ -21,721 +21,736 @@
 
   <!-- Excel生成库 -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-  
+
   <style>
-  /* 背景图片样式 */
-  body {
-    background-image: url('/images/background.jpg');
-    /* 背景图片路径 */
-    background-size: cover;
-    /* 图片适应屏幕大小 */
-    background-repeat: no-repeat;
-    /* 不重复平铺 */
-    background-position: center;
-    /* 居中显示 */
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    margin: 0;
-    padding: 0;
-    min-height: 100vh;
-    /* 占满整个视口高度 */
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-  }
-
-  .fancy-font {
-    font-family: 'Amatic SC', cursive;
-    /* cursive等用于回退 */
-  }
-
-
-  /* 背景遮罩 */
-  .modal-backdrop {
-    display: none;
-    /* 默认隐藏 */
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    /* 过渡动画可选 */
-    z-index: 999;
-  }
-
-  .modal-backdrop.active {
-    display: block;
-  }
-
-/* 调整模态窗口基础样式 */  
-.modal {  
-  display: none; /* 默认隐藏 */  
-  position: fixed;  
-  top: 50%;  
-  left: 50%;  
-  transform: translate(-50%, -50%);  
-  z-index: 1000;  
-  width: 60%; /* 调整宽度 */  
-  max-width: 800px; /* 调整最大宽度 */  
-  max-height: 80vh; /* 可选：调整最大高度 */  
-  overflow-y: auto;  
-}  
-
-/* 模态内容样式 */  
-.modal-content {  
-  width: 100%;  
-  padding: 10px; /* 调整内边距，这样内容会紧凑一些 */  
-  background-color: #fff;  
-  border-radius: 8px;  
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);  
-}  
-
-  /* 模态窗口内表单元素自适应 */
-  #firefighterForm {
-    width: 100%;
-  }
-
-  /* 确保行占满空间 */
-  .row {
-    display: flex;
-    flex-wrap: wrap;
-    width: 100%;
-    margin-left: 0;
-    margin-right: 0;
-  }
-
-  /* 列元素拉伸以占满空间 */
-  .col-md-4,
-  .col-md-6,
-  .col-md-12 {
-    flex-grow: 1;
-    transition: all 0.3s ease;
-    /* 添加过渡效果使尺寸变化更平滑 */
-  }
-
-  /* 输入框自动填充可用空间 */
-  .form-control,
-  .form-select {
-    width: 100%;
-    min-height: 38px;
-    padding: 8px 12px;
-    box-sizing: border-box;
-  }
-
-  /* 标签变大以适应大屏幕 */
-  @media (min-width: 1200px) {
-    .form-label {
-      font-size: 1.1rem;
-    }
-
-    .form-control,
-    .form-select {
-      font-size: 1.05rem;
-      padding: 10px 15px;
-      min-height: 45px;
-    }
-
-    /* 按钮在大屏幕上变大 */
-    .modal-footer .button {
-      padding: 10px 25px;
-      font-size: 1.1rem;
-    }
-  }
-
-  /* 更大屏幕上进一步增大字体和间距 */
-  @media (min-width: 1600px) {
-    .form-label {
-      font-size: 1.2rem;
-      margin-bottom: 10px;
-    }
-
-    .form-control,
-    .form-select {
-      font-size: 1.1rem;
-      padding: 12px 18px;
-      min-height: 50px;
-    }
-
-    .mb-3 {
-      margin-bottom: 1.5rem !important;
-    }
-
-    /* 增大模态标题 */
-    .modal-header h2 {
-      font-size: 2.2rem;
-    }
-
-    /* 增大关闭按钮 */
-    #closeModal {
-      font-size: 2rem;
-    }
-  }
-
-  /* 确保按钮栏始终占满宽度 */
-  .modal-footer {
-    display: flex;
-    justify-content: flex-end;
-    gap: 15px;
-    width: 100%;
-    padding-top: 20px;
-    margin-top: 10px;
-  }
-
-  /* 超宽屏幕进一步扩大元素 */
-  @media (min-width: 2000px) {
-    .modal {
-      max-width: 1800px;
-      /* 超宽屏幕允许更大模态框 */
-    }
-
-    .row {
-      gap: 20px;
-      /* 增加行内元素间距 */
-    }
-  }
-
-  /* 确保模态窗口内容有足够空间 */
-  .modal-content {
-    width: 100%;
-    background-color: #fff;
-    border-radius: 8px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-  }
-
-  /* 滚动条美化 (可选) */
-  .modal::-webkit-scrollbar {
-    width: 8px;
-  }
-
-  .modal::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 4px;
-  }
-
-  .modal::-webkit-scrollbar-thumb {
-    background: #888;
-    border-radius: 4px;
-  }
-
-  .modal::-webkit-scrollbar-thumb:hover {
-    background: #555;
-  }
-
-  .modal.active {
-    display: block;
-  }
-
-  /* 模态内容区 */
-  .modal-content {
-    background-color: #f7f7f7;
-    /* 背景带点浅灰 */
-    border: 3px solid #888;
-    /* 边框线加粗 */
-    border-radius: 6px;
-    padding: 16px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-  }
-
-  .modal-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .modal-header {
-    border-bottom: 2px solid #ccc;
-    padding-bottom: 8px;
-    margin-bottom: 8px;
-  }
-
-  .modal-header h2 {
-    margin: 0;
-  }
-
-  .modal-header span {
-    font-size: 1.4rem;
-  }
-
-  .modal-body {
-    margin: 16px 0;
-    max-height: 70vh;
-    /* 避免内容过多时超出屏幕 */
-    overflow-y: auto;
-  }
-
-  .modal-footer {
-    border-top: 2px solid #ccc;
-    padding-top: 8px;
-    margin-top: 8px;
-    text-align: right;
-    /* 简单的右对齐 */
-  }
-
-  /* 表单样式 */
-  .form-group {
-    margin-bottom: 15px;
-  }
-
-  .form-label {
-    display: block;
-    margin-bottom: 5px;
-    font-weight: 600;
-    color: #555;
-  }
-
-  .form-control {
-    width: 100%;
-    padding: 8px 12px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 14px;
-    transition: border-color 0.2s, box-shadow 0.2s;
-  }
-
-  .form-control:focus {
-    border-color: #007bff;
-    outline: none;
-    box-shadow: 0 0 3px rgba(0, 123, 255, 0.3);
-  }
-
-  /* 通用按钮样式 */
-  .button {
-    padding: 10px 20px;
-    /* 幅度内边距 */
-    border: none;
-    /* 去掉边框 */
-    border-radius: 5px;
-    /* 圆角 */
-    background-color: #007bff;
-    /* 背景颜色 */
-    color: white;
-    /* 字体颜色 */
-    font-size: 16px;
-    /* 字体大小 */
-    cursor: pointer;
-    /* 鼠标指针 */
-    transition: background-color 0.3s;
-    /* 过渡效果 */
-  }
-
-  /* 按钮悬停样式 */
-  .button:hover {
-    background-color: #0056b3;
-    /* 悬停时的背景颜色 */
-  }
-
-  .button-primary {
-    background-color: #28a745;
-    color: #fff;
-  }
-
-  .button-primary:hover {
-    background-color: #218838;
-    box-shadow: 0 0 8px rgba(40, 167, 69, 0.2);
-  }
-
-  .button-secondary {
-    background-color: #6c757d;
-    color: #fff;
-  }
-
-  .button-secondary:hover {
-    background-color: #5a6268;
-    box-shadow: 0 0 8px rgba(108, 117, 125, 0.2);
-  }
-
-  /* 响应式设计 */
-  @media screen and (max-width: 768px) {
-    .modal {
-      width: 95%;
-      padding: 15px;
-      max-height: 85vh;
-      /* 适当减少最大高度以适应移动设备 */
-    }
-
-    .modal-header h2 {
-      font-size: 1.2rem;
-    }
-  }
-
-  /* 全局容器 */
-  .container {
-    width: 80%;
-    max-width: 800px;
-    margin: 20px auto;
-    padding: 10px 0;
-    /* 可以根据需要添加背景或阴影 */
-  }
-
-  .container h1 {
-    text-align: center;
-    color: #333;
-    margin-bottom: 2.0rem;
-    font-size: 50px;
-  }
-
-  .container h2 {
-    text-align: center;
-    color: #333;
-    margin-bottom: 1.5rem;
-    font-size: 30px;
-  }
-
-
-  /* 三个 section 的通用样式 */
-  section {
-    background-color: #fff;
-    padding: 1.5rem;
-    margin-bottom: 2rem;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-  }
-
-  /* Excel模板上传表单 & 搜索表单基础样式 */
-  form {
-    display: flex;
-    flex-wrap: wrap;
-    /* 当屏幕宽度较小，自动换行 */
-    align-items: center;
-    gap: 0.5rem;
-    /* 表单元素之间的间距 */
-  }
-
-  label {
-    font-weight: 600;
-    margin-right: 0.5rem;
-  }
-
-  input[type="text"],
-  input[type="number"],
-  input[type="file"],
-  select {
-    padding: 0.5rem;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 0.9rem;
-    flex: 1;
-    /* 让输入框或选择框能够灵活扩展宽度 */
-    min-width: 100px;
-    /* 避免过小 */
-  }
-
-  input[type="file"] {
-    flex: none;
-    /* 上传按钮大小通常固定 */
-  }
-
-  /* 分割线美化 */
-  hr {
-    border: none;
-    border-top: 1px solid #ddd;
-    margin: 2rem 0;
-  }
-
-
-  .users-table {
-    width: 100%;
-    /* 表格宽度占满父容器 */
-    border-collapse: collapse;
-    /* 去掉单元格间的间隙 */
-    margin-top: 20px;
-    /* 表格顶部留空 */
-    background: #fff;
-    /* 表格背景色 */
-    border-radius: 4px;
-    /* 表格圆角 */
-    overflow: hidden;
-    /* 防止溢出 */
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    /* 添加阴影 */
-  }
-
-  .users-table th,
-  .users-table td {
-    border: 1px solid #ddd;
-    /* 单元格边框颜色 */
-    padding: 12px;
-    /* 单元格内边距 */
-    text-align: center;
-    /* 水平居中 */
-    vertical-align: middle;
-    /* 垂直居中 */
-    font-size: 14px;
-    /* 字体大小 */
-    color: #333;
-    /* 字体颜色 */
-    word-wrap: break-word;
-    word-break: break-all;
-  }
-
-  .users-table th {
-    background-color: #f1dbb5;
-    /* 表头背景色 */
-    font-weight: bold;
-    /* 表头加粗 */
-    color: #333;
-    /* 表头字体颜色 */
-  }
-
-  .users-table tr:nth-child(even) {
-    background-color: #f9f9f9;
-    /* 偶数行背景色 */
-  }
-
-  .users-table tr:hover {
-    background-color: #f1f1f1;
-    /* 鼠标悬停时的背景色 */
-  }
-
-  /* 错误提示样式 */
-  .error {
-    border-color: red;
-  }
-
-  .error-message {
-    color: red;
-    font-size: 12px;
-  }
-
-  /* 搜索表单样式 */
-  .search-form input,
-  .search-form select {
-    padding: 6px;
-    margin-right: 10px;
-  }
-
-  .btn-delete {
-    background-color: #f44336;
-    color: white;
-    border: none;
-    padding: 6px 12px;
-    border-radius: 4px;
-    cursor: pointer;
-  }
-
-  .btn-delete:hover {
-    background-color: #d32f2f;
-  }
-
-  .btn-change {
-    background-color: #f49236;
-    color: white;
-    border: none;
-    padding: 6px 12px;
-    border-radius: 4px;
-    cursor: pointer;
-  }
-
-  .btn-change:hover {
-    background-color: #f49236;
-  }
-
-  /* 报表相关样式 */
-  .date-range {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .radio-group {
-    display: flex;
-    gap: 20px;
-  }
-
-  .print-container {
-    width: 100%;
-    max-width: 1000px;
-    margin: 0 auto;
-    padding: 20px;
-    background: #fff;
-  }
-
-  .print-header {
-    text-align: center;
-    margin-bottom: 20px;
-  }
-
-  .print-header h1 {
-    margin-bottom: 10px;
-  }
-
-  .print-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 20px;
-  }
-
-  .print-table th,
-  .print-table td {
-    border: 1px solid #000;
-    padding: 8px;
-    text-align: center;
-  }
-
-  .print-table th {
-    background-color: #f0f0f0;
-  }
-
-  .print-footer {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 20px;
-  }
-
-  @media print {
-    body * {
-      visibility: hidden;
-    }
-
-    .print-container,
-    .print-container * {
-      visibility: visible;
-    }
-
-    .print-container {
-      position: absolute;
-      left: 0;
-      top: 0;
-      width: 100%;
-      padding: 0;
-    }
-
-    .no-print {
-      display: none !important;
-    }
-  }
-
-  /* 打印专用样式 */
-  @media print {
-
-    /* 基本打印设置 */
-    @page {
-      size: auto;
-      margin: 10mm 10mm 10mm 10mm;
-      /* 减小页面边距 */
-    }
-
+    /* 背景图片样式 */
     body {
+      background-image: url('/images/background.jpg');
+      /* 背景图片路径 */
+      background-size: cover;
+      /* 图片适应屏幕大小 */
+      background-repeat: no-repeat;
+      /* 不重复平铺 */
+      background-position: center;
+      /* 居中显示 */
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
       margin: 0;
       padding: 0;
-      background: white;
-    }
-
-    /* 隐藏非打印元素 */
-    .no-print {
-      display: none !important;
-    }
-
-    /* 控制打印容器 */
-    .print-container {
-      width: 100%;
-      margin: 0;
-      padding: 0;
-      page-break-after: avoid;
-      /* 防止容器后自动分页 */
-    }
-
-    /* 控制表格打印 */
-    table {
-      width: 100% !important;
-      page-break-inside: auto;
-      border-collapse: collapse;
-    }
-
-    tr,
-    td,
-    th {
-      page-break-inside: avoid;
-      /* 尽量避免行内分页 */
-    }
-
-    /* 如果按钮在容器中，可以为容器添加样式 */
-    .print-footer .no-print {
+      min-height: 100vh;
+      /* 占满整个视口高度 */
       display: flex;
-      justify-content: flex-end;
-      gap: 10px;
-      /* 按钮之间的间距 */
-      margin-bottom: 10px;
-      /* 底部留一些空间 */
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
     }
 
-    .button-container {
+    .fancy-font {
+      font-family: 'Amatic SC', cursive;
+      /* cursive等用于回退 */
+    }
+
+
+    /* 背景遮罩 */
+    .modal-backdrop {
+      display: none;
+      /* 默认隐藏 */
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      /* 过渡动画可选 */
+      z-index: 999;
+    }
+
+    .modal-backdrop.active {
+      display: block;
+    }
+
+    /* 调整模态窗口基础样式 */
+    .modal {
+      display: none;
+      /* 默认隐藏 */
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 1000;
+      width: 60%;
+      /* 调整宽度 */
+      max-width: 800px;
+      /* 调整最大宽度 */
+      max-height: 80vh;
+      /* 可选：调整最大高度 */
+      overflow-y: auto;
+    }
+
+    /* 模态内容样式 */
+    .modal-content {
+      width: 100%;
+      padding: 10px;
+      /* 调整内边距，这样内容会紧凑一些 */
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    /* 模态窗口内表单元素自适应 */
+    #firefighterForm {
+      width: 100%;
+    }
+
+    /* 确保行占满空间 */
+    .row {
       display: flex;
-      justify-content: flex-end;
-      gap: 10px;
+      flex-wrap: wrap;
+      width: 100%;
+      margin-left: 0;
+      margin-right: 0;
     }
 
-    .action-buttons {
-      display: flex !important;
-      justify-content: flex-end !important;
-      gap: 10px;
-      width: 100%;
+    /* 列元素拉伸以占满空间 */
+    .col-md-4,
+    .col-md-6,
+    .col-md-12 {
+      flex-grow: 1;
+      transition: all 0.3s ease;
+      /* 添加过渡效果使尺寸变化更平滑 */
     }
 
-    /* 重置可能影响对齐的样式 */
-    .print-footer {
+    /* 输入框自动填充可用空间 */
+    .form-control,
+    .form-select {
       width: 100%;
+      min-height: 38px;
+      padding: 8px 12px;
       box-sizing: border-box;
     }
 
-    .no-print {
+    /* 标签变大以适应大屏幕 */
+    @media (min-width: 1200px) {
+      .form-label {
+        font-size: 1.1rem;
+      }
+
+      .form-control,
+      .form-select {
+        font-size: 1.05rem;
+        padding: 10px 15px;
+        min-height: 45px;
+      }
+
+      /* 按钮在大屏幕上变大 */
+      .modal-footer .button {
+        padding: 10px 25px;
+        font-size: 1.1rem;
+      }
+    }
+
+    /* 更大屏幕上进一步增大字体和间距 */
+    @media (min-width: 1600px) {
+      .form-label {
+        font-size: 1.2rem;
+        margin-bottom: 10px;
+      }
+
+      .form-control,
+      .form-select {
+        font-size: 1.1rem;
+        padding: 12px 18px;
+        min-height: 50px;
+      }
+
+      .mb-3 {
+        margin-bottom: 1.5rem !important;
+      }
+
+      /* 增大模态标题 */
+      .modal-header h2 {
+        font-size: 2.2rem;
+      }
+
+      /* 增大关闭按钮 */
+      #closeModal {
+        font-size: 2rem;
+      }
+    }
+
+    /* 确保按钮栏始终占满宽度 */
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 15px;
       width: 100%;
+      padding-top: 20px;
+      margin-top: 10px;
+    }
+
+    /* 超宽屏幕进一步扩大元素 */
+    @media (min-width: 2000px) {
+      .modal {
+        max-width: 1800px;
+        /* 超宽屏幕允许更大模态框 */
+      }
+
+      .row {
+        gap: 20px;
+        /* 增加行内元素间距 */
+      }
+    }
+
+    /* 确保模态窗口内容有足够空间 */
+    .modal-content {
+      width: 100%;
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    /* 滚动条美化 (可选) */
+    .modal::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .modal::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 4px;
+    }
+
+    .modal::-webkit-scrollbar-thumb {
+      background: #888;
+      border-radius: 4px;
+    }
+
+    .modal::-webkit-scrollbar-thumb:hover {
+      background: #555;
+    }
+
+    .modal.active {
+      display: block;
+    }
+
+    /* 模态内容区 */
+    .modal-content {
+      background-color: #f7f7f7;
+      /* 背景带点浅灰 */
+      border: 3px solid #888;
+      /* 边框线加粗 */
+      border-radius: 6px;
+      padding: 16px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-header {
+      border-bottom: 2px solid #ccc;
+      padding-bottom: 8px;
+      margin-bottom: 8px;
+    }
+
+    .modal-header h2 {
+      margin: 0;
+    }
+
+    .modal-header span {
+      font-size: 1.4rem;
+    }
+
+    .modal-body {
+      margin: 16px 0;
+      max-height: 70vh;
+      /* 避免内容过多时超出屏幕 */
+      overflow-y: auto;
+    }
+
+    .modal-footer {
+      border-top: 2px solid #ccc;
+      padding-top: 8px;
+      margin-top: 8px;
+      text-align: right;
+      /* 简单的右对齐 */
+    }
+
+    /* 表单样式 */
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    .form-label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 600;
+      color: #555;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .form-control:focus {
+      border-color: #007bff;
+      outline: none;
+      box-shadow: 0 0 3px rgba(0, 123, 255, 0.3);
+    }
+
+    /* 通用按钮样式 */
+    .button {
+      padding: 10px 20px;
+      /* 幅度内边距 */
+      border: none;
+      /* 去掉边框 */
+      border-radius: 5px;
+      /* 圆角 */
+      background-color: #007bff;
+      /* 背景颜色 */
+      color: white;
+      /* 字体颜色 */
+      font-size: 16px;
+      /* 字体大小 */
+      cursor: pointer;
+      /* 鼠标指针 */
+      transition: background-color 0.3s;
+      /* 过渡效果 */
+    }
+
+    /* 按钮悬停样式 */
+    .button:hover {
+      background-color: #0056b3;
+      /* 悬停时的背景颜色 */
+    }
+
+    .button-primary {
+      background-color: #28a745;
+      color: #fff;
+    }
+
+    .button-primary:hover {
+      background-color: #218838;
+      box-shadow: 0 0 8px rgba(40, 167, 69, 0.2);
+    }
+
+    .button-secondary {
+      background-color: #6c757d;
+      color: #fff;
+    }
+
+    .button-secondary:hover {
+      background-color: #5a6268;
+      box-shadow: 0 0 8px rgba(108, 117, 125, 0.2);
+    }
+
+    /* 响应式设计 */
+    @media screen and (max-width: 768px) {
+      .modal {
+        width: 95%;
+        padding: 15px;
+        max-height: 85vh;
+        /* 适当减少最大高度以适应移动设备 */
+      }
+
+      .modal-header h2 {
+        font-size: 1.2rem;
+      }
+    }
+
+    /* 全局容器 */
+    .container {
+      width: 80%;
+      max-width: 800px;
+      margin: 20px auto;
+      padding: 10px 0;
+      /* 可以根据需要添加背景或阴影 */
+    }
+
+    .container h1 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 2.0rem;
+      font-size: 50px;
+    }
+
+    .container h2 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 1.5rem;
+      font-size: 30px;
     }
 
 
-    /* 避免元素产生无意义的分页 */
-    * {
-      overflow: visible !important;
+    /* 三个 section 的通用样式 */
+    section {
+      background-color: #fff;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
     }
 
-  /* 确保filter-group不会影响栅格布局 */  
-  .filter-group {  
-    width: 100%;  
-    padding: 0;  
-    margin: 0;  
-  }  
-  
-  /* 确保每个row是flex布局并且填充整个宽度 */  
-  .filter-group .row {  
-    display: flex;  
-    width: 100%;  
-    margin-left: 0;  
-    margin-right: 0;  
-  }  
-  
-  /* 关键修复：确保col-md-4实际占用33.33%的宽度 */  
-  .filter-group .col-md-4 {  
-    width: 33.33%;  
-    flex: 0 0 33.33%;  
-    max-width: 33.33%;  
-    box-sizing: border-box;  
-  }  
-  
-  /* 确保表单元素填充整个列宽 */  
-  .filter-group .form-control {  
-    width: 100%;  
-    box-sizing: border-box;  
-  }  
-  
-  /* 确保标签不会影响布局 */  
-  .filter-group label {  
-    display: block;  
-    width: 100%;  
-    box-sizing: border-box;  
-  }  
-  
-  /* 如果需要，可以添加媒体查询以确保在小屏幕上正确显示 */  
-  @media (max-width: 768px) {  
-    .filter-group .col-md-4 {  
-      width: 100%;  
-      flex: 0 0 100%;  
-      max-width: 100%;  
-    }  
-  }  
+    /* Excel模板上传表单 & 搜索表单基础样式 */
+    form {
+      display: flex;
+      flex-wrap: wrap;
+      /* 当屏幕宽度较小，自动换行 */
+      align-items: center;
+      gap: 0.5rem;
+      /* 表单元素之间的间距 */
+    }
 
-  }
+    label {
+      font-weight: 600;
+      margin-right: 0.5rem;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    input[type="file"],
+    select {
+      padding: 0.5rem;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 0.9rem;
+      flex: 1;
+      /* 让输入框或选择框能够灵活扩展宽度 */
+      min-width: 100px;
+      /* 避免过小 */
+    }
+
+    input[type="file"] {
+      flex: none;
+      /* 上传按钮大小通常固定 */
+    }
+
+    /* 分割线美化 */
+    hr {
+      border: none;
+      border-top: 1px solid #ddd;
+      margin: 2rem 0;
+    }
+
+
+    .users-table {
+      width: 100%;
+      /* 表格宽度占满父容器 */
+      border-collapse: collapse;
+      /* 去掉单元格间的间隙 */
+      margin-top: 20px;
+      /* 表格顶部留空 */
+      background: #fff;
+      /* 表格背景色 */
+      border-radius: 4px;
+      /* 表格圆角 */
+      overflow: hidden;
+      /* 防止溢出 */
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      /* 添加阴影 */
+    }
+
+    .users-table th,
+    .users-table td {
+      border: 1px solid #ddd;
+      /* 单元格边框颜色 */
+      padding: 12px;
+      /* 单元格内边距 */
+      text-align: center;
+      /* 水平居中 */
+      vertical-align: middle;
+      /* 垂直居中 */
+      font-size: 14px;
+      /* 字体大小 */
+      color: #333;
+      /* 字体颜色 */
+      word-wrap: break-word;
+      word-break: break-all;
+    }
+
+    .users-table th {
+      background-color: #f1dbb5;
+      /* 表头背景色 */
+      font-weight: bold;
+      /* 表头加粗 */
+      color: #333;
+      /* 表头字体颜色 */
+    }
+
+    .users-table tr:nth-child(even) {
+      background-color: #f9f9f9;
+      /* 偶数行背景色 */
+    }
+
+    .users-table tr:hover {
+      background-color: #f1f1f1;
+      /* 鼠标悬停时的背景色 */
+    }
+
+    /* 错误提示样式 */
+    .error {
+      border-color: red;
+    }
+
+    .error-message {
+      color: red;
+      font-size: 12px;
+    }
+
+    /* 搜索表单样式 */
+    .search-form input,
+    .search-form select {
+      padding: 6px;
+      margin-right: 10px;
+    }
+
+    .btn-delete {
+      background-color: #f44336;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .btn-delete:hover {
+      background-color: #d32f2f;
+    }
+
+    .btn-change {
+      background-color: #f49236;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .btn-submit {
+      background-color: #3649f4;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .btn-change:hover {
+      background-color: #f49236;
+    }
+
+    /* 报表相关样式 */
+    .date-range {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .radio-group {
+      display: flex;
+      gap: 20px;
+    }
+
+    .print-container {
+      width: 100%;
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #fff;
+    }
+
+    .print-header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .print-header h1 {
+      margin-bottom: 10px;
+    }
+
+    .print-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+
+    .print-table th,
+    .print-table td {
+      border: 1px solid #000;
+      padding: 8px;
+      text-align: center;
+    }
+
+    .print-table th {
+      background-color: #f0f0f0;
+    }
+
+    .print-footer {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 20px;
+    }
+
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+
+      .print-container,
+      .print-container * {
+        visibility: visible;
+      }
+
+      .print-container {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        padding: 0;
+      }
+
+      .no-print {
+        display: none !important;
+      }
+    }
+
+    /* 打印专用样式 */
+    @media print {
+
+      /* 基本打印设置 */
+      @page {
+        size: auto;
+        margin: 10mm 10mm 10mm 10mm;
+        /* 减小页面边距 */
+      }
+
+      body {
+        margin: 0;
+        padding: 0;
+        background: white;
+      }
+
+      /* 隐藏非打印元素 */
+      .no-print {
+        display: none !important;
+      }
+
+      /* 控制打印容器 */
+      .print-container {
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        page-break-after: avoid;
+        /* 防止容器后自动分页 */
+      }
+
+      /* 控制表格打印 */
+      table {
+        width: 100% !important;
+        page-break-inside: auto;
+        border-collapse: collapse;
+      }
+
+      tr,
+      td,
+      th {
+        page-break-inside: avoid;
+        /* 尽量避免行内分页 */
+      }
+
+      /* 如果按钮在容器中，可以为容器添加样式 */
+      .print-footer .no-print {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        /* 按钮之间的间距 */
+        margin-bottom: 10px;
+        /* 底部留一些空间 */
+      }
+
+      .button-container {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+      }
+
+      .action-buttons {
+        display: flex !important;
+        justify-content: flex-end !important;
+        gap: 10px;
+        width: 100%;
+      }
+
+      /* 重置可能影响对齐的样式 */
+      .print-footer {
+        width: 100%;
+        box-sizing: border-box;
+      }
+
+      .no-print {
+        width: 100%;
+      }
+
+
+      /* 避免元素产生无意义的分页 */
+      * {
+        overflow: visible !important;
+      }
+
+      /* 确保filter-group不会影响栅格布局 */
+      .filter-group {
+        width: 100%;
+        padding: 0;
+        margin: 0;
+      }
+
+      /* 确保每个row是flex布局并且填充整个宽度 */
+      .filter-group .row {
+        display: flex;
+        width: 100%;
+        margin-left: 0;
+        margin-right: 0;
+      }
+
+      /* 关键修复：确保col-md-4实际占用33.33%的宽度 */
+      .filter-group .col-md-4 {
+        width: 33.33%;
+        flex: 0 0 33.33%;
+        max-width: 33.33%;
+        box-sizing: border-box;
+      }
+
+      /* 确保表单元素填充整个列宽 */
+      .filter-group .form-control {
+        width: 100%;
+        box-sizing: border-box;
+      }
+
+      /* 确保标签不会影响布局 */
+      .filter-group label {
+        display: block;
+        width: 100%;
+        box-sizing: border-box;
+      }
+
+      /* 如果需要，可以添加媒体查询以确保在小屏幕上正确显示 */
+      @media (max-width: 768px) {
+        .filter-group .col-md-4 {
+          width: 100%;
+          flex: 0 0 100%;
+          max-width: 100%;
+        }
+      }
+
+    }
+
     /* 缩略图样式 */
     .thumbnail {
       width: 80px !important;
@@ -803,46 +818,86 @@
       display: none;
       /* 隐藏模态框 */
     }
-    .button2:disabled {  
-  background-color: #404040;  
-  color: #ffffff;  
-  cursor: not-allowed;
-  padding: 10px 20px;            /* 增加内边距，使按钮更大 */  
-  border: 2px solid transparent;  /* 添加透明边框 */  
-  border-radius: 4px;            /* 可选：圆角边框 */  
-  transition: background-color 0.3s; /* 添加过渡效果 */  
-}
-.button2:not(:disabled) {  
-  background-color: #28a745;   /* 未禁用按钮的背景色 */  
-  color: white;                 /* 未禁用按钮的文字颜色 */  
-  cursor: pointer;              /* 鼠标指针为可点击状态 */ 
-  padding: 10px 20px;            /* 增加内边距，使按钮更大 */  
-  border: 2px solid transparent;  /* 添加透明边框 */  
-  border-radius: 4px;            /* 可选：圆角边框 */  
-  transition: background-color 0.3s; /* 添加过渡效果 */ 
-}
 
-    /* ========== 新增：为表格外层加一个固定高度+滚动条容器 ========== */  
-    .table-container {  
-      max-height: 400px; /* 根据实际需求调整表格容器的最大高度*/  
-      overflow-y: auto;  /* 当内容超过最大高度时出现垂直滚动条*/  
-      border: 1px solid #ccc;  
-      margin: 16px 0;  
-    }  
-    /* 搜索区域 */  
-    .search-container {  
-      margin-bottom: 12px;  
-    }  
-    .search-container input {  
-      width: 200px;  
-      padding: 6px;  
-    }  
-    .search-container button {  
-      padding: 6px 12px;  
-      margin-left: 8px;  
-      cursor: pointer;  
-    }  
+    .button2:disabled {
+      background-color: #404040;
+      color: #ffffff;
+      cursor: not-allowed;
+      padding: 10px 20px;
+      /* 增加内边距，使按钮更大 */
+      border: 2px solid transparent;
+      /* 添加透明边框 */
+      border-radius: 4px;
+      /* 可选：圆角边框 */
+      transition: background-color 0.3s;
+      /* 添加过渡效果 */
+    }
 
+    .button2:not(:disabled) {
+      background-color: #28a745;
+      /* 未禁用按钮的背景色 */
+      color: white;
+      /* 未禁用按钮的文字颜色 */
+      cursor: pointer;
+      /* 鼠标指针为可点击状态 */
+      padding: 10px 20px;
+      /* 增加内边距，使按钮更大 */
+      border: 2px solid transparent;
+      /* 添加透明边框 */
+      border-radius: 4px;
+      /* 可选：圆角边框 */
+      transition: background-color 0.3s;
+      /* 添加过渡效果 */
+    }
+
+    /* ========== 新增：为表格外层加一个固定高度+滚动条容器 ========== */
+    .table-container {
+      max-height: 400px;
+      /* 根据实际需求调整表格容器的最大高度*/
+      overflow-y: auto;
+      /* 当内容超过最大高度时出现垂直滚动条*/
+      border: 1px solid #ccc;
+      margin: 16px 0;
+    }
+
+    /* 搜索区域 */
+    .search-container {
+      margin-bottom: 12px;
+    }
+
+    .search-container input {
+      width: 400px;
+      padding: 10px;
+    }
+
+    .search-container button {
+      background-color: #f49236;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 8px 15px;
+      margin-left: 8px;
+      cursor: pointer;
+    }
+
+    /* 购物车模态框表格 */
+    #cartTable {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    #cartTable th,
+    #cartTable td {
+      border: 1px solid #ccc;
+      padding: 12px;
+      text-align: center;
+      vertical-align: middle;
+    }
+
+    #cartTable th {
+      background-color: #f1dbb5;
+      font-weight: bold;
+    }
   </style>
 </head>
 
@@ -852,97 +907,101 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.15/jspdf.plugin.autotable.min.js"></script>
 
-  
+
   <div class="container">
     <h1>物品申领</h1>
 
-  <!-- 服装信息表格展示 -->
-  <section>
-    <div style="display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 15px; margin-top: 20px; margin-bottom: 20px;">
-      <span id="currentUsername"></span>
-      <span style="color: black; font-size: 30px; font-weight: bold;">，可用余额：<strong id="currentBalance" style="color: <%= keyongyue > 0 ? 'green' : (keyongyue < 0 ? 'red' : 'black') %>; font-size: 30px; font-weight: bold;">
-        <%= keyongyue === undefined ? '0.00' : keyongyue %>  
-        </strong>元</span>
-    </div>
-  </section>
+    <!-- 服装信息表格展示 -->
+    <section>
+      <div
+        style="display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 15px; margin-top: 20px; margin-bottom: 20px;">
+        <span id="currentUsername"></span>
+        <span style="color: black; font-size: 30px; font-weight: bold;">，可用余额：<strong id="currentBalance"
+            style="color: <%= keyongyue > 0 ? 'green' : (keyongyue < 0 ? 'red' : 'black') %>; font-size: 30px; font-weight: bold;">
+            <%= keyongyue===undefined ? '0.00' : keyongyue %>
+          </strong>元</span>
+      </div>
+    </section>
 
-  <hr>
+    <hr>
 
-  <!-- 服装信息表格展示 -->
-  <section>
-    <h2>被装信息列表</h2>
-    <div id="total-amount-container" style="margin-top: 20px; font-size: 30px; text-align: center;">
-      当前选中物品总额：<span id="total-amounttop" style="color: red; font-size: 30px; font-weight: bold;">0.00</span> 元
-    </div>
-    <div style="display: flex; justify-content: center; gap: 15px; margin-top: 20px; margin-bottom: 5px;">
-      <button id="checkoutBtntop" class="button">申领</button>
-    </div>
-<!-- 搜索框 -->  
-<div class="search-container">  
-  <input type="text" id="searchInput" placeholder="输入关键字搜索..." />  
-  <button id="searchBtn">搜索</button>  
-  <button id="resetBtn">重置</button>  
-</div>  
+    <!-- 服装信息表格展示 -->
+    <section>
+      <h2>被装信息列表</h2>
+      <!-- 搜索框 -->
+      <div class="search-container" style="text-align: center;">
+        <input type="text" id="searchInput" placeholder="输入物品编号、物品名称、类别关键字搜索..." />
+        <button id="searchBtn">搜索</button>
+        <button id="resetBtn">重置</button>
+      </div>
 
-<!-- ========== 新增：外层容器 .table-container，带滚动条 ========== -->  
-  <div class="table-container">    
-    <table id="clothingTable" class="users-table">
-      <thead>
-        <tr>
-          <th>选择</th>
-          <th>物品编号</th>
-          <th>物品名称</th>
-          <th>缩略图</th> <!-- 新增缩略图列 -->
-          <th>尺码与数量</th> <!-- 新增尺码列 -->
-          <th>单价</th>
-          <th>类别</th>
-          <th>年份</th>
-          <th>备注</th>
-          <th>申领个数</th>
-        </tr>
-      </thead>
-      <tbody>
-        <!-- 数据将通过AJAX动态加载 -->
-      </tbody>
-    </table>
+      <div id="total-amount-containertop" style="margin-top: 20px; font-size: 30px; text-align: center;">
+        当前购物车选中物品总额：<span id="total-amounttop" style="color: red; font-size: 30px; font-weight: bold;">0.00</span> 元
+      </div>
+      <div style="display: flex; justify-content: center; gap: 15px; margin-top: 20px; margin-bottom: 5px;">
+        <button id="openCartBtntop" class="button" onclick="openCartModal()">查看购物车</button>
+        <button id="checkoutBtntop" class="button">申领</button>
+      </div>
+
+
+      <!-- ========== 新增：外层容器 .table-container，带滚动条 ========== -->
+      <div class="table-container">
+        <table id="clothingTable" class="users-table">
+          <thead>
+            <tr>
+              <th>物品编号</th>
+              <th>物品名称</th>
+              <th>缩略图</th> <!-- 新增缩略图列 -->
+              <th>尺码与数量</th> <!-- 新增尺码列 -->
+              <th>单价</th>
+              <th>类别</th>
+              <th>年份</th>
+              <th>备注</th>
+              <th>申领个数</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- 数据将通过AJAX动态加载 -->
+          </tbody>
+        </table>
+      </div>
+
+      <div id="total-amount-container" style="margin-top: 20px; font-size: 30px; text-align: center;">
+        当前购物车选中物品总额：<span id="total-amount" style="color: red; font-size: 30px; font-weight: bold;">0.00</span> 元
+      </div>
+      <div style="display: flex; justify-content: center; gap: 15px; margin-top: 20px; margin-bottom: 5px;">
+        <button id="openCartBtn" class="button" onclick="openCartModal()">查看购物车</button>
+        <button id="checkoutBtn" class="button">申领</button>
+      </div>
+    </section>
+
+
+    <hr>
+
+    <!-- 服装信息表格展示 -->
+    <section>
+      <h2>申领信息列表</h2>
+      <div class="table-container">
+        <table id="ShenlingTable" class="users-table">
+          <thead>
+            <tr>
+              <th>用户姓名</th>
+              <th>订单编号</th>
+              <th>订单信息</th>
+              <th>订单金额</th>
+              <th>订单时间</th>
+              <th>审核时间</th>
+              <th>审核状态</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- 数据将通过AJAX动态加载 -->
+          </tbody>
+        </table>
+      </div>
+    </section>
   </div>
-  </section>
-  <hr>
-
-  <section>
-    <div id="total-amount-container" style="margin-top: 20px; font-size: 30px; text-align: center;">
-      当前选中物品总额：<span id="total-amount" style="color: red; font-size: 30px; font-weight: bold;">0.00</span> 元
-    </div>
-       <div style="display: flex; justify-content: center; gap: 15px; margin-top: 20px; margin-bottom: 5px;">
-      <button id="checkoutBtn" class="button">申领</button>
-    </div> 
-  </section>
-
-
-  <hr>
-
-  <!-- 服装信息表格展示 -->
-  <section>
-    <h2>申领信息列表</h2>
-    <table id="ShenlingTable" class="users-table">
-      <thead>
-        <tr>
-          <th>用户姓名</th>
-          <th>订单编号</th>
-          <th>订单信息</th>
-          <th>订单金额</th>
-          <th>订单时间</th>
-          <th>审核时间</th>
-          <th>审核状态</th>
-          <th>操作</th>
-        </tr>
-      </thead>
-      <tbody>
-        <!-- 数据将通过AJAX动态加载 -->
-      </tbody>
-    </table>
-  </section>
-</div>
 
   <!-- 模态框大图容器（默认隐藏） -->
   <div id="ShenlinglargeImageModal" class="modal-background modal-background-hidden" onclick="closeLargeImage()">
@@ -950,8 +1009,51 @@
   </div>
 
 
+  <!-- ========== 新增：购物车模态框 ========== -->
+  <div class="modal" id="cartModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 style="font-family: Arial, sans-serif; font-size: 24px; color: #070707;">购物车</h2>
+        <button class="button" onclick="closeCartModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <table id="cartTable">
+          <thead>
+            <tr>
+              <th>物品编号</th>
+              <th>物品名称</th>
+              <th>尺码</th>
+              <th>单价</th>
+              <th>数量</th>
+              <th>总价</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- JS 动态加载购物车内容 -->
+          </tbody>
+        </table>
+        <div id="total-amount-containercart" style="margin-top: 20px; font-size: 30px; text-align: center;">
+          当前购物车选中物品总额：<span id="total-amountcart" style="color: red; font-size: 30px; font-weight: bold;">0.00</span> 元
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="clearCartBtn" class="btn-delete">清空购物车</button>
+        <button class="btn-change" onclick="closeCartModal()">取消</button>
+        <button id="checkoutCartBtn" class="btn-submit">申领</button>
+      </div>
+    </div>
+  </div>
+
+
 
   <script>
+
+    // 全局数组：物品数据 & 过滤后数据  
+    let clothingDataAll = [];
+    let clothingDataFiltered = [];
+
+    // ========== 新增：购物车数组 ==========   
+    let cartItems = [];
 
     // 页面加载时获取物品列表  
     document.addEventListener('DOMContentLoaded', function () {
@@ -978,97 +1080,56 @@
             // 存在记录，自动填充表单  
             const data = result.data;
             if (currentUser && data.name) {
-              welcomeEl.innerHTML =  `<span style="color: black; font-size: 30px; font-weight: bold;">当前用户：</span><span style="color: red; font-size: 30px; font-weight: bold;">${data.name}</span>`;
-            }else{
-              welcomeEl.innerHTML =  `<span style="color: black; font-size: 30px; font-weight: bold;">当前用户：</span><span style="color: red; font-size: 30px; font-weight: bold;">未登录</span>`;
+              welcomeEl.innerHTML = `<span style="color: black; font-size: 30px; font-weight: bold;">当前用户：</span><span style="color: red; font-size: 30px; font-weight: bold;">${data.name}</span>`;
+            } else {
+              welcomeEl.innerHTML = `<span style="color: black; font-size: 30px; font-weight: bold;">当前用户：</span><span style="color: red; font-size: 30px; font-weight: bold;">未登录</span>`;
             }
           }
         });
 
-      let totalAmount = 0; // 用于存储当前总额  
+      const searchBtn = document.getElementById('searchBtn');
+      const resetBtn = document.getElementById('resetBtn');
+      const searchInput = document.getElementById('searchInput');
+
+      if (searchBtn) {
+        searchBtn.addEventListener('click', handleSearch);
+      }
+      if (resetBtn) {
+        resetBtn.addEventListener('click', handleReset);
+      }
+
+      // 初始化 购物车 相关按钮  
+      document.getElementById('clearCartBtn').addEventListener('click', clearCart);
+      document.getElementById('checkoutCartBtn').addEventListener('click', handleCheckout);
+
+
+      function handleSearch() {
+        const val = searchInput.value.trim().toLowerCase();
+        // 使用 clothingDataAll 做搜索  
+        clothingDataFiltered = clothingDataAll.filter(item => {
+          const numberMatch = String(item.itemNumber || '').toLowerCase().includes(val);
+          const nameMatch = String(item.itemName || '').toLowerCase().includes(val);
+          const catMatch = String(item.category || '').toLowerCase().includes(val);
+          return numberMatch || nameMatch || catMatch;
+        });
+        renderClothingTable(clothingDataFiltered);
+      }
+
+      function handleReset() {
+        searchInput.value = '';
+        clothingDataFiltered = clothingDataAll;
+        renderClothingTable(clothingDataAll);
+      }
+
 
       const container = document.getElementById('clothingTable');
       const totalAmountElement = document.getElementById('total-amount');    // 总额展示区域
       const totalAmountElementtop = document.getElementById('total-amounttop');    // 总额展示区域
-
-
-      document.getElementById('clothingTable').addEventListener('click', function(e) {  
-    if (e.target.classList.contains('qty-decrease')) {  
-      const itemNumber = e.target.dataset.number;  
-      const quantityInput = document.getElementById(`quantity-${itemNumber}`);  
-      const currentValue = parseInt(quantityInput.value) || 1;  
-      if (currentValue > 1) {  
-        quantityInput.value = currentValue - 1;  
-      }  
-      // 如果需要更新总额，则调用更新方法  
-      updateTotalAmount();  
-    } else if (e.target.classList.contains('qty-increase')) {  
-      const itemNumber = e.target.dataset.number;  
-      const quantityInput = document.getElementById(`quantity-${itemNumber}`);  
-      const currentValue = parseInt(quantityInput.value) || 1;  
-      quantityInput.value = currentValue + 1;  
-      // 如果需要更新总额，则调用更新方法  
-      updateTotalAmount();  
-    }  
-  });  
-
-
-      // 监听所有子元素的 change 事件  
-      container.addEventListener('change', function (event) {
-        const target = event.target;
-        // 如果是产品选择框或尺码选择框，则执行你的逻辑  
-        if (target.classList.contains('item-checkbox') || target.classList.contains('size-select') || (target.tagName === 'INPUT' && target.type === 'number')) {
-          updateTotalAmount();  // 计算总金额  
-        }
-      });
-
-
-
-
-
-      // 更新总额的方法  
-      function updateTotalAmount() {
-        let newTotal = 0;
-
-        const productCheckboxes = container.querySelectorAll('.item-checkbox'); // 产品选择框 
-
-        // 遍历所有产品选择框  
-        productCheckboxes.forEach((productCheckbox) => {
-          if (productCheckbox.checked) { // 产品选择框被选中  
-            const itemNumber = productCheckbox.dataset.itemnumber; // 获取产品编号            
-            const productPrice = parseFloat(productCheckbox.dataset.price); // 获取产品价格
-
-            // 找到对应的下拉框  
-            const sizeSelect = container.querySelector(`.size-select[data-number="${itemNumber}"]`);
-
-            if (sizeSelect) {  
-              const selectedOption = sizeSelect.options[sizeSelect.selectedIndex];  
-              // 该尺码对应的可用库存  
-              const maxAllowedQuantity = parseFloat(selectedOption.getAttribute('data-quantity'));
-              const sizeQuantity_str = document.getElementById(`quantity-${itemNumber}`);
-              const sizeQuantity = Number(sizeQuantity_str.value);  // 将输入值转换为数字
-
-              // 校验申领个数是否满足条件：1 到所有尺寸库存的最小值  
-              if (sizeQuantity < 1 || sizeQuantity > maxAllowedQuantity) {
-                alert(
-                  `申领个数必须在 1 到当前库存 ${maxAllowedQuantity} 范围内！`
-                );
-                return; // 退出当前循环，避免继续计算总金额  
-              }
-
-                newTotal += productPrice * sizeQuantity; // 计算并增加总额  
-            }
-          }
-        });
-
-        // 更新总额  
-        totalAmount = newTotal;
-        totalAmountElement.textContent = totalAmount.toFixed(2); // 保留两位小数
-        totalAmountElementtop.textContent = totalAmount.toFixed(2); // 保留两位小数  
-      }    
+      const totalAmountElementcart = document.getElementById('total-amountcart');    // 总额展示区域
 
       document.getElementById('checkoutBtn').addEventListener('click', handleCheckout);
       document.getElementById('checkoutBtntop').addEventListener('click', handleCheckout);
+      document.getElementById('checkoutBtncart').addEventListener('click', handleCheckout);
 
       function handleCheckout() {
         // 读取当前余额  
@@ -1076,209 +1137,168 @@
         let currentBalance = parseFloat(balanceSpan.textContent.trim()) || 0;
         const userId = currentUser.username;
 
-        // 收集所有选中的物品  
-        const selectedItems = [];
-        const checkboxes = document.querySelectorAll('.item-checkbox:checked');
+  // 2. 读取购物车数组中的所有选中物品（这里假设你在全局定义了 cartItems）  
+  //    如果你只是将商品的数量和尺码等信息暂存在 cartItems，直接在这里用即可。  
+  if (!cartItems || cartItems.length === 0) {  
+    alert('购物车为空，请先添加物品！');  
+    return;  
+  }  
 
-        checkboxes.forEach(checkbox => {
-          const itemNumber = checkbox.getAttribute('data-itemnumber'); // 修正大小写  
-          const itemName = checkbox.getAttribute('data-itemname');
-          const price = parseFloat(checkbox.getAttribute('data-price'));
+  // 3. 计算总金额（或如果已有 totalAmount 变量实时更新，也可直接用）  
+  // **直接使用前面计算好的总金额**  
+  const totalCost = totalAmount;
 
-          // 找到对应的下拉框  
-          const sizeSelect = checkbox.closest('tr').querySelector('.size-select');  
-          if (!sizeSelect) return;  
-
-          const selectedOption = sizeSelect.options[sizeSelect.selectedIndex];  
-          const specification = selectedOption.value; // 尺码  
-          const maxQuantity = parseFloat(selectedOption.getAttribute('data-quantity'));  
-
-          // 获取用户输入的数量  
-          const quantityInput = document.getElementById(`quantity-${itemNumber}`);
-          const quantity = parseFloat(quantityInput.value);
-
-          // 校验数量是否有效  
-          if (quantity <= 0 || quantity > maxQuantity) {
-              alert(`物品 [${itemName}] 尺码 [${specification}] 的申领数量 [${quantity}] 超出有效范围！`);
-              return;
-          }
-
-          selectedItems.push({
-              itemNumber,
-              itemName,
-              specification,
-              price,
-              quantity
-            });
-          });
-
-        // 如果没有选中任何物品  
-        if (selectedItems.length === 0) {
-          alert('请先勾选要申领的物品');
-          return;
-        }
-
-        // **直接使用前面计算好的总金额**  
-        const totalCost = totalAmount;
-
-        // 校验余额是否足够  
-        if (totalCost > currentBalance) {
-          alert(`所选物品合计 ${totalCost} 元，超过您的可用余额 ${currentBalance} 元，无法结算！`);
-          return;
-        }
+  // 4. 校验余额是否足够  
+  if (totalCost > currentBalance) {  
+    alert(`所选物品合计 ${totalCost.toFixed(2)} 元，超过您的可用余额 ${currentBalance} 元，无法结算！`);  
+    return;  
+  }  
 
         // **生成订单时间和订单号**  
         const orderTime1 = getOrderTime(); // 生成订单时间
         const orderTime = convertToDate(orderTime1); // 转换为 Date 对象
         const orderNumber = generateOrderNumber(orderTime1); // 生成订单号  
 
-      // 从 EJS 变量中获取当前登录用户的用户名  
-      const username = currentUser.username; // 假设已从后端传递到全局变量
-      let user_name = '';
-      // 发起请求查询  
-      fetch(`/gerenxinxiguanli/fetch?number=${username}`)
-        .then(res => res.json())
-        .then(result => {
-          if (result.success) {
-            // 存在记录，自动填充表单  
-            const data = result.data;
-            user_name = data.name
-
-
-                    // 向后端提交数据   
-        const shenlingData = {
-          userId: userId,          
-          userName: user_name,
-          Number: orderNumber,
-          Info: JSON.stringify(selectedItems),
-          Cost: totalCost,
-          Time: orderTime.getTime(),
-          ShenheTime: 0,
-          shenhezhuangtai: "未审核"
-        };
-
-
-        fetch('/shenling/save', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(shenlingData)
-        })
+        // 从 EJS 变量中获取当前登录用户的用户名  
+        const username = currentUser.username; // 假设已从后端传递到全局变量
+        let user_name = '';
+        // 发起请求查询  
+        fetch(`/gerenxinxiguanli/fetch?number=${username}`)
           .then(res => res.json())
           .then(result => {
             if (result.success) {
-              alert('申领成功！');
-              // 更新前端余额  
-              document.getElementById('currentBalance').textContent = result.newBalance.toFixed(2);
-              document.getElementById('total-amount').textContent = 0.00;
-              document.getElementById('total-amounttop').textContent = 0.00;
-              // 清空勾选  
-              checkboxes.forEach(checkbox => checkbox.checked = false);
-              // 刷新申领列表
-              loadClothing()
-              loadShenling();
-            } else {
-              alert('申领失败: ' + (result.error || '未知错误'));
+              // 存在记录，自动填充表单  
+              const data = result.data;
+              user_name = data.name
+
+
+              // 向后端提交数据   
+              const shenlingData = {
+                userId: userId,
+                userName: user_name,
+                Number: orderNumber,
+                Info: JSON.stringify(cartItems),
+                Cost: totalCost,
+                Time: orderTime.getTime(),
+                ShenheTime: 0,
+                shenhezhuangtai: "未审核"
+              };
+
+
+              fetch('/shenling/save', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(shenlingData)
+              })
+                .then(res => res.json())
+                .then(result => {
+                  if (result.success) {
+                    alert('申领成功！');
+                    // 更新前端余额  
+                    document.getElementById('currentBalance').textContent = result.newBalance.toFixed(2);
+                    document.getElementById('total-amount').textContent = 0.00;
+                    document.getElementById('total-amounttop').textContent = 0.00;
+                    document.getElementById('total-amountcart').textContent = 0.00;
+                    // 刷新申领列表
+                    loadClothing();
+                    loadShenling();
+                    clearCart2();
+                  } else {
+                    alert('申领失败: ' + (result.error || '未知错误'));
+                  }
+                })
+                .catch(err => {
+                  console.error('结算请求失败:', err);
+                  alert('结算请求异常: ' + err);
+                  loadClothing()
+                  loadShenling();
+                });
             }
-          })
-          .catch(err => {
-            console.error('结算请求失败:', err);
-            alert('结算请求异常: ' + err);
           });
-          }
-        });
 
       }
-
     });
 
-      // 生成订单时间（格式：YYYYMMDDHHMMSS）  
-      function getOrderTime() {
-        const now = new Date();
-        const year = now.getFullYear();
-        const month = String(now.getMonth() + 1).padStart(2, '0'); // 月份从 0 开始，需要加 1  
-        const day = String(now.getDate()).padStart(2, '0');
-        const hours = String(now.getHours()).padStart(2, '0');
-        const minutes = String(now.getMinutes()).padStart(2, '0');
-        const seconds = String(now.getSeconds()).padStart(2, '0');
+    // 生成订单时间（格式：YYYYMMDDHHMMSS）  
+    function getOrderTime() {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0'); // 月份从 0 开始，需要加 1  
+      const day = String(now.getDate()).padStart(2, '0');
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const seconds = String(now.getSeconds()).padStart(2, '0');
 
-        return `${year}${month}${day}${hours}${minutes}${seconds}`;
+      return `${year}${month}${day}${hours}${minutes}${seconds}`;
+    }
+
+    // 将生成的订单时间转换为 Date 对象  
+    function convertToDate(orderTime) {
+      const year = parseInt(orderTime.slice(0, 4), 10);
+      const month = parseInt(orderTime.slice(4, 6), 10) - 1; // 月份从 0 开始  
+      const day = parseInt(orderTime.slice(6, 8), 10);
+      const hours = parseInt(orderTime.slice(8, 10), 10);
+      const minutes = parseInt(orderTime.slice(10, 12), 10);
+      const seconds = parseInt(orderTime.slice(12, 14), 10);
+
+      return new Date(year, month, day, hours, minutes, seconds);
+    }
+
+    // 格式化日期为常规格式  
+    function formatDate(date) {
+      const year = date.getFullYear();
+      const month = date.getMonth() + 1; // 月份从 0 开始  
+      const day = date.getDate();
+      const hours = String(date.getHours()).padStart(2, '0'); // 补零  
+      const minutes = String(date.getMinutes()).padStart(2, '0'); // 补零  
+      const seconds = String(date.getSeconds()).padStart(2, '0'); // 补零  
+
+      return `${year}年${month}月${day}日${hours}-${minutes}-${seconds}`; // 返回格式化后的字符串  
+    }
+
+    // 生成随机订单号（格式：时间戳 + 随机 6 位字符串）  
+    function generateOrderNumber(orderTime) {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+      let randomString = '';
+      for (let i = 0; i < 6; i++) {
+        randomString += chars.charAt(Math.floor(Math.random() * chars.length));
       }
-
-      // 将生成的订单时间转换为 Date 对象  
-      function convertToDate(orderTime) {  
-    const year = parseInt(orderTime.slice(0, 4), 10);  
-    const month = parseInt(orderTime.slice(4, 6), 10) - 1; // 月份从 0 开始  
-    const day = parseInt(orderTime.slice(6, 8), 10);  
-    const hours = parseInt(orderTime.slice(8, 10), 10);  
-    const minutes = parseInt(orderTime.slice(10, 12), 10);  
-    const seconds = parseInt(orderTime.slice(12, 14), 10);  
-
-    return new Date(year, month, day, hours, minutes, seconds);  
-}
-
-// 格式化日期为常规格式  
-function formatDate(date) {  
-    const year = date.getFullYear();  
-    const month = date.getMonth() + 1; // 月份从 0 开始  
-    const day = date.getDate();  
-    const hours = String(date.getHours()).padStart(2, '0'); // 补零  
-    const minutes = String(date.getMinutes()).padStart(2, '0'); // 补零  
-    const seconds = String(date.getSeconds()).padStart(2, '0'); // 补零  
-
-    return `${year}年${month}月${day}日${hours}-${minutes}-${seconds}`; // 返回格式化后的字符串  
-}  
-
-      // 生成随机订单号（格式：时间戳 + 随机 6 位字符串）  
-      function generateOrderNumber(orderTime) {
-        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-        let randomString = '';
-        for (let i = 0; i < 6; i++) {
-          randomString += chars.charAt(Math.floor(Math.random() * chars.length));
-        }
-        return `${orderTime}${randomString}`;
-      }
-
+      return `${orderTime}${randomString}`;
+    }
 
     // 加载服装数据并填充表格  
     function loadClothing() {
       fetch('/clothing/list') // 获取物品数据的 API  
         .then(response => response.json())
         .then(data => {
-          const tbody = document.querySelector('#clothingTable tbody');
-          tbody.innerHTML = ''; // 清空当前表格内容  
-
-          // 当前登录用户信息来源：前端变量  
-          const userId = currentUser.username; // 假设已从后端传递到全局变量  
-
-          // 遍历物品数据，生成每行表格  
-          data.forEach(item => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = generateTableRow(item, userId); // 传递 userId  
-            tbody.appendChild(tr);
-          });
+          // 1. 全量数据存到 clothingDataAll  
+          clothingDataAll = data;
+          // 2. 默认情况，搜索前先显示所有  
+          clothingDataFiltered = data;
+          // 3. 调用统一的渲染函数  
+          renderClothingTable(clothingDataAll);
         })
         .catch(err => console.error(err));
     }
 
+    /* ========== 新增函数：渲染指定数组到表格 ========== */
+    function renderClothingTable(dataArray) {
+      const tbody = document.querySelector('#clothingTable tbody');
+      tbody.innerHTML = ''; // 清空当前表格内容  
+      // 当前登录用户信息来源：前端变量  
+      const userId = currentUser.username;
+      // 遍历物品数据，生成每行表格
+      dataArray.forEach(item => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = generateTableRow(item, userId);
+        tbody.appendChild(tr);
+      });
+    }
 
     // 生成表格行的 HTML  
     function generateTableRow(item, userId) {
       return `  
     <tr>  
-      <td>  
-        <input   
-          type="checkbox"   
-          class="item-checkbox"  
-          data-itemnumber="${item.itemNumber}"  
-          data-itemname="${item.itemName}"  
-          data-itempic="${item.itemPic}"   
-          data-itemsizes="${JSON.stringify(item.sizes || [])}"  
-          data-price="${item.price || ''}"  
-          data-category="${item.category || ''}"   
-          data-warehouseLocation="${item.warehouseLocation || ''}"   
-          data-remarks="${item.remarks || ''}"   
-        />  
-      </td>  
       <td>${item.itemNumber}</td>  
       <td>${item.itemName}</td>  
       <td>  
@@ -1297,10 +1317,10 @@ function formatDate(date) {
       <td>${item.price || ''}</td>  
       <td>${item.category || ''}</td>  
       <td>${item.warehouseLocation || ''}</td>  
-      <td>${item.remarks || ''}</td>  
+      <td>${item.remarks || ''}</td> 
 <td>  
   <div style="display: flex; align-items: center; gap: 8px;">  
-    <button type="button" class="qty-decrease" data-number="${item.itemNumber}" style="  
+    <button type="button" class="qty-decrease" onclick="changeQuantity('${item.itemNumber}', -1)" style="  
         width: 40px;  
         height: 40px;  
         font-size: 20px;       /* 字体大小 */  
@@ -1319,7 +1339,7 @@ function formatDate(date) {
       value="1"  
       style="width: 60px; text-align: center;"  
     />  
-    <button type="button" class="qty-increase" data-number="${item.itemNumber}" style="  
+    <button type="button" class="qty-increase" onclick="changeQuantity('${item.itemNumber}', 1)" style="  
         width: 40px;  
         height: 40px;  
         font-size: 20px;  
@@ -1331,12 +1351,142 @@ function formatDate(date) {
         cursor: pointer;  
       ">+</button>  
   </div>  
+    <!-- 新增 加入购物车按钮 -->  
+            <button  
+              type="button"  
+              class="button"  
+              style="background-color: #f49236;"  
+              onclick="addToCart('${item.itemNumber}', '${item.itemName}', ${item.price || 0})"  
+            >  
+              加入购物车  
+            </button>    
+  </div>  
 </td>  
     </tr>  
   `;
     }
 
+    // ========== 修改数量 ==========   
+    function changeQuantity(itemNumber, delta) {
+      const quantityInput = document.getElementById(`quantity-${itemNumber}`);
+      let currentValue = parseInt(quantityInput.value) || 1;
+      currentValue += delta;
+      if (currentValue < 1) currentValue = 1;
+      quantityInput.value = currentValue;
+    }
 
+    // 全局变量：存储总价  
+    let totalAmount = 0;
+    // ========== 加入购物车 ==========   
+    function addToCart(itemNumber, itemName, price) {
+
+      const container = document.getElementById('clothingTable');
+      // 找到对应的下拉框  
+      const sizeSelect = container.querySelector(`.size-select[data-number="${itemNumber}"]`);
+      if (sizeSelect) {
+        const selectedOption = sizeSelect.options[sizeSelect.selectedIndex];
+        const maxQuantity = parseFloat(selectedOption.getAttribute('data-quantity'));
+        const specification = selectedOption.value;
+        const quantityInput = document.getElementById(`quantity-${itemNumber}`);
+        const quantity = parseInt(quantityInput.value) || 1;
+
+        if (quantity < 1 || quantity > maxQuantity) {
+          alert(`申领个数必须在 1~${maxQuantity} 之间！`);
+          return;
+        }
+        // 检查购物车内是否已有相同(商品+尺码)，如果有，就叠加数量  
+        const existingIndex = cartItems.findIndex(
+          (cartItem) =>
+            cartItem.itemNumber === itemNumber && cartItem.specification === specification
+        );
+        if (existingIndex > -1) {
+          // 已存在则叠加数量  
+          cartItems[existingIndex].quantity += quantity;
+          cartItems[existingIndex].total = cartItems[existingIndex].quantity * cartItems[existingIndex].price;
+        } else {
+          // 否则插入新的  
+          cartItems.push({
+            itemNumber,
+            itemName,
+            specification,
+            price,
+            quantity,
+            total: quantity * price
+          });
+        }
+        alert(`已加入购物车：\n商品：${itemName}\n尺码：${specification}\n数量：${quantity}`);
+        // 累加总金额  
+        totalAmount += price * quantity;
+        // 更新页面上显示的总价  
+        const totalAmountElement = document.getElementById('total-amount');
+        const totalAmountElementtop = document.getElementById('total-amounttop');
+        const totalAmountElementcart = document.getElementById('total-amountcart');
+        totalAmountElement.textContent = totalAmount.toFixed(2);
+        totalAmountElementtop.textContent = totalAmount.toFixed(2);
+        totalAmountElementcart.textContent = totalAmount.toFixed(2);
+      }
+    }
+
+
+    // ========== 打开购物车模态框 ==========   
+    function openCartModal() {
+      const cartModal = document.getElementById('cartModal');
+      cartModal.classList.add('active');
+      renderCartTable();
+    }
+
+    // 关闭  
+    function closeCartModal() {
+      const cartModal = document.getElementById('cartModal');
+      cartModal.classList.remove('active');
+    }
+
+    // ========== 渲染购物车 ==========   
+    function renderCartTable() {
+      const tbody = document.querySelector('#cartTable tbody');
+      tbody.innerHTML = '';
+      cartItems.forEach((item, index) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `  
+          <td>${item.itemNumber}</td>  
+          <td>${item.itemName}</td>  
+          <td>${item.specification}</td>  
+          <td>${item.price}</td>  
+          <td>${item.quantity}</td>
+          <td>${item.total}</td>  
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // ========== 清空购物车 ==========   
+    function clearCart() {
+      if (!confirm('确定要清空购物车吗？')) return;
+      cartItems = [];
+      renderCartTable();
+        // 更新页面上显示的总价
+        totalAmount = 0;  
+        const totalAmountElement = document.getElementById('total-amount');
+        const totalAmountElementtop = document.getElementById('total-amounttop');
+        const totalAmountElementcart = document.getElementById('total-amountcart');
+        totalAmountElement.textContent = totalAmount.toFixed(2);
+        totalAmountElementtop.textContent = totalAmount.toFixed(2);
+        totalAmountElementcart.textContent = totalAmount.toFixed(2);
+    }
+
+    // ========== 强制清空购物车 ==========   
+    function clearCart2() {
+      cartItems = [];
+      renderCartTable();
+        // 更新页面上显示的总价
+        totalAmount = 0;  
+        const totalAmountElement = document.getElementById('total-amount');
+        const totalAmountElementtop = document.getElementById('total-amounttop');
+        const totalAmountElementcart = document.getElementById('total-amountcart');
+        totalAmountElement.textContent = totalAmount.toFixed(2);
+        totalAmountElementtop.textContent = totalAmount.toFixed(2);
+        totalAmountElementcart.textContent = totalAmount.toFixed(2);
+    }
     // 双击缩略图显示大图  
     function showLargeImage(src) {
       const modal = document.getElementById('ShenlinglargeImageModal'); // 获取模态框  
@@ -1400,23 +1550,23 @@ function formatDate(date) {
       }).join('<br><br>'); // 用两个换行符分隔每件物品的信息
 
       // 判断是否需要禁用按钮  
-      const isDisabled = item.shenhezhuangtai === '已审核' || item.shenhezhuangtai.startsWith('未通过') ? 'disabled' : '';  
+      const isDisabled = item.shenhezhuangtai === '已审核' || item.shenhezhuangtai.startsWith('未通过') ? 'disabled' : '';
 
       // 使用格式化函数
       // 创建 Date 对象
-      
-      
-    // 显示时格式化输出  
+
+
+      // 显示时格式化输出  
       const date1 = new Date(item.Time);
       const formattedDate1 = date1.toLocaleString('zh-CN'); // 根据需要格式化为字符串
-      
+
       let formattedDate2;
 
-      if (item.ShenheTime && item.ShenheTime!== 0){
-        const date2 = new Date(item.ShenheTime);  
+      if (item.ShenheTime && item.ShenheTime !== 0) {
+        const date2 = new Date(item.ShenheTime);
         formattedDate2 = date2.toLocaleString('zh-CN'); // 根据需要格式化为字符串
-      }else{
-        formattedDate2 ='审核中，请稍后！';
+      } else {
+        formattedDate2 = '审核中，请稍后！';
       };
 
       return `  
@@ -1436,7 +1586,7 @@ function formatDate(date) {
     }
 
     function cancelOrder(orderId, price) {
-           
+
       if (!confirm('确定要取消此订单吗？')) return;
 
       fetch(`/shenling/${orderId}`, {
