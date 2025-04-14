@@ -1734,7 +1734,7 @@ function BatchReject() {
       const doc = new jsPDF();
 
       // 加载字体  
-      const fontPath = '/fonts/SourceHanSans-Regular.ttf'; // 确保字体文件路径正确  
+      const fontPath = '/fonts/Simsun.ttf'; // 确保字体文件路径正确  
       const fontRes = await fetch(fontPath);
       if (!fontRes.ok) throw new Error('字体文件未找到');
 
@@ -1744,9 +1744,9 @@ function BatchReject() {
       const fontBase64 = arrayBufferToBase64(fontBlob); // 转换为 Base64 
 
       // 添加字体到 jsPDF  
-      doc.addFileToVFS('SourceHanSans-Regular.ttf', fontBase64);
-      doc.addFont('SourceHanSans-Regular.ttf', 'SourceHanSans', 'normal');
-      doc.setFont('SourceHanSans');
+      doc.addFileToVFS('Simsun.ttf', fontBase64);
+      doc.addFont('Simsun.ttf', 'Simsun', 'normal');
+      doc.setFont('Simsun');
 
 
       // 设置标题  
@@ -1839,7 +1839,7 @@ function BatchReject() {
         },
         margin: { top: 30 },
         styles: {
-          font: "SourceHanSans",
+          font: "Simsun",
           fontSize: 12,
           cellPadding: 3,
           valign: 'middle',
@@ -1870,7 +1870,7 @@ function BatchReject() {
       const pageCount = doc.internal.getNumberOfPages();
       for (let i = 1; i <= pageCount; i++) {
         // 确保设置字体后再添加日期文本  
-        doc.setFont('SourceHanSans');
+        doc.setFont('Simsun');
         doc.setPage(i);
         doc.setFontSize(10);
         doc.text(`第${i}页/共${pageCount}页`, 105, doc.internal.pageSize.height - 10, { align: 'center' });
@@ -1878,7 +1878,7 @@ function BatchReject() {
         // 只在最后一页的表格下方添加日期和打印人信息  
         if (i === pageCount) {
           // 确保设置字体  
-          doc.setFont('SourceHanSans');
+          doc.setFont('Simsun');
           doc.setFontSize(10);
 
           // 在表格下方添加日期和打印人信息  

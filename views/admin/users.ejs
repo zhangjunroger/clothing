@@ -11,6 +11,80 @@
 </head>
 
 <style>
+      /* 全局容器 */
+  .container {
+    width: 80%;
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 10px 0;
+    /* 可以根据需要添加背景或阴影 */
+  }
+
+  .container h1 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 2.0rem;
+    font-size: 50px;
+  }
+
+  .container h2 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 1.5rem;
+    font-size: 30px;
+  }
+
+
+  /* 三个 section 的通用样式 */
+  section {
+    background-color: #fff;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  }
+
+  /* Excel模板上传表单 & 搜索表单基础样式 */
+  form {
+    display: flex;
+    flex-wrap: wrap;
+    /* 当屏幕宽度较小，自动换行 */
+    align-items: center;
+    gap: 0.5rem;
+    /* 表单元素之间的间距 */
+  }
+
+  label {
+    font-weight: 600;
+    margin-right: 0.5rem;
+  }
+
+  input[type="text"],
+  input[type="number"],
+  input[type="file"],
+  select {
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    flex: 1;
+    /* 让输入框或选择框能够灵活扩展宽度 */
+    min-width: 100px;
+    /* 避免过小 */
+  }
+
+  input[type="file"] {
+    flex: none;
+    /* 上传按钮大小通常固定 */
+  }
+
+  /* 分割线美化 */
+  hr {
+    border: none;
+    border-top: 1px solid #ddd;
+    margin: 2rem 0;
+  }
     /* 模态窗口基础样式 */
     .modal {
         display: none;
@@ -160,6 +234,8 @@
 <body>
     <div class="container">
         <h1>用户管理（管理员 Admin 权限）</h1>
+        <section>
+        <h2>已注册用户信息列表</h2>           
         <div class="table-container">
 
         <!-- 用户列表 -->
@@ -173,14 +249,18 @@
             <button id="exportExcelBtn" class="btn-action">导出Excel</button>
             <button id="printPdfBtn" class="btn-action">打印PDF</button>
         </div>
+    </section>
+
+    <hr>
 
         <!-- 注册新用户 -->
+        <section>
         <div class="register-form">
             <h2>注册新用户</h2>
             <form id="registerForm">
                 <input type="text" id="username" placeholder="用户名" required>
                 <input type="password" id="password" placeholder="密码" required>
-                <input type="email" id="email" placeholder="邮箱" required>
+                <input type="email" id="email" placeholder="邮箱" hidden>
                 <label for="role">角色：</label>
                 <select id="role" name="role" required>
                     <option value="user">普通用户</option>
@@ -190,6 +270,7 @@
             </form>
         </div>
     </div>
+</section>
 
     <!-- 密码修改模态框 -->
     <div id="passwordModal" class="modal">
@@ -226,7 +307,6 @@
     </script>
     <script>
         async function loadUsers() {
-            console.log('loadUsers 函数已被调用');
             try {
                 const response = await fetch('/admin/users-list');
 
@@ -246,6 +326,7 @@
 
         // 动态展示用户列表  
         function displayUsers(users) {
+
             const usersListDiv = document.getElementById('usersList');
 
             if (users.length === 0) {
@@ -262,7 +343,7 @@
             thead.innerHTML = `  
             <tr>  
                 <th>用户名</th>  
-                <th>邮箱</th> 
+                <th>姓名</th> 
                 <th>权限</th>
                 <th>注册时间</th>  
                 <th>操作</th>  
@@ -271,11 +352,12 @@
             table.appendChild(thead);
 
             const tbody = document.createElement('tbody');
+
             users.forEach(user => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `  
                 <td>${user.username}</td>  
-                <td>${user.email}</td>
+                <td>${user.name}</td>
                 <td>${user.role}</td>  
                 <td>${new Date(user.createdAt).toLocaleString()}</td>  
                 <td>  
@@ -418,7 +500,7 @@
 
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
-            const email = document.getElementById('email').value;
+            const email = generateEmail();
             const role = document.getElementById('role').value;
             try {
                 const response = await fetch('/admin/users', {
@@ -440,7 +522,15 @@
                 alert(`注册用户失败: ${error.message}`);
             }
         });
-
+        // 生成随机邮箱号  
+        function generateEmail() {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        let randomString = '';
+        for (let i = 0; i < 12; i++) {
+          randomString += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        return `${randomString}@163.com`;
+      }
 
         // 在DOM加载完成后设置事件监听器  
         document.addEventListener('DOMContentLoaded', () => {
@@ -472,10 +562,10 @@
                 // 准备数据  
                 const data = [
                     ["已注册用户信息", "", "", ""],
-                    ["用户名", "邮箱", "权限", "注册日期"],
+                    ["用户名", "姓名", "权限", "注册日期"],
                     ...users.map(user => [
                         user.username,
-                        user.email,
+                        user.name,
                         user.role,
                         new Date(user.createdAt).toLocaleString()
                     ])
@@ -487,7 +577,7 @@
                 // 设置列宽  
                 worksheet['!cols'] = [
                     { wch: 20 }, // 用户名  
-                    { wch: 20 }, // 邮箱  
+                    { wch: 20 }, // 姓名  
                     { wch: 10 }, // 权限  
                     { wch: 20 }  // 注册日期  
                 ];
@@ -599,7 +689,7 @@
                 });
 
                 // 加载字体  
-                const fontPath = '/fonts/SourceHanSans-Regular.ttf'; // 确保字体文件路径正确  
+                const fontPath = '/fonts/Simsun.ttf'; // 确保字体文件路径正确  
                 const fontRes = await fetch(fontPath);
                 if (!fontRes.ok) throw new Error('字体文件未找到');
 
@@ -609,9 +699,9 @@
                 const fontBase64 = arrayBufferToBase64(fontBlob); // 转换为 Base64 
 
                 // 添加字体到 jsPDF  
-                doc.addFileToVFS('SourceHanSans-Regular.ttf', fontBase64);
-                doc.addFont('SourceHanSans-Regular.ttf', 'SourceHanSans', 'normal');
-                doc.setFont('SourceHanSans');
+                doc.addFileToVFS('Simsun.ttf', fontBase64);
+                doc.addFont('Simsun.ttf', 'Simsun', 'normal');
+                doc.setFont('Simsun');
 
                 // 创建格式化日期时间的函数  
                 function formatDateTime(dateString) {
@@ -633,7 +723,7 @@
                 const formattedUsers = users.map(user => {
                     return [
                         user.username,
-                        user.email,
+                        user.name,
                         user.role,
                         formatDateTime(user.createdAt) // 使用格式化函数获取注册时间  
                     ];
@@ -641,11 +731,11 @@
 
                 // 调用 autoTable 创建表格  
                 doc.autoTable({
-                    head: [['用户名', '邮箱', '权限', '注册时间']],
+                    head: [['用户名', '姓名', '权限', '注册时间']],
                     body: formattedUsers,
                     theme: 'striped',
                     styles: {
-                        font: "SourceHanSans",
+                        font: "Simsun",
                         fontSize: 10,
                         cellPadding: 3,
                         valign: 'middle',

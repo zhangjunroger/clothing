@@ -145,5 +145,40 @@ router.post('/gerenxinxiguanli/add', async (req, res) => {
     });
   }
 });
+
+
+// 更新 _User 表中的 name 字段  
+router.post('/gerenxinxiguanli/updateUserRealName', async (req, res) => {  
+  try {  
+    const { userId, realName } = req.body;    
+    if (!userId || !realName) {  
+      return res.status(400).json({  
+        success: false,  
+        error: '信息不全：需要 userId 和 realName'  
+      });  
+    }  
+    // 1. 获取 _User 对象  
+    const userObj = AV.Object.createWithoutData('_User', userId);  
+
+    // 2. 设置 name 字段  
+    userObj.set('name', String(realName));  
+
+    // 3. 保存到数据库  
+    await userObj.save();  
+
+    // 4. 返回结果  
+    return res.json({  
+      success: true,  
+      message: '姓名已更新到 _User 表'  
+    });  
+  } catch (err) {  
+    console.error('更新 _User.name 失败:', err);  
+    res.status(500).json({  
+      success: false,  
+      error: '服务器异常，更新失败'  
+    });  
+  }  
+});  
+
 // 导出路由  
 module.exports = router;  

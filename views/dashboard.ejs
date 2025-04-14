@@ -674,6 +674,25 @@ AV.init({
             const data = result.data;
             if (currentUser && data.name) {
               welcomeEl.innerHTML =  `<span class="font-medium text-2xl" style="color: black; font-size: 20px;">欢迎，</span><span class="font-medium text-2xl" style="color: red; font-size: 20px; font-weight: bold;">${data.name}</span>`;
+          // 2. 写入到 _User 表的 name 字段(只示例若后端尚未存该姓名，则更新)  
+          fetch('/gerenxinxiguanli/updateUserRealName', {  
+            method: 'POST',  
+            headers: { 'Content-Type': 'application/json' },  
+            body: JSON.stringify({  
+              userId: currentUser.id,      // _User 表中的 objectId  
+              realName: data.name  // Firefighter 中的 name  
+            })
+
+          })  
+            .then(r => r.json())  
+            .then(updateRes => {  
+              if (!updateRes.success) {  
+                console.error('更新 _User.name 失败:', updateRes.error);  
+              }  
+            })  
+            .catch(err => {  
+              console.error('更新 _User.name 请求异常:', err);  
+            });  
               return;
             }
           }
@@ -786,9 +805,6 @@ AV.init({
       url = '/gerenxinxiguanli/add';
       method = 'POST';
 
-      console.log(formData);
-      console.log(JSON.stringify(formData));
-
       fetch(url, {
         method: method,
         headers: {
@@ -800,6 +816,34 @@ AV.init({
         .then(result => {
           if (result.success) {
             alert('保存成功');
+            // 存在记录，自动填充表单
+                  // 从 EJS 变量中获取当前登录用户的用户名  
+      const username = currentUser.username; // 假设已从后端传递到全局变量
+      const welcomeEl = document.getElementById('welcome');  
+            const data = result.data;
+            if (currentUser && data.name) {
+              welcomeEl.innerHTML =  `<span class="font-medium text-2xl" style="color: black; font-size: 20px;">欢迎，</span><span class="font-medium text-2xl" style="color: red; font-size: 20px; font-weight: bold;">${data.name}</span>`;
+          // 2. 写入到 _User 表的 name 字段(只示例若后端尚未存该姓名，则更新)  
+          fetch('/gerenxinxiguanli/updateUserRealName', {  
+            method: 'POST',  
+            headers: { 'Content-Type': 'application/json' },  
+            body: JSON.stringify({  
+              userId: currentUser.id,      // _User 表中的 objectId  
+              realName: data.name  // Firefighter 中的 name  
+            })
+
+          })  
+            .then(r => r.json())  
+            .then(updateRes => {  
+              if (!updateRes.success) {  
+                console.error('更新 _User.name 失败:', updateRes.error);  
+              }  
+            })  
+            .catch(err => {  
+              console.error('更新 _User.name 请求异常:', err);  
+            });  
+          }
+
             modal.style.display = 'none';
             backdrop.style.display = 'none';
           } else {

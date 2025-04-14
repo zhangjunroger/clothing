@@ -502,8 +502,12 @@
   /* 搜索表单样式 */
   .search-form input,
   .search-form select {
-    padding: 6px;
     margin-right: 10px;
+    width: 100%;
+    min-height: 42px;
+    padding: 8px 12px;
+    box-sizing: border-box;
+    font-size: 16px;  /* 这里指定新的字体大小 */
   }
 
   .btn-delete {
@@ -789,7 +793,7 @@
       <form id="searchForm" class="search-form">
         <input type="text" id="searchNumber" placeholder="编号">
         <input type="text" id="searchName" placeholder="姓名">
-        <select id="searchGender" placeholder="请选择性别">
+        <select class="form-select" id="searchGender" placeholder="请选择性别">
           <option value="">请选择性别</option>
           <option value="男">男</option>
           <option value="女">女</option>
@@ -901,6 +905,7 @@
   <!-- 在搜索表单下方，按钮区域添加批量删除按钮 -->
   <div style="display: flex; justify-content: center; gap: 15px; margin-top: -40px; margin-bottom: 5px;">
     <button onclick="showChangeTeamModal()" class="button">实力单位变更</button>
+    <button class="button" id="batchUpdateFundsBtn">批量修改经费</button>  
     <button id="batchDeleteBtn" class="button">批量删除</button>
     <button onclick="showReportModal()" class="button">打印报表</button>
   </div>
@@ -1638,6 +1643,44 @@
     </div>
   </div>
 
+<!-- 批量修改经费-模态框 -->  
+<div id="batchFundsModal" class="modal">  
+  <div class="modal-content">  
+    <div class="modal-header">  
+      <h2>批量修改经费</h2>  
+      <span id="closeBatchFundsModal" style="cursor: pointer;">&times;</span>  
+    </div>  
+    <div class="modal-body">  
+      <form id="batchFundsForm" class="search-form">  
+
+        <!-- 可用余额 -->  
+        <div class="form-group" style="margin-bottom: 15px;">  
+          <label for="newBalance" class="form-label">新的可用余额</label>  
+          <input type="number" id="newBalance" name="newBalance"   
+                 placeholder="请输入新的可用余额！" required>  
+        </div>  
+
+        <!-- 经费来源 -->  
+        <div class="form-group" style="margin-bottom: 15px;">  
+          <label for="newFundSource" class="form-label">新的经费来源</label>  
+          <select class="form-select" id="newFundSource" name="newFundSource" required>
+            <option value="">请选择经费来源</option>
+            <option value="支队经费">支队经费</option>
+            <option value="大队经费">大队经费</option>
+            <option value="其它">其它</option>
+          </select>                 
+        </div>  
+
+      </form>  
+    </div>  
+    <div class="modal-footer">  
+      <button class="button" id="cancelBatchFundsBtn">取消</button>  
+      <button class="button" id="confirmBatchFundsBtn">确定</button>  
+    </div>  
+  </div>  
+</div>  
+
+
   <script>
     // 页面加载时获取消防员列表  
     document.addEventListener('DOMContentLoaded', function () {
@@ -1662,6 +1705,88 @@
           document.getElementById('selectAll').checked = checkedCount === allCheckboxes.length && allCheckboxes.length > 0;
         }
       });
+
+
+// 拿到各元素  
+const batchUpdateFundsBtn = document.getElementById('batchUpdateFundsBtn');  
+const batchFundsModal = document.getElementById('batchFundsModal');  
+const closeBatchFundsModal = document.getElementById('closeBatchFundsModal');  
+const cancelBatchFundsBtn = document.getElementById('cancelBatchFundsBtn');  
+const confirmBatchFundsBtn = document.getElementById('confirmBatchFundsBtn');  
+
+// 打开模态  
+batchUpdateFundsBtn.addEventListener('click', () => {
+    // 2. 在“实力信息列表”中找出所有选中项  
+  //    例如：<input type="checkbox" class="select-checkbox" data-id="xxx" />
+  const selectedIds = Array.from(document.querySelectorAll('.row-checkbox:checked'))
+  .map(checkbox => checkbox.getAttribute('data-id'));
+
+  if (selectedIds.length === 0) {  
+    alert('请先在列表中勾选要批量修改的人员！');  
+    return;  
+  }    
+  batchFundsModal.style.display = 'block';  
+});  
+
+// 关闭模态  
+function closeBatchFunds() {  
+  batchFundsModal.style.display = 'none';  
+  // 清空表单(可选)  
+  document.getElementById('batchFundsForm').reset();  
+}  
+closeBatchFundsModal.addEventListener('click', closeBatchFunds);  
+cancelBatchFundsBtn.addEventListener('click', closeBatchFunds);  
+
+// 点击“确定” → 批量更新  
+confirmBatchFundsBtn.addEventListener('click', () => {  
+  // 2. 在“实力信息列表”中找出所有选中项  
+  //    例如：<input type="checkbox" class="select-checkbox" data-id="xxx" />
+  const selectedIds = Array.from(document.querySelectorAll('.row-checkbox:checked'))
+  .map(checkbox => checkbox.getAttribute('data-id'));
+
+  if (selectedIds.length === 0) {  
+    alert('请先在列表中勾选要批量修改的人员！');  
+    return;  
+  }  
+  // 1. 获取表单输入  
+  const newBalance = document.getElementById('newBalance').value.trim();  
+  const newFundSource = document.getElementById('newFundSource').value;  
+  if (!newBalance || !newFundSource) {  
+    alert('请先填写新的可用余额和选择经费来源！');  
+    return;  
+  }  
+
+  // 3. 发送请求到后端，进行批量更新  
+  const payload = {  
+    ids: selectedIds,  
+    newBalance: parseFloat(newBalance),  
+    newFundSource: newFundSource  
+  };  
+
+  fetch('/firefighters/bulkUpdateFunds', {  
+    method: 'POST',  
+    headers: { 'Content-Type': 'application/json' },  
+    body: JSON.stringify(payload)  
+  })  
+    .then(res => res.json())  
+    .then(result => {  
+      if (result.success) {  
+        alert('批量更新经费成功！');  
+        // 刷新页面或重新加载列表  
+        // e.g. loadFirefightersList();  
+        loadFirefighters();
+        // 关闭模态并清空表单  
+        closeBatchFunds();  
+      } else {  
+        alert('批量更新经费失败：' + (result.error || '未知错误'));  
+      }  
+    })  
+    .catch(err => {  
+      console.error(err);  
+      alert('请求异常：' + err);  
+    });  
+});  
+
 
       // 批量删除按钮事件  
       document.getElementById('batchDeleteBtn').addEventListener('click', function () {
@@ -1801,7 +1926,6 @@
       fetch(`/firefighters/get/${id}`)
         .then(response => response.json())
         .then(item => {
-          console.log(item);
           document.getElementById('modalTitle').innerText = '修改实力信息';
           document.getElementById('saveFirefighter').innerText = '确认修改'; // 设置按钮文字
           const numberInput = document.getElementById('modalNumber'); // 获取 DOM 元素
@@ -2353,7 +2477,6 @@
     // 根据选择的报表类型显示不同的筛选选项  
     function updateFilterOptions() {
       const reportTypeElement = document.getElementById('reportType').value;
-      console.log('reportType:', reportTypeElement);
 
       // 隐藏所有筛选组  
       document.querySelectorAll('.filter-group').forEach(elem => {
@@ -2893,7 +3016,7 @@
       const doc = new jsPDF();
 
       // 加载字体  
-      const fontPath = '/fonts/SourceHanSans-Regular.ttf'; // 确保字体文件路径正确  
+      const fontPath = '/fonts/Simsun.ttf'; // 确保字体文件路径正确  
       const fontRes = await fetch(fontPath);
       if (!fontRes.ok) throw new Error('字体文件未找到');
 
@@ -2903,9 +3026,9 @@
       const fontBase64 = arrayBufferToBase64(fontBlob); // 转换为 Base64 
 
       // 添加字体到 jsPDF  
-      doc.addFileToVFS('SourceHanSans-Regular.ttf', fontBase64);
-      doc.addFont('SourceHanSans-Regular.ttf', 'SourceHanSans', 'normal');
-      doc.setFont('SourceHanSans');
+      doc.addFileToVFS('Simsun.ttf', fontBase64);
+      doc.addFont('Simsun.ttf', 'Simsun', 'normal');
+      doc.setFont('Simsun');
 
 
       // 设置标题  
@@ -2998,7 +3121,7 @@
         },
         margin: { top: 30 },
         styles: {
-          font: "SourceHanSans",
+          font: "Simsun",
           fontSize: 12,
           cellPadding: 3,
           valign: 'middle',
@@ -3015,7 +3138,7 @@
       const pageCount = doc.internal.getNumberOfPages();
       for (let i = 1; i <= pageCount; i++) {
         // 确保设置字体后再添加日期文本  
-        doc.setFont('SourceHanSans');
+        doc.setFont('Simsun');
         doc.setPage(i);
         doc.setFontSize(10);
         doc.text(`第${i}页/共${pageCount}页`, 105, doc.internal.pageSize.height - 10, { align: 'center' });
@@ -3023,7 +3146,7 @@
         // 只在最后一页的表格下方添加日期和打印人信息  
         if (i === pageCount) {
           // 确保设置字体  
-          doc.setFont('SourceHanSans');
+          doc.setFont('Simsun');
           doc.setFontSize(10);
 
           // 在表格下方添加日期和打印人信息  

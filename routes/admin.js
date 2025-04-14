@@ -18,23 +18,21 @@ router.get('/users-list', async (req, res) => {
         const query = new AV.Query('_User'); // '_User' 是 LeanCloud 的用户表  
         query.limit(1000); // 设置查询上限  
         const users = await query.find();
-        console.log('查询到的用户数据:', users);   
-
         // 格式化用户信息发送给前端  
         const userList = users.map(user => ({  
             id: user.id,  
             username: user.get('username'),  
-            email: user.get('email'), 
+            name: user.get('name')||'', 
             role: user.get('role'),  
             createdAt: user.createdAt  
         }));  
-
         res.json(userList);  
     } catch (error) {  
         console.error('获取用户列表失败:', error);  
         res.status(500).json({ error: '获取用户列表失败' });  
     }  
 });  
+
 
 // 删除用户  
 router.delete('/users/:id', async (req, res) => {  
@@ -71,6 +69,6 @@ router.post('/users', async (req, res) => {
         console.error('注册用户失败:', error);  
         res.status(500).json({ error: error.message || '注册用户失败' });  
     }  
-});  
+});
 
 module.exports = router;

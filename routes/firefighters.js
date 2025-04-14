@@ -95,7 +95,6 @@ router.get('/firefighters/list', async (req, res) => {
     const data = results.map(item => {
       const attrs = item.toJSON();
       attrs.id = item.id; // 获取对象的id
-      console.log('查询返回的id数据为', attrs.id);
       return attrs;
     });
 
@@ -165,7 +164,6 @@ router.post('/firefighters/add', async (req, res) => {
 router.get('/firefighters/get/:id', async (req, res) => {
   try {
     const id = req.params.id;
-    console.log('get到的id为:', id)
     const query = new AV.Query('Firefighter');
     const firefighter = await query.get(id);
 
@@ -640,7 +638,6 @@ router.get('/reports/generate', async (req, res) => {
             }
             return true;
           });
-          console.log('filteredResults结果：', filteredResults);
         }
         report = filteredResults.map(item => item.toJSON());
       } else {
@@ -712,6 +709,65 @@ router.get('/reports/generate', async (req, res) => {
     res.status(500).json({ success: false, error: '打印报表失败' });
   }
 });
+
+
+router.post('/firefighters/bulkUpdateFunds', async (req, res) => {  
+  try {  
+    const { ids, newBalance, newFundSource } = req.body;  
+    // 1. 参数校验  
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {  
+      return res.status(400).json({  
+        success: false,  
+        error: '无效的请求参数：请至少选择一名人员'  
+      });  
+    }  
+    if (typeof newBalance !== 'number' || isNaN(newBalance)) {  
+      return res.status(400).json({  
+        success: false,  
+        error: 'newBalance 必须是一个数字'  
+      });  
+    }  
+    if (!newFundSource) {  
+      return res.status(400).json({  
+        success: false,  
+        error: 'newFundSource 不能为空'  
+      });  
+    }  
+
+    // 2. 遍历每个 id，更新对应记录  
+    const updatePromises = ids.map(id => {  
+      // 通过 objectId 获取对应的 Firefighter  
+      const firefighter = AV.Object.createWithoutData('Firefighter', id);  
+
+      // 设置“可用余额”（字段名为 keyongyue）  
+      firefighter.set('keyongyue', String(newBalance));  
+      firefighter.set('keyongyueNum', Number(newBalance) || 0); // 若需要数值统计  
+
+      // 设置“经费来源”（字段名为 "经费来源"）  
+      // 注意：LeanCloud 上中文字段名需与实际创建时一致  
+      firefighter.set('jingfeilaiyuan', String(newFundSource));  
+
+      // 提交保存  
+      return firefighter.save();  
+    });  
+
+    // 3. 并发执行所有保存操作  
+    await Promise.all(updatePromises);  
+
+    // 4. 返回响应  
+    res.json({  
+      success: true,  
+      message: '批量更新经费成功',  
+      updatedCount: ids.length  
+    });  
+  } catch (err) {  
+    console.error('批量更新经费失败:', err);  
+    res.status(500).json({  
+      success: false,  
+      error: '批量更新经费失败，请稍后重试'  
+    });  
+  }  
+});  
 
 // 导出路由  
 module.exports = router;  
