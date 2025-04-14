@@ -799,12 +799,11 @@
         <select class="form-select" id="searchPosition" placeholder="请选择职务">
           <option value="">请选择职务</option>
           <option value="专职消防员">专职消防员</option>
-          <option value="文职雇员">文职雇员</option>
+          <option value="消防文员">消防文员</option>
           <option value="其它">其它</option>
         </select>
         <select class="form-select" id="searchTeam" placeholder="请选择单位">
           <option value="">请选择单位</option>
-          <option value="司令部">司令部</option>
           <option value="政治部组织干部科">政治部组织干部科</option>
           <option value="财务科">财务科</option>
           <option value="防火监督科">防火监督科</option>
@@ -946,7 +945,7 @@
             <!-- 身高 -->
             <div class="col-md-4 mb-3">
               <label for="modalShengao" class="form-label">身高</label>
-              <input type="number" class="form-control" id="modalShengao" name="shengao">
+              <input type="number" class="form-control" id="modalShengao" name="shengao" min="1" max="250" placeholder="单位为cm">
             </div>
           </div>
 
@@ -967,7 +966,7 @@
               <select class="form-select" id="modalPosition" name="position">
                 <option value="">请选择职务</option>
                 <option value="专职消防员">专职消防员</option>
-                <option value="文职雇员">文职雇员</option>
+                <option value="消防文员">消防文员</option>
                 <option value="其它">其它</option>
               </select>
             </div>
@@ -979,7 +978,6 @@
               <label for="modalTeam" class="form-label">单位</label>
               <select class="form-select" id="modalTeam" name="team">
                 <option value="">请选择单位</option>
-                <option value="司令部">司令部</option>
                 <option value="政治部组织干部科">政治部组织干部科</option>
                 <option value="财务科">财务科</option>
                 <option value="防火监督科">防火监督科</option>
@@ -1038,41 +1036,12 @@
             <!-- 胸围 -->
             <div class="col-md-4 mb-3">
               <label for="modalXiongwei" class="form-label">胸围</label>
-              <select class="form-select" id="modalXiongwei" name="xiongwei">
-                <option value="">请选择胸围</option>
-                <option value="84">84</option>
-                <option value="88">88</option>
-                <option value="92">92</option>
-                <option value="96">96</option>
-                <option value="100">100</option>
-                <option value="104">104</option>
-                <option value="108">108</option>
-                <option value="112">112</option>
-                <option value="116">116</option>
-                <option value="120">120</option>
-                <option value="124">124</option>
-                <option value="其它">其它</option>
-              </select>
+              <input class="form-control" id="modalXiongwei" name="xiongwei" min="1" max="250" placeholder="单位为cm">
             </div>
             <!-- 腰围 -->
             <div class="col-md-4 mb-3">
               <label for="modalYaowei" class="form-label">腰围</label>
-              <select class="form-select" id="modalYaowei" name="yaowei">
-                <option value="">请选择腰围</option>
-                <option value="74">74</option>
-                <option value="80">80</option>
-                <option value="86">86</option>
-                <option value="92">92</option>
-                <option value="96">96</option>
-                <option value="100">100</option>
-                <option value="104">104</option>
-                <option value="108">108</option>
-                <option value="112">112</option>
-                <option value="116">116</option>
-                <option value="120">120</option>
-                <option value="124">124</option>
-                <option value="其它">其它</option>
-              </select>
+              <input class="form-control" id="modalYaowei" name="yaowei" min="1" max="250" placeholder="单位为cm">
             </div>
             <!-- 头围 -->
             <div class="col-md-4 mb-3">
@@ -1313,7 +1282,6 @@
               <label for="teamFilter">单位筛选：</label>
               <select id="teamFilter" class="form-control">
                 <option value="">全部单位</option>
-                <option value="司令部">司令部</option>
                 <option value="政治部组织干部科">政治部组织干部科</option>
                 <option value="财务科">财务科</option>
                 <option value="防火监督科">防火监督科</option>
@@ -1379,7 +1347,7 @@
                 <select id="positionFilter" class="form-control">
                   <option value="">全部职务</option>
                   <option value="专职消防员">专职消防员</option>
-                  <option value="文职雇员">文职雇员</option>
+                  <option value="消防文员">消防文员</option>
                   <option value="其它">其它</option>
                 </select>
               </div>
@@ -1583,7 +1551,6 @@
                 <label for="oldTeamFilter">原单位筛选：</label>
                 <select id="oldTeamFilter" class="form-control">
                   <option value="">全部单位</option>
-                  <option value="司令部">司令部</option>
                   <option value="政治部组织干部科">政治部组织干部科</option>
                   <option value="财务科">财务科</option>
                   <option value="防火监督科">防火监督科</option>
@@ -2204,7 +2171,6 @@
         const teamSelect = `  
       <select class="form-select new-team">  
         <option value="">请选择单位</option>  
-        <option value="司令部">司令部</option>  
         <option value="政治部组织干部科">政治部组织干部科</option>  
         <option value="财务科">财务科</option>  
         <option value="防火监督科">防火监督科</option>  
