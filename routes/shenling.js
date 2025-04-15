@@ -191,7 +191,29 @@ router.post('/shenling/save', async (req, res) => {
 
       // 更新商品的库存信息  
       clothingItem.set('sizes', currentSizes); // 更新 `sizes` 字段  
-      await clothingItem.save(); // 保存到数据库  
+      await clothingItem.save(); // 保存到数据库
+      
+      //更新单条目数据库
+      const AllData = AV.Object.extend('AllData');  
+      const record = new AllData();  
+
+      // 假设 Firefighter 表里有 name / danwei 字段  
+      record.set('name', firefighter.name || '');   // 姓名  
+      record.set('danwei', firefighter.team || ''); // 单位(若无此字段可删)  
+      
+      record.set('wupinbianhao', item.itemNumber || '');  
+      record.set('wupinmingcheng', item.itemName || '');  
+      record.set('xinghao', item.specification || '');  
+      record.set('danjia', item.price || 0);  
+      record.set('shuliang', item.quantity || 0);  
+      record.set('zonge', item.total);  
+      
+      record.set('dingdanhao', req.body['Number'] || '');  
+
+      record.set('dingdanshijian', Number(req.body['Time']) || 0);  
+
+      await record.save();  
+
     }
 
     // 3. 扣除用户的可用余额  
@@ -307,6 +329,22 @@ router.delete('/shenling/:id', async (req, res) => {
       clothingItem.set('sizes', currentSizes); // 更新 `sizes` 字段  
       await clothingItem.save(); // 保存到数据库  
     }
+
+
+    /***********************************************  
+     * 新增：删除 AllData 中对应此订单号的所有记录  
+     ***********************************************/  
+    const allDataQuery = new AV.Query('AllData');  
+    // 假设订单号存到 AllData 的 dingdanhao 字段  
+    allDataQuery.equalTo('dingdanhao', id);  
+
+    const allDataRecords = await allDataQuery.find();  
+    if (allDataRecords && allDataRecords.length > 0) {  
+      // 批量删除  
+      await AV.Object.destroyAll(allDataRecords);  
+    }  
+
+    // 6. 返回成功响应  
     return res.json({ success: true, newBalance_display, message: '订单已取消' });
   } catch (err) {
     console.error('取消订单失败:', err);
