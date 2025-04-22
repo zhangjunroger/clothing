@@ -398,13 +398,10 @@ AV.init({
           <input type="hidden" id="gerenxinxiguanliId" name="id">
           <!-- 编号 -->
           <div class="row">
-            <div class="col-md-12 mb-3">
+            <div class="col-md-4 mb-3">
               <label for="modalNumber" class="form-label">编号</label>
               <input type="text" class="form-control" id="modalNumber" name="number" required readonly>
             </div>
-          </div>
-
-          <div class="row">
             <!-- 姓名 -->
             <div class="col-md-4 mb-3">
               <label for="modalName" class="form-label">姓名</label>
@@ -418,12 +415,7 @@ AV.init({
                 <option value="男">男</option>
                 <option value="女">女</option>
               </select>
-            </div>
-            <!-- 身高 -->
-            <div class="col-md-4 mb-3">
-              <label for="modalShengao" class="form-label">身高</label>
-              <input type="number" class="form-control" id="modalShengao" name="shengao" min="1" max="250" placeholder="单位为cm">
-            </div>
+            </div>                        
           </div>
 
           <div class="row">
@@ -455,37 +447,30 @@ AV.init({
               <label for="modalTeam" class="form-label">单位</label>
               <select class="form-select" id="modalTeam" name="team">
                 <option value="">请选择单位</option>
-                <option value="政治部组织干部科">政治部组织干部科</option>
-                <option value="财务科">财务科</option>
-                <option value="防火监督科">防火监督科</option>
-                <option value="综合指导科">综合指导科</option>
-                <option value="战勤保障科">战勤保障科</option>
-                <option value="作战训练科">作战训练科</option>
-                <option value="装备科">装备科</option>
-                <option value="政治部队务督察科">政治部队务督察科</option>
-                <option value="指挥中心">指挥中心</option>
-                <option value="办公室">办公室</option>
-                <option value="公用">公用</option>
-                <option value="太子河大队">太子河大队</option>
-                <option value="白塔大队">白塔大队</option>
-                <option value="宏伟区消防救援大队">宏伟区消防救援大队</option>
-                <option value="灯塔市消防救援大队">灯塔市消防救援大队</option>
-                <option value="文圣区消防救援大队">文圣区消防救援大队</option>
-                <option value="辽阳县大队">辽阳县大队</option>
-                <option value="弓长岭区消防救援大队">弓长岭区消防救援大队</option>
-                <option value="雷锋街消防救援站">雷锋街消防救援站</option>
-                <option value="汤泉谷消防救援站">汤泉谷消防救援站</option>
-                <option value="佟二堡消防站">佟二堡消防站</option>
-                <option value="兆麟西路消防站">兆麟西路消防站</option>
-                <option value="铧子消防站">铧子消防站</option>
-                <option value="万和一路消防救援站">万和一路消防救援站</option>
-                <option value="安康路消防救援站">安康路消防救援站</option>
-                <option value="文昌街消防站">文昌街消防站</option>
-                <option value="腾飞街">腾飞街</option>
-                <option value="刘二堡消防救援站">刘二堡消防救援站</option>
-                <option value="黄泥洼消防救援站">黄泥洼消防救援站</option>
-                <option value="下达河消防救援站">下达河消防救援站</option>
-                <option value="备用">备用</option>
+                <option value="防火战线">防火战线</option>  
+                <option value="灭火战线">灭火战线</option>  
+                <option value="政治部战线">政治部战线</option>  
+                <option value="后勤战线">后勤战线</option>  
+                <option value="指挥中心和勤务站">指挥中心和勤务站</option>  
+                <option value="战勤保障大队">战勤保障大队</option>  
+                <option value="白塔区消防救援大队">白塔区消防救援大队</option>  
+                <option value="铁西路消防救援站">铁西路消防救援站</option>  
+                <option value="文圣区消防救援大队">文圣区消防救援大队</option>  
+                <option value="安康路消防救援站">安康路消防救援站</option>  
+                <option value="文昌街消防救援站">文昌街消防救援站</option>  
+                <option value="太子河区消防救援大队">太子河区消防救援大队</option>  
+                <option value="蔡四路特勤站">蔡四路特勤站</option>  
+                <option value="辽阳县消防救援大队">辽阳县消防救援大队</option>  
+                <option value="下达河消防救援站">下达河消防救援站</option>  
+                <option value="刘二堡消防救援站">刘二堡消防救援站</option>  
+                <option value="黄泥洼消防救援站">黄泥洼消防救援站</option>  
+                <option value="灯塔市消防救援大队">灯塔市消防救援大队</option>  
+                <option value="佟二堡消防救援站">佟二堡消防救援站</option>  
+                <option value="铧子消防救援站">铧子消防救援站</option>  
+                <option value="宏伟区消防救援大队">宏伟区消防救援大队</option>  
+                <option value="万和一路消防救援站">万和一路消防救援站</option>  
+                <option value="弓长岭区消防救援大队">弓长岭区消防救援大队</option>  
+                <option value="汤泉谷消防救援站">汤泉谷消防救援站</option>  
                 <option value="其它">其它</option>
               </select>
             </div>
@@ -510,18 +495,13 @@ AV.init({
           </div>
 
           <div class="row">
-            <!-- 胸围 -->
-            <div class="col-md-4 mb-3">
-              <label for="modalXiongwei" class="form-label">胸围</label>
-              <input class="form-control" id="modalXiongwei" name="xiongwei" min="1" max="200" placeholder="单位为cm">  
-            </div>
-            <!-- 腰围 -->
-            <div class="col-md-4 mb-3">
-              <label for="modalYaowei" class="form-label">腰围</label>
-            <input class="form-control" id="modalYaowei" name="yaowei" min="1" max="200" placeholder="单位为cm">
-            </div>
+          <!-- 身高 -->
+          <div class="col-md-3 mb-3">
+          <label for="modalShengao" class="form-label">身高</label>
+          <input type="number" class="form-control" id="modalShengao" name="shengao" min="1" max="250" placeholder="单位为cm">
+          </div>
             <!-- 头围 -->
-            <div class="col-md-4 mb-3">
+            <div class="col-md-3 mb-3">
               <label for="modalTouwei" class="form-label">头围</label>
               <select class="form-select" id="modalTouwei" name="touwei">
                 <option value="">请选择头围</option>
@@ -536,7 +516,18 @@ AV.init({
                 <option value="62">62</option>
                 <option value="其它">其它</option>
               </select>
+            </div>          
+            <!-- 胸围 -->
+            <div class="col-md-3 mb-3">
+              <label for="modalXiongwei" class="form-label">胸围</label>
+              <input class="form-control" id="modalXiongwei" name="xiongwei" min="1" max="200" placeholder="单位为cm">  
             </div>
+            <!-- 腰围 -->
+            <div class="col-md-3 mb-3">
+              <label for="modalYaowei" class="form-label">腰围</label>
+            <input class="form-control" id="modalYaowei" name="yaowei" min="1" max="200" placeholder="单位为cm">
+            </div>
+
           </div>
 
 
@@ -568,58 +559,63 @@ AV.init({
             <div class="col-md-4 mb-3">
               <label for="modalFuzhuanghao" class="form-label">服装号</label>
               <select class="form-select" id="modalFuzhuanghao" name="fuzhuanghao">
-                <option value="">请选择服装号</option>  
-                <option value="160/84">160/84</option>  
-                <option value="160/88">160/88</option>  
-                <option value="160/92">160/92</option>  
-                <option value="165/88">165/88</option>  
-                <option value="165/92">165/92</option>  
-                <option value="165/92-96">165/92-96</option>  
-                <option value="165/96">165/96</option>  
-                <option value="165/100">165/100</option>  
-                <option value="165/104">165/104</option>  
-                <option value="165/108">165/108</option>  
-                <option value="170/88">170/88</option>  
-                <option value="170/92">170/92</option>  
-                <option value="170/92-96">170/92-96</option>  
-                <option value="170/96">170/96</option>  
-                <option value="170/100">170/100</option>  
-                <option value="170/104-108">170/104-108</option>  
-                <option value="175/88">175/88</option>  
-                <option value="175/92">175/92</option>  
-                <option value="175/92-96">175/92-96</option>  
-                <option value="175/96">175/96</option>  
-                <option value="175/100">175/100</option>  
-                <option value="175/104">175/104</option>  
-                <option value="175/104-108">175/104-108</option>  
-                <option value="175/108">175/108</option>  
-                <option value="175/120-124">175/120-124</option>  
-                <option value="180/92-96">180/92-96</option>  
-                <option value="180/96">180/96</option>  
-                <option value="180/100">180/100</option>  
-                <option value="180/100-104">180/100-104</option>  
-                <option value="180/104">180/104</option>  
-                <option value="180/104-108">180/104-108</option>  
-                <option value="180/108">180/108</option>  
-                <option value="180/112-116">180/112-116</option>  
-                <option value="180/116">180/116</option>  
-                <option value="180/120">180/120</option>  
-                <option value="180/124">180/124</option>  
-                <option value="185/92-96">185/92-96</option>  
-                <option value="185/96">185/96</option>  
-                <option value="185/100">185/100</option>  
-                <option value="185/100-104">185/100-104</option>  
-                <option value="185/104">185/104</option>  
-                <option value="185/104-108">185/104-108</option>  
-                <option value="185/108">185/108</option>  
-                <option value="185/112">185/112</option>  
-                <option value="185/112-116">185/112-116</option>  
-                <option value="185/116">185/116</option>  
-                <option value="185/120">185/120</option>  
-                <option value="185/124">185/124</option>  
-                <option value="190/104">190/104</option>  
-                <option value="195/112-116">195/112-116</option>  
-                <option value="195/136">195/136</option>  
+                <option value="">请选择服装号</option>
+                <option value="160/80">160/80</option>
+                <option value="160/84">160/84</option>
+                <option value="160/88">160/88</option>
+                <option value="160/92">160/92</option>
+                <option value="160/96">160/96</option>
+                <option value="160/100">160/100</option>
+                <option value="160/108">160/108</option>
+                <option value="165/80">165/80</option>
+                <option value="165/84">165/84</option>
+                <option value="165/88">165/88</option>
+                <option value="165/92">165/92</option>
+                <option value="165/96">165/96</option>
+                <option value="165/100">165/100</option>
+                <option value="165/104">165/104</option>
+                <option value="165/108">165/108</option>
+                <option value="170/80">170/80</option>
+                <option value="170/84">170/84</option>
+                <option value="170/88">170/88</option>
+                <option value="170/92">170/92</option>
+                <option value="170/96">170/96</option>
+                <option value="170/100">170/100</option>
+                <option value="170/104">170/104</option>
+                <option value="170/108">170/108</option>
+                <option value="170/112">170/112</option>
+                <option value="175/84">175/84</option>
+                <option value="175/88">175/88</option>
+                <option value="175/92">175/92</option>
+                <option value="175/96">175/96</option>
+                <option value="175/100">175/100</option>
+                <option value="175/104">175/104</option>
+                <option value="175/108">175/108</option>
+                <option value="175/112">175/112</option>
+                <option value="175/116">175/116</option>
+                <option value="175/120">175/120</option>
+                <option value="180/88">180/88</option>
+                <option value="180/92">180/92</option>
+                <option value="180/96">180/96</option>
+                <option value="180/100">180/100</option>
+                <option value="180/104">180/104</option>
+                <option value="180/108">180/108</option>
+                <option value="180/112">180/112</option>
+                <option value="180/116">180/116</option>
+                <option value="180/120">180/120</option>
+                <option value="185/92">185/92</option>
+                <option value="185/96">185/96</option>
+                <option value="185/100">185/100</option>
+                <option value="185/104">185/104</option>
+                <option value="185/108">185/108</option>
+                <option value="185/112">185/112</option>
+                <option value="185/116">185/116</option>
+                <option value="185/120">185/120</option>
+                <option value="190/92">190/92</option>
+                <option value="190/96">190/96</option>
+                <option value="190/100">190/100</option>
+                <option value="190/112">190/112</option>
+                <option value="190/116">190/116</option>
                 <option value="其它">其它</option>
               </select>
             </div>
@@ -628,6 +624,7 @@ AV.init({
               <label for="modalMaoleihao" class="form-label">帽类号</label>
               <select class="form-select" id="modalMaoleihao" name="maoleihao">
                 <option value="">请选择帽号</option>
+                <option value="54">54</option>
                 <option value="55">55</option>
                 <option value="56">56</option>
                 <option value="57">57</option>
@@ -641,9 +638,20 @@ AV.init({
             </div>
 
           </div>
+
           <div class="row">
+            <!-- 经费来源 -->
+            <div class="col-md-6 mb-3">
+              <label for="modalJingfeilaiyuan" class="form-label">经费来源</label>
+              <select class="form-select" id="modalJingfeilaiyuan" name="jingfeilaiyuan">
+                <option value="">请选择经费来源</option>
+                <option value="支队经费">支队经费</option>
+                <option value="大队经费">大队经费</option>
+                <option value="其它">其它</option>
+              </select>
+            </div>
             <!-- 备注 -->
-            <div class="col-md-12 mb-3">
+            <div class="col-md-6 mb-3">
               <label for="modalRemarks" class="form-label">备注</label>
               <input class="form-control" id="modalRemarks" name="remarks">
             </div>
@@ -741,6 +749,7 @@ AV.init({
             document.getElementById('modalXiongwei').value = data.xiongwei || '';
             document.getElementById('modalYaowei').value = data.yaowei || '';
             document.getElementById('modalTouwei').value = data.touwei || '';
+            document.getElementById('modalJingfeilaiyuan').value = data.jingfeilaiyuan || '';
             document.getElementById('modalRemarks').value = data.remarks || '';
 
           } else {
