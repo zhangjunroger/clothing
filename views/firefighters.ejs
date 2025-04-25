@@ -536,6 +536,19 @@
     background-color: #f49236;
   }
 
+  .btn-button {
+    background-color: #365cf4;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  .btn-button:hover {
+    background-color: #365cf4;
+  }
+
   /* 报表相关样式 */
   .date-range {
     display: flex;
@@ -743,7 +756,7 @@
   
     /* ========== 新增：为表格外层加一个固定高度+滚动条容器 ========== */  
     .table-container {  
-      max-height: 400px; /* 根据实际需求调整表格容器的最大高度*/  
+      max-height: 1200px; /* 根据实际需求调整表格容器的最大高度*/  
       overflow-y: auto;  /* 当内容超过最大高度时出现垂直滚动条*/  
       border: 1px solid #ccc;  
       margin: 16px 0;  
@@ -772,24 +785,10 @@
 
   <div class="container">
     <h1>实力管理</h1>
-    <!-- Excel模板下载 + 导入 -->
-    <section>
-      <h2>模版上传实力信息</h2>
-      <form id="importForm"
-        style="display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 15px; margin-top: 20px; margin-bottom: 20px;">
-        <a href="/firefighters/template/firefighters_template.xlsx" class="button"
-          style="white-space: nowrap;">下载Excel模板</a>
-        <label for="excelFile" style="margin: 0 5px; white-space: nowrap;">上传Excel文件：</label>
-        <input type="file" id="excelFile" name="excelFile" accept=".xlsx" required style="margin: 0 5px;">
-        <button type="submit" class="button" style="white-space: nowrap;">导入</button>
-      </form>
-    </section>
-
-    <hr>
-
     <!-- 消防员信息表格展示 -->
     <section>
-      <h2>搜索实力信息</h2>
+      <h2>实力信息列表</h2>
+
       <form id="searchForm" class="search-form">
         <input type="text" id="searchNumber" placeholder="编号">
         <input type="text" id="searchName" placeholder="姓名">
@@ -853,55 +852,72 @@
       <div style="display: flex; justify-content: center; gap: 15px; margin-top: 15px; margin-bottom: 15px;">
         <button type="button" onclick="searchFirefighters()" class="btn-change">搜索</button>
         <button type="button" onclick="resetSearch()" class="btn-delete">重置</button>
+        <button type="button" onclick="showAddFirefighterModal()" class="btn-button">添加实力</button>        
       </div>
 
-      <div style="display: flex; justify-content: center; gap: 15px; margin-top: 15px; margin-bottom: 15px;">
-        <button onclick="showAddFirefighterModal()" class="button">添加实力</button>
-      </div>
-
-
-      <h2>实力信息列表</h2>
       <div class="table-container">
-      <table id="firefightersTable" class="users-table">
+      <table id="firefightersTable" class="users-table" style="width: 100%; table-layout: fixed; border-collapse: collapse; justify-content: center;">
         <thead>
           <tr>
-            <th><input type="checkbox" id="selectAll" title="全选/取消全选"></th>
-            <th>编号</th>
-            <th>姓名</th>
-            <th>性别</th>
-            <th>出生年月</th>
-            <th>年龄</th>
-            <th>职务</th>
-            <th>单位</th>
-            <th>工作年限</th>
-            <th>帽类号</th>
-            <th>服装号</th>
-            <th>鞋类号</th>
-            <th>身高</th>
-            <th>胸围</th>
-            <th>腰围</th>
-            <th>头围</th>
-            <th>可用余额</th>
-            <th>经费来源</th>
-            <th>备注</th>
-            <th>操作</th>
+            <th style="width: 2%;"><input type="checkbox" id="selectAll" title="全选/取消全选"></th>
+            <th style="width: 10%;">编号</th>
+            <th style="width: 5%;">姓名</th>
+            <th style="width: 4%;">性别</th>
+            <th style="width: 6%;">出生年月</th>
+            <th style="width: 4%;">年龄</th>
+            <th style="width: 6%;">职务</th>
+            <th style="width: 5%;">单位</th>
+            <th style="width: 6%;">工作年限</th>
+            <th style="width: 5%;">帽类号</th>
+            <th style="width: 5%;">服装号</th>
+            <th style="width: 5%;">鞋类号</th>
+            <th style="width: 3%;">身高</th>
+            <th style="width: 3%;">胸围</th>
+            <th style="width: 3%;">腰围</th>
+            <th style="width: 3%;">头围</th>
+            <th style="width: 4%;">可用余额</th>
+            <th style="width: 4%;">经费来源</th>
+            <th style="width: 4%;">备注</th>
+            <th style="width: 4%;">操作</th>
           </tr>
         </thead>
         <tbody>
           <!-- 数据将通过AJAX动态加载 -->
         </tbody>
       </table>
-    </div>      
-    </section>
-  </div>
+    </div>
 
+    <div style="display: flex; justify-content: center; gap: 15px; margin-top: 10px; margin-bottom: 5px;">
+      <button id="firstPage" class="bg-green-500 text-white px-2 py-1 rounded" onclick="changePage1()">首页</button>         
+      <button id="prevPage" class="bg-green-500 text-white px-2 py-1 rounded" onclick="changePage(-1)">前一页</button>  
+      <div id="pageInfo" class="text-center text-lg font-bold text-gray-700"></div>  
+      <button id="nextPage" class="bg-green-500 text-white px-2 py-1 rounded" onclick="changePage(1)">后一页</button>
+      <button id="lastPage" class="bg-green-500 text-white px-2 py-1 rounded" onclick="changePageN()">尾页</button>   
+  </div>      
   <!-- 在搜索表单下方，按钮区域添加批量删除按钮 -->
-  <div style="display: flex; justify-content: center; gap: 15px; margin-top: -40px; margin-bottom: 5px;">
+  <div style="display: flex; justify-content: center; gap: 15px; margin-top: 10px; margin-bottom: 5px;">
     <button onclick="showChangeTeamModal()" class="button">实力单位变更</button>
     <button class="button" id="batchUpdateFundsBtn">批量修改经费</button>  
     <button id="batchDeleteBtn" class="button">批量删除</button>
     <button onclick="showReportModal()" class="button">打印报表</button>
+  </div>        
+    </section>
+
+    <!-- Excel模板下载 + 导入 -->
+    <section>
+      <h2>模版上传实力信息</h2>
+      <form id="importForm"
+        style="display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 15px; margin-top: 10px; margin-bottom: 10px;">
+        <a href="/firefighters/template/firefighters_template.xlsx" class="button"
+          style="white-space: nowrap;">下载Excel模板</a>
+        <label for="excelFile" style="margin: 0 5px; white-space: nowrap;">上传Excel文件：</label>
+        <input type="file" id="excelFile" name="excelFile" accept=".xlsx" required style="margin: 0 5px;">
+        <button type="submit" class="button" style="white-space: nowrap;">导入</button>
+      </form>
+    </section>
+    
   </div>
+
 
   <!-- 模态窗口（用于添加和修改消防员信息） -->
   <!-- 背景遮罩 -->
@@ -919,13 +935,10 @@
           <input type="hidden" id="firefighterId" name="id">
           <!-- 编号 -->
           <div class="row">
-            <div class="col-md-12 mb-3">
+            <div class="col-md-4 mb-3">
               <label for="modalNumber" class="form-label">编号</label>
               <input type="text" class="form-control" id="modalNumber" name="number" required>
             </div>
-          </div>
-
-          <div class="row">
             <!-- 姓名 -->
             <div class="col-md-4 mb-3">
               <label for="modalName" class="form-label">姓名</label>
@@ -939,11 +952,6 @@
                 <option value="男">男</option>
                 <option value="女">女</option>
               </select>
-            </div>
-            <!-- 身高 -->
-            <div class="col-md-4 mb-3">
-              <label for="modalShengao" class="form-label">身高</label>
-              <input type="number" class="form-control" id="modalShengao" name="shengao" min="1" max="250" placeholder="单位为cm">
             </div>
           </div>
 
@@ -1024,18 +1032,24 @@
           </div>
 
           <div class="row">
+            <!-- 身高 -->
+            <div class="col-md-3 mb-3">
+              <label for="modalShengao" class="form-label">身高</label>
+              <input type="number" class="form-control" id="modalShengao" name="shengao" min="1" max="250" placeholder="单位为cm">
+            </div>
+
             <!-- 胸围 -->
-            <div class="col-md-4 mb-3">
+            <div class="col-md-3 mb-3">
               <label for="modalXiongwei" class="form-label">胸围</label>
               <input class="form-control" id="modalXiongwei" name="xiongwei" min="1" max="250" placeholder="单位为cm">
             </div>
             <!-- 腰围 -->
-            <div class="col-md-4 mb-3">
+            <div class="col-md-3 mb-3">
               <label for="modalYaowei" class="form-label">腰围</label>
               <input class="form-control" id="modalYaowei" name="yaowei" min="1" max="250" placeholder="单位为cm">
             </div>
             <!-- 头围 -->
-            <div class="col-md-4 mb-3">
+            <div class="col-md-3 mb-3">
               <label for="modalTouwei" class="form-label">头围</label>
               <select class="form-select" id="modalTouwei" name="touwei">
                 <option value="">请选择头围</option>
@@ -1168,7 +1182,7 @@
               <label for="modalKeyongyue" class="form-label">可用余额</label>
               <input class="form-control" id="modalKeyongyue" name="keyongyue">
             </div>
-            <div class="col-md-12 mb-3">
+            <div class="col-md-6 mb-3">
               <label for="modalJingfeilaiyuan" class="form-label">经费来源</label>
               <select class="form-select" id="modalJingfeilaiyuan" name="jingfeilaiyuan">
                 <option value="">请选择经费来源</option>
@@ -1666,6 +1680,13 @@
 
 
   <script>
+
+
+const pageSize = 10; // 每页显示5条数据  
+let currentPage = 1; 
+let totalPages = 1;  
+
+
     // 页面加载时获取消防员列表  
     document.addEventListener('DOMContentLoaded', function () {
       loadFirefighters();
@@ -1835,16 +1856,60 @@ confirmBatchFundsBtn.addEventListener('click', () => {
       fetch('/firefighters/list?' + queryString)
         .then(response => response.json())
         .then(data => {
-          const tbody = document.querySelector('#firefightersTable tbody');
+            const tbody = document.querySelector('#firefightersTable tbody');
+
+            const pageInfo = document.getElementById('pageInfo');  
+            const prevPageBtn = document.getElementById('prevPage');  
+            const nextPageBtn = document.getElementById('nextPage');  
+
+            // 计算总页数  
+            totalPages = Math.ceil(data.length / pageSize);  
+
+            // 计算当前页的数据范围  
+            const start = (currentPage - 1) * pageSize;  
+            const end = start + pageSize;  
+            const pageData = data.slice(start, end);
+
           tbody.innerHTML = ''; // 清空当前表格内容  
-          data.forEach(item => {
+
+
+          pageData.forEach(item => {
             const tr = document.createElement('tr');
             tr.innerHTML = generateTableRow(item);
             tbody.appendChild(tr);
           });
+ 
+            // 更新页码信息  
+            pageInfo.textContent = `第 ${currentPage} / ${totalPages} 页`;  
+
+            // 控制按钮状态  
+            prevPageBtn.disabled = currentPage === 1;  
+            nextPageBtn.disabled = currentPage === totalPages; 
         })
         .catch(err => console.error(err));
     }
+    
+
+    function changePage(direction) {  
+            currentPage += direction;  
+
+            // 确保页码在合理范围内  
+            currentPage = Math.max(1, Math.min(currentPage, totalPages));  
+
+            loadFirefighters();  
+        }
+        
+        function changePage1() {  
+            currentPage = 1;  
+            loadFirefighters();  
+        }  
+        
+        
+        function changePageN(direction) {  
+            currentPage = totalPages;  
+            loadFirefighters();  
+        }          
+
 
     // 生成表格行的HTML  
     function generateTableRow(item) {
@@ -1868,9 +1933,11 @@ confirmBatchFundsBtn.addEventListener('click', () => {
         <td>${item.keyongyue || ''}</td>
         <td>${item.jingfeilaiyuan || ''}</td>           
         <td>${item.remarks || ''}</td>  
-        <td>  
-          <button onclick="showEditFirefighterModal('${item.objectId}')" class="btn-change" style="margin-bottom: 5px;">修改</button>  
-          <button onclick="deleteFirefighter('${item.objectId}')" class="btn-delete">删除</button>  
+        <td>
+        <div style="display: flex; border: none; justify-content: center; align-items: center; gap: 5px; height: 100%;">  
+          <button onclick="showEditFirefighterModal('${item.objectId}')" class="btn-change" style="padding: 0.5px 0.5px; border: none; font-size: 5px;">修改</button>  
+          <button onclick="deleteFirefighter('${item.objectId}')" class="btn-delete" style="padding: 0.5px 0.5px; border: none; font-size: 5px;">删除</button>  
+        </div>
         </td>  
       `;
     }
