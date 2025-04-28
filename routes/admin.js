@@ -14,8 +14,22 @@ router.get('/users', (req, res) => {
 
 // 获取用户列表  
 router.get('/users-list', async (req, res) => {  
-    try {  
-        const query = new AV.Query('_User'); // '_User' 是 LeanCloud 的用户表  
+    try {
+        const {
+            number,
+            name,
+          } = req.query; // 从查询参数获取搜索条件         
+        const query = new AV.Query('_User'); // '_User' 是 LeanCloud 的用户表 
+        
+    // 添加搜索条件  
+    if (number) {
+        query.equalTo('username', number);
+      }
+      if (name) {
+        query.contains('name', name);
+      }        
+
+
         query.limit(1000); // 设置查询上限  
         const users = await query.find();
         // 格式化用户信息发送给前端  

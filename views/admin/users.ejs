@@ -6,6 +6,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 引入Tailwind CSS（仅开发环境示例） -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <title>用户管理-被装管理系统</title>
     <link rel="stylesheet" href="/css/style.css">
 </head>
@@ -13,8 +15,8 @@
 <style>
       /* 全局容器 */
   .container {
-    width: 80%;
-    max-width: 800px;
+    width: 100%;
+    max-width: 400px;
     margin: 20px auto;
     padding: 10px 0;
     /* 可以根据需要添加背景或阴影 */
@@ -50,6 +52,7 @@
     display: flex;
     flex-wrap: wrap;
     /* 当屏幕宽度较小，自动换行 */
+    justify-content: center;  /* 水平居中 */  
     align-items: center;
     gap: 0.5rem;
     /* 表单元素之间的间距 */
@@ -61,6 +64,7 @@
   }
 
   input[type="text"],
+  input[type="password"],
   input[type="number"],
   input[type="file"],
   select {
@@ -211,7 +215,7 @@
     
     /* ========== 新增：为表格外层加一个固定高度+滚动条容器 ========== */  
     .table-container {  
-      max-height: 400px; /* 根据实际需求调整表格容器的最大高度*/  
+      max-height: 1000px; /* 根据实际需求调整表格容器的最大高度*/  
       overflow-y: auto;  /* 当内容超过最大高度时出现垂直滚动条*/  
       border: 1px solid #ccc;  
       margin: 16px 0;  
@@ -232,10 +236,21 @@
 </style>
 
 <body>
-    <div class="container">
+    <div class="container" style="width: 100%; max-width: 1200px;">
         <h1>用户管理（管理员 Admin 权限）</h1>
         <section>
-        <h2>已注册用户信息列表</h2>           
+        <h2>已注册用户信息列表</h2>
+        
+        <form id="searchForm" class="search-form">
+            <div style="display: flex; justify-content: center; gap: 15px; margin-top: 10px; margin-bottom: 5px; width: 100%; max-width: 600px;">
+            <input type="text" id="searchNumber" placeholder="用户名" style="width: 60%;">
+            <input type="text" id="searchName" placeholder="姓名" style=" width: 20%;">
+            <button type="button" onclick="searchFirefighters()" class="btn-change">搜索</button>
+            <button type="button" onclick="resetSearch()" class="btn-delete">重置</button>
+            <!-- 可以继续添加搜索条件 -->
+            </div>
+        </form>
+    
         <div class="table-container">
 
         <!-- 用户列表 -->
@@ -244,6 +259,14 @@
         </div>
     </div>        
 
+    <div style="display: flex; justify-content: center; gap: 15px; margin-top: 10px; margin-bottom: 5px;">
+        <button id="firstPage" class="bg-green-500 text-white px-2 py-1 rounded" onclick="changePage1()">首页</button>         
+        <button id="prevPage" class="bg-green-500 text-white px-2 py-1 rounded" onclick="changePage(-1)">前一页</button>  
+        <div id="pageInfo" class="text-center text-lg font-bold text-gray-700"></div>  
+        <button id="nextPage" class="bg-green-500 text-white px-2 py-1 rounded" onclick="changePage(1)">后一页</button>
+        <button id="lastPage" class="bg-green-500 text-white px-2 py-1 rounded" onclick="changePageN()">尾页</button>   
+    </div>    
+    
         <!-- 导出和打印按钮 -->
         <div class="action-buttons">
             <button id="exportExcelBtn" class="btn-action">导出Excel</button>
@@ -258,15 +281,25 @@
         <div class="register-form">
             <h2>注册新用户</h2>
             <form id="registerForm">
+                <div class="row" style="display: flex; justify-content: center; gap: 15px; margin-top: 10px; margin-bottom: 5px; width: 100%; max-width: 400px;">
+                <label for="registername">用户名：</label>
                 <input type="text" id="username" placeholder="用户名" required>
+                </div>
+                <div class="row" style="display: flex; justify-content: center; gap: 15px; margin-top: 10px; margin-bottom: 5px; width: 100%; max-width: 400px;">
+                <label for="registerpassword">密码：</label>
                 <input type="password" id="password" placeholder="密码" required>
+                </div>
                 <input type="email" id="email" placeholder="邮箱" hidden>
+                <div class="row" style="display: flex; justify-content: center; gap: 15px; margin-top: 10px; margin-bottom: 5px; width: 100%; max-width: 400px;">
                 <label for="role">角色：</label>
                 <select id="role" name="role" required>
                     <option value="user">普通用户</option>
                     <option value="admin">管理员</option>
                 </select>
+                </div>
+                <div class="row" style="display: flex; justify-content: center; gap: 15px; margin-top: 10px; margin-bottom: 5px; width: 100%; max-width: 400px;">
                 <button class="btn-regist" type="submit">注册</button>
+                </div>
             </form>
         </div>
     </div>
@@ -306,9 +339,16 @@
         console.log('EJS 模板已正确渲染');  
     </script>
     <script>
-        async function loadUsers() {
+
+const pageSize = 10; // 每页显示5条数据  
+let currentPage = 1; 
+let totalPages = 1;  
+
+
+        async function loadUsers(queryParams = {}) {
             try {
-                const response = await fetch('/admin/users-list');
+                const queryString = new URLSearchParams(queryParams).toString();
+                const response = await fetch('/admin/users-list?' + queryString);
 
                 if (!response.ok) {
                     const errorData = await response.json();
@@ -334,26 +374,39 @@
                 return;
             }
 
+            const pageInfo = document.getElementById('pageInfo');  
+            const prevPageBtn = document.getElementById('prevPage');  
+            const nextPageBtn = document.getElementById('nextPage');  
+
+            // 计算总页数  
+            totalPages = Math.ceil(users.length / pageSize);  
+
+            // 计算当前页的数据范围  
+            const start = (currentPage - 1) * pageSize;  
+            const end = start + pageSize;  
+            const pageData = users.slice(start, end);
+
             usersListDiv.innerHTML = '';
 
             const table = document.createElement('table');
             table.className = 'users-table';
+            table.style = "width: 100%; table-layout: fixed; border-collapse: collapse; justify-content: center;"
 
             const thead = document.createElement('thead');
             thead.innerHTML = `  
             <tr>  
-                <th>用户名</th>  
-                <th>姓名</th> 
-                <th>权限</th>
-                <th>注册时间</th>  
-                <th>操作</th>  
+                <th style="width: 20%;">用户名</th>  
+                <th style="width: 20%;">姓名</th> 
+                <th style="width: 10%;">权限</th>
+                <th style="width: 25%;">注册时间</th>  
+                <th style="width: 25%;">操作</th>  
             </tr>  
         `;
             table.appendChild(thead);
 
             const tbody = document.createElement('tbody');
 
-            users.forEach(user => {
+            pageData.forEach(user => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `  
                 <td>${user.username}</td>  
@@ -371,7 +424,38 @@
             table.appendChild(tbody);
 
             usersListDiv.appendChild(table);
+
+            // 更新页码信息  
+            pageInfo.textContent = `第 ${currentPage} / ${totalPages} 页`;  
+
+            // 控制按钮状态  
+            prevPageBtn.disabled = currentPage === 1;  
+            nextPageBtn.disabled = currentPage === totalPages; 
+
         }
+
+        function changePage(direction) {  
+            currentPage += direction;  
+
+            // 确保页码在合理范围内  
+            currentPage = Math.max(1, Math.min(currentPage, totalPages));  
+
+            loadUsers();  
+        }
+        
+        function changePage1() {  
+            currentPage = 1;
+            if (document.getElementById('searchNumber').value=='' && document.getElementById('searchName').value==''){
+            loadUsers();
+            }  
+        }  
+               
+        function changePageN(direction) {  
+            currentPage = totalPages;
+            if (document.getElementById('searchNumber').value=='' && document.getElementById('searchName').value==''){
+            loadUsers();
+            }  
+        }     
 
         // 删除用户功能  
         async function deleteUser(userId) {
@@ -551,7 +635,21 @@
             });
         });
 
+    // 搜索功能  
+    function searchFirefighters() {
+      const queryParams = {
+        number: document.getElementById('searchNumber').value.trim(),
+        name: document.getElementById('searchName').value.trim(),
+        // 可以继续添加其他搜索条件  
+      };
+      loadUsers(queryParams);
+    }
 
+    // 重置搜索条件  
+    function resetSearch() {
+      document.getElementById('searchForm').reset();
+      loadUsers();
+    }
 
         document.getElementById('exportExcelBtn').addEventListener('click', async () => {
             try {
