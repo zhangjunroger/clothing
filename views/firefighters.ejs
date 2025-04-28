@@ -1934,9 +1934,13 @@ confirmBatchFundsBtn.addEventListener('click', () => {
         <td>${item.jingfeilaiyuan || ''}</td>           
         <td>${item.remarks || ''}</td>  
         <td>
-        <div style="display: flex; border: none; justify-content: center; align-items: center; gap: 5px; height: 100%;">  
-          <button onclick="showEditFirefighterModal('${item.objectId}')" class="btn-change" style="padding: 0.5px 0.5px; border: none; font-size: 5px;">修改</button>  
-          <button onclick="deleteFirefighter('${item.objectId}')" class="btn-delete" style="padding: 0.5px 0.5px; border: none; font-size: 5px;">删除</button>  
+        <div style="display: flex; border: none; justify-content: center; align-items: center; gap: 5px; height: 100%;">
+          <div class='row'>  
+          <button onclick="showEditFirefighterModal('${item.objectId}')" class="btn-change" style="padding: 2px 2px; border: none; font-size: 7px;">修改</button>
+          </div>
+          <div class='row'>  
+          <button onclick="deleteFirefighter('${item.objectId}')" class="btn-delete" style="padding: 2px 2px; border: none; font-size: 7px;">删除</button>
+          </div> 
         </div>
         </td>  
       `;
