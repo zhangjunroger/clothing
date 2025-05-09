@@ -767,7 +767,107 @@ router.post('/firefighters/bulkUpdateFunds', async (req, res) => {
       error: '批量更新经费失败，请稍后重试'  
     });  
   }  
-});  
+}); 
+
+
+router.get('/reports/generatenow', async (req, res) => {
+  try {
+
+    const {
+      reportType, number, name, gender, ageMin, ageMax, position, team, yearMinMax, sortField, sortOrder
+    } = req.query;
+
+    // 查询数据  
+    let report = [];
+
+    // 查询消防员  
+    const query = new AV.Query('Firefighter');
+
+    // 编号过滤  
+    if (number) {
+      query.equalTo('number', number);
+    }
+
+    // 姓名过滤  
+    if (name) {
+      query.equalTo('name', name);
+    }
+
+    // 应用性别过滤  
+    if (gender) {
+      query.equalTo('gender', gender);
+    }    
+      
+    // 应用年龄过滤  
+    if (ageMin) {
+      query.greaterThanOrEqualTo('ageNum', parseInt(ageMin, 10));
+    }
+    if (ageMax) {
+      query.lessThanOrEqualTo('ageNum', parseInt(ageMax, 10));
+    }    
+
+    // 应用职务过滤  
+    if (position) {
+      query.equalTo('position', position);
+    }    
+
+    // 应用单位过滤  
+    if (team) {
+      query.equalTo('team', team);
+    }
+
+    // 应用工作年限过滤  
+    if (yearMinMax) {
+      query.equalTo('year', yearMinMax);
+    }
+
+    // 执行查询  
+    const results = await query.find();
+
+
+    report = results.map(item => item.toJSON());
+
+    res.json({
+      success: true,
+      report: report
+    });
+
+  } catch (err) {
+    console.error('打印报表失败:', err);
+    res.status(500).json({ success: false, error: '打印报表失败' });
+  }
+});
+
+
+router.get('/reports/generateall', async (req, res) => {
+  try {
+
+    const {
+      reportType, number, name, gender, ageMin, ageMax, position, team, yearMinMax, sortField, sortOrder
+    } = req.query;
+
+    // 查询数据  
+    let report = [];
+    
+    // 查询消防员  
+    const query = new AV.Query('Firefighter');
+
+    // 执行查询  
+    const results = await query.find();
+
+    report = results.map(item => item.toJSON());
+
+    res.json({
+      success: true,
+      report: report
+    });
+
+  } catch (err) {
+    console.error('打印报表失败:', err);
+    res.status(500).json({ success: false, error: '打印报表失败' });
+  }
+});
+
 
 // 导出路由  
 module.exports = router;  

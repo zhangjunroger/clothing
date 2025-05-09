@@ -563,7 +563,7 @@
 
   .print-container {
     width: 100%;
-    max-width: 1000px;
+    max-width: 1500px;
     margin: 0 auto;
     padding: 20px;
     background: #fff;
@@ -852,7 +852,21 @@
       <div style="display: flex; justify-content: center; gap: 15px; margin-top: 15px; margin-bottom: 15px;">
         <button type="button" onclick="searchFirefighters()" class="btn-change">搜索</button>
         <button type="button" onclick="resetSearch()" class="btn-delete">重置</button>
-        <button type="button" onclick="showAddFirefighterModal()" class="btn-button">添加实力</button>        
+        <button type="button" onclick="showAddFirefighterModal()" class="btn-button">添加实力</button>
+        <button type="button" onclick="printnow()" class="btn-button">打印搜索实力</button> 
+        <button type="button" onclick="printall()" class="btn-button">打印所有实力</button> 
+            <label>打印格式：</label>
+            <div class="radio-group">
+              <label>
+                <input type="radio" name="printoutputFormat" value="print" checked> 打印
+              </label>
+              <label>
+                <input type="radio" name="printoutputFormat" value="pdf"> PDF
+              </label>
+              <label>
+                <input type="radio" name="printoutputFormat" value="excel"> Excel
+              </label>
+        </div>       
       </div>
 
       <div class="table-container">
@@ -2515,6 +2529,87 @@ confirmBatchFundsBtn.addEventListener('click', () => {
     }
 
 
+    // 打印当前实力  
+    function printnow() {
+  
+      const printoutputFormatElement = document.querySelector('input[name="printoutputFormat"]:checked').value;
+
+      // 基本参数 - 修改为正确的参数名  
+      const params = {
+        reportType: 'shilixinxi'  // 正确的参数名  
+      };
+
+      params.number = document.getElementById('searchNumber').value;      
+      params.name = document.getElementById('searchName').value;
+      params.gender = document.getElementById('searchGender').value;
+      params.ageMin = document.getElementById('searchAgeMin').value;
+      params.ageMax = document.getElementById('searchAgeMax').value;
+      params.position = document.getElementById('searchPosition').value;
+      params.team = document.getElementById('searchTeam').value;
+      params.yearMinMax = document.getElementById('searchYear').value;
+
+      // 添加排序参数  
+      params.sortField = '';
+      params.sortOrder = '';
+
+      // 请求报表数据  
+      fetch('/reports/generatenow?' + new URLSearchParams(params))
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            if (printoutputFormatElement === 'print') {
+              displayPrintableReport(data.report, params.reportType);
+            } else if (printoutputFormatElement === 'pdf') {
+              downloadReportPDF(data.report, params.reportType);
+            } else if (printoutputFormatElement === 'excel') {
+              downloadReportExcel(data.report, params.reportType);
+            }
+          } else {
+            alert('生成报表失败：' + data.error);
+          }
+        })
+        .catch(err => {
+          console.error('报表生成失败:', err);
+          alert('报表生成失败，请稍后重试');
+        });
+    }
+
+
+// 打印所有实力  
+function printall() {
+  
+  const printoutputFormatElement = document.querySelector('input[name="printoutputFormat"]:checked').value;
+
+  // 基本参数 - 修改为正确的参数名  
+  const params = {
+    reportType: 'shilixinxi'  // 正确的参数名  
+  };
+
+  // 添加排序参数  
+  params.sortField = '';
+  params.sortOrder = '';
+
+  // 请求报表数据  
+  fetch('/reports/generateall?' + new URLSearchParams(params))
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        if (printoutputFormatElement === 'print') {
+          displayPrintableReport(data.report, params.reportType);
+        } else if (printoutputFormatElement === 'pdf') {
+          downloadReportPDF(data.report, params.reportType);
+        } else if (printoutputFormatElement === 'excel') {
+          downloadReportExcel(data.report, params.reportType);
+        }
+      } else {
+        alert('生成报表失败：' + data.error);
+      }
+    })
+    .catch(err => {
+      console.error('报表生成失败:', err);
+      alert('报表生成失败，请稍后重试');
+    });
+}
 
     // 关闭报表模态窗口  
     function closeReportModal() {
@@ -2567,13 +2662,22 @@ confirmBatchFundsBtn.addEventListener('click', () => {
       const fieldNames = {
         'number': '编号',
         'name': '姓名',
+        'sex': '性别',
+        'bornyear': '出生年月',        
         'ageNum': '年龄',
+        'position': '职务',
         'team': '单位',
         'year': '工作年限',
+        'maoleiNum': '帽类号',
+        'fuzhuangNum': '服装号',
+        'xieleiNum': '鞋类号',        
         'shengaoNum': '身高',
         'xiongweiNum': '胸围',
         'yaoweiNum': '腰围',
         'touweiNum': '头围',
+        'keyongyue': '可用余额',
+        'jingfeilaiyuan': '经费来源',
+        'beizhu': '备注',
         'total': '总人数',
         'male': '男性人数',
         'female': '女性人数',
@@ -2677,7 +2781,7 @@ confirmBatchFundsBtn.addEventListener('click', () => {
       const header = document.createElement('div');
       header.className = 'print-header';
       header.innerHTML = `  
-    <h1>${getReportTitle(reportType)}</h1>  
+    <h1 style="font-size: 40px;">${getReportTitle(reportType)}</h1>  
   `;
       printContainer.appendChild(header);
 
@@ -2703,7 +2807,7 @@ confirmBatchFundsBtn.addEventListener('click', () => {
             const data = result.data;
             if (currentUser && data.name) {
               printInfo.innerHTML = `  
-    <div class="print-info-container" style="display: flex; gap: 20px;">  
+    <div class="print-info-container" style="display: flex; gap: 30px;">  
       <div class="print-date">打印日期：${new Date().toLocaleDateString()}</div>  
       <div class="print-user">打印人：${data.name || '系统管理员'}</div>  
     </div>  
@@ -2752,125 +2856,204 @@ confirmBatchFundsBtn.addEventListener('click', () => {
       document.body.appendChild(printContainer);
     }
 
-    // 使用iframe打印  
-    function printReportIframe() {
-      // 获取要打印的内容  
-      const printContent = document.getElementById('printableReport');
 
-      // 创建一个新的iframe  
-      const iframe = document.createElement('iframe');
-      iframe.style.display = 'none';
-      document.body.appendChild(iframe);
+// 使用iframe打印并强制插入页码
+function printReportIframe() {
+  // 获取要打印的内容  
+  const printContent = document.getElementById('printableReport');
+  
+  // 获取标题
+  const reportTitle = printContent.querySelector('.print-header h1')?.textContent || '报表';
 
-      // 获取iframe的文档  
-      const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+  // 创建一个新的iframe  
+  const iframe = document.createElement('iframe');
+  iframe.style.display = 'none';
+  document.body.appendChild(iframe);
 
-      // 写入基本HTML结构  
-      iframeDoc.write(`  
-    <!DOCTYPE html>  
-    <html>  
-    <head>  
-      <title>${getReportTitle(reportType)}</title>  
-      <style>  
-        /* 重置样式 */  
-        body, html {  
-          margin: 0;  
-          padding: 0;  
-          font-family: Arial, sans-serif;  
-        }  
+  // 获取表格和其内容
+  const table = printContent.querySelector('table');
+  if (!table) {
+    console.error('找不到表格元素');
+    return;
+  }
+
+  const thead = table.querySelector('thead');
+  const tbody = table.querySelector('tbody');
+  
+  if (!thead || !tbody) {
+    console.error('表格结构不完整');
+    return;
+  }
+
+  // 获取表头HTML
+  const theadHTML = thead.outerHTML;
+  
+  // 获取所有行
+  const rows = Array.from(tbody.querySelectorAll('tr'));
+  
+  // 每页显示的行数
+  const rowsPerPage = 28; // 可以根据需要调整
+  
+  // 计算总页数
+  const totalPages = Math.ceil(rows.length / rowsPerPage);
+  
+  // 创建分页后的内容
+  let pagedContent = '';
+  
+  // 获取标题和其他信息
+  const headerHTML = printContent.querySelector('.print-header')?.outerHTML || '';
+  const printInfoHTML = printContent.querySelector('.print-info')?.outerHTML || '';
+  
+  // 为每页创建内容
+  for (let page = 0; page < totalPages; page++) {
+    // 当前页的行范围
+    const startRow = page * rowsPerPage;
+    const endRow = Math.min((page + 1) * rowsPerPage, rows.length);
+    
+    // 提取当前页的行
+    const pageRows = rows.slice(startRow, endRow);
+    const pageRowsHTML = pageRows.map(row => row.outerHTML).join('');
+    
+    // 创建当前页的表格
+    const pageTableHTML = `
+      <table>
+        ${theadHTML}
+        <tbody>
+          ${pageRowsHTML}
+        </tbody>
+      </table>
+    `;
+    
+    // 创建当前页的完整内容
+    pagedContent += `
+      <div class="page">
+        ${page === 0 ? headerHTML : `<div class="print-header"><h1>${reportTitle}</h1></div>`}
+        ${pageTableHTML}
+        ${page === totalPages - 1 ? printInfoHTML : ''}
+        <div class="page-number">第 ${page + 1} 页/共 ${totalPages} 页</div>
+        ${page < totalPages - 1 ? '<div class="page-break"></div>' : ''}
+      </div>
+    `;
+  }
+  
+  // 获取iframe的文档  
+  const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+  
+  // 写入基本HTML结构，包括分页后的内容
+  iframeDoc.write(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>${reportTitle}</title>
+      <style>
+        /* 重置样式 */
+        body, html {
+          margin: 0;
+          padding: 0;
+          font-family: Arial, sans-serif;
+        }
         
-        /* 报表样式 */  
-        .print-content {  
-          padding: 10mm;  
-        }  
+        /* 页面样式 */
+        .page {
+          position: relative;
+          padding: 10mm;
+          min-height: 270mm; /* A4高度减去上下边距 */
+          box-sizing: border-box;
+        }
         
-        .print-header {  
-          text-align: center;  
-          margin-bottom: 15mm;  
-        }  
+        /* 报表样式 */
+        .print-header {
+          text-align: center;
+          margin-bottom: 15mm;
+        }
         
-        /* 打印信息样式 - 新增 */  
-        .print-info {  
-          padding: 0 10mm;  
-          margin-top: 10mm;  
-        }  
+        /* 打印信息样式 */
+        .print-info {
+          padding: 0;
+          margin-top: 10mm;
+        }
         
-        .print-info-container {  
-          display: flex;  
-          justify-content: space-between;  
-          border-top: 1px solid #ddd;  
-          padding-top: 5mm;  
-        }  
+        .print-info-container {
+          display: flex;
+          justify-content: space-between;
+          border-top: 1px solid #ddd;
+          padding-top: 5mm;
+        }
         
-        .print-date, .print-user {  
-          font-size: 10pt;  
-        }  
+        .print-date, .print-user {
+          font-size: 10pt;
+        }
         
-        .print-footer {  
-          text-align: center;  
-          margin-top: 10mm;  
-        }  
+        /* 表格样式 */
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          margin-bottom: 10mm;
+        }
         
-        /* 表格样式 */  
-        table {  
-          width: 100%;  
-          border-collapse: collapse;  
-        }  
+        th, td {
+          border: 1px solid #333;
+          padding: 3mm;
+          text-align: center;
+        }
         
-        th, td {  
-          border: 1px solid #333;  
-          padding: 3mm;  
-          text-align: center;  
-        }  
+        th {
+          background-color: #f2f2f2;
+        }
         
-        th {  
-          background-color: #f2f2f2;  
-        }  
+        /* 页码样式 */
+        .page-number {
+          position: absolute;
+          bottom: 10mm;
+          left: 0;
+          width: 100%;
+          text-align: center;
+          font-size: 10pt;
+        }
         
-        /* 隐藏不打印的元素 */  
-        .no-print {  
-          display: none;  
-        }  
+        /* 分页样式 */
+        .page-break {
+          page-break-after: always;
+          height: 0;
+        }
         
-        /* 页码样式 */  
-        .page-number {  
-          position: absolute;  
-          bottom: 5mm;  
-          width: 100%;  
-          text-align: center;  
-          font-size: 10pt;  
-        }  
-        
-        /* 控制分页 */  
-        .page-break {  
-          page-break-after: always;  
-        }  
-        
-        @page {  
-          margin: 10mm;  
-        }  
-      </style>  
-    </head>  
-    <body>  
-      ${printContent.innerHTML.replace(/<div class="no-print">.*?<\/div>/g, '')}  
-    </body>  
-    </html>  
+        /* 打印样式 */
+        @media print {
+          @page {
+            margin: 0;
+          }
+          
+          .page {
+            page-break-after: always;
+          }
+          
+          .page:last-child {
+            page-break-after: auto;
+          }
+        }
+      </style>
+    </head>
+    <body>
+      ${pagedContent}
+    </body>
+    </html>
   `);
+  
+  iframeDoc.close();
+  
+  // 等待内容加载完成  
+  setTimeout(() => {
+    // 打印iframe内容  
+    iframe.contentWindow.focus();
+    iframe.contentWindow.print();
+    
+    // 打印后删除iframe  
+    setTimeout(() => {
+      document.body.removeChild(iframe);
+    }, 1000);
+  }, 1000);
+}
 
-      iframeDoc.close();
-
-      // 等待图片加载完成  
-      setTimeout(() => {
-        // 打印iframe内容  
-        iframe.contentWindow.focus();
-        iframe.contentWindow.print();
-
-        // 打印后删除iframe  
-        setTimeout(() => {
-          document.body.removeChild(iframe);
-        }, 1000);
-      }, 500);
-    }
 
     // 关闭报表  
     function closeReport() {
@@ -2887,7 +3070,9 @@ confirmBatchFundsBtn.addEventListener('click', () => {
         'equipment': '人员装备配发表',
         'bodySize': '人员体型尺寸表',
         'teamSummary': '队伍人员统计表',
-        'changeHistory': '单位变更记录表'
+        'changeHistory': '单位变更记录表',
+        'shilixinxi': '实力信息统计表'
+
       };
       return titles[reportType] || '报表';
     }
@@ -3050,6 +3235,57 @@ confirmBatchFundsBtn.addEventListener('click', () => {
         </tr>  
       `;
         });
+      } else if (reportType === 'shilixinxi') {
+        tableHTML += `  
+      <thead>  
+        <tr>  
+          <th>编号</th>  
+          <th>姓名</th>  
+          <th>性别</th>
+          <th>出生年月</th>  
+          <th>年龄</th>
+          <th>职务</th>            
+          <th>单位</th>  
+          <th>工作年限</th>  
+          <th>帽类号</th>
+          <th>服装号</th>
+          <th>鞋类号</th>
+          <th>身高</th>
+          <th>胸围</th>          
+          <th>腰围</th>          
+          <th>头围</th>
+          <th>可用余额</th>
+          <th>经费来源</th>
+          <th>备注</th>          
+        </tr>  
+      </thead>  
+      <tbody>  
+    `;
+
+        report.forEach(item => {
+          tableHTML += `  
+        <tr>  
+          <td>${item.number || ''}</td>  
+          <td>${item.name || ''}</td>  
+          <td>${item.gender || ''}</td>
+          <td>${item.birthDate || ''}</td>        
+          <td>${item.age || ''}</td>  
+          <td>${item.position || ''}</td>  
+          <td>${item.team || ''}</td>  
+          <td>${item.year || ''}</td>
+          <td>${item.maoleihao || ''}</td>  
+          <td>${item.fuzhuanghao || ''}</td>  
+          <td>${item.xieleihao || ''}</td>
+          <td>${item.shengao || ''}</td>        
+          <td>${item.xiongwei || ''}</td>  
+          <td>${item.yaowei || ''}</td>  
+          <td>${item.touwei || ''}</td>  
+          <td>${item.keyongyue || ''}</td>
+          <td>${item.jingfeilaiyuan || ''}</td>  
+          <td>${item.remarks || ''}</td>                         
+        </tr>  
+      `;
+        });
       }
 
       tableHTML += '</tbody></table>';
@@ -3061,7 +3297,14 @@ confirmBatchFundsBtn.addEventListener('click', () => {
     async function downloadReportPDF(report, reportType) {
       // 创建PDF文档  
       const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
+      const doc = new jsPDF({
+    orientation: 'landscape', // 设置为横向
+    unit: 'mm',
+    format: 'a4'
+  });
+
+     // 设置表格线宽度为 0.5mm（默认通常是 0.1mm 左右）
+     doc.setLineWidth(0.5);
 
       // 加载字体  
       const fontPath = '/fonts/Simsun.ttf'; // 确保字体文件路径正确  
@@ -3081,8 +3324,8 @@ confirmBatchFundsBtn.addEventListener('click', () => {
 
       // 设置标题  
       const title = getReportTitle(reportType);
-      doc.setFontSize(18);
-      doc.text(title, 105, 15, { align: 'center' });
+      doc.setFontSize(25);
+      doc.text(title, 140, 15, { align: 'center' });
 
       // 设置表格列  
       let columns = [];
@@ -3140,6 +3383,27 @@ confirmBatchFundsBtn.addEventListener('click', () => {
           { header: '变更单位', dataKey: 'newTeam' },
           { header: '变更日期', dataKey: 'changeDate' }
         ];
+      } else if (reportType === 'shilixinxi') {
+        columns = [
+          { header: '编号', dataKey: 'number' },
+          { header: '姓名', dataKey: 'name' },
+          { header: '性别', dataKey: 'gender' },
+          { header: '出生年月', dataKey: 'birthDate' },          
+          { header: '年龄', dataKey: 'age' },
+          { header: '职务', dataKey: 'position' },          
+          { header: '单位', dataKey: 'team' },
+          { header: '工作年限', dataKey: 'year' },
+          { header: '帽类号', dataKey: 'maoleihao' },
+          { header: '服装号', dataKey: 'fuzhuanghao' },
+          { header: '鞋类号', dataKey: 'xieleihao' },
+          { header: '身高', dataKey: 'shengao' },
+          { header: '胸围', dataKey: 'xiongwei' },
+          { header: '腰围', dataKey: 'yaowei' },
+          { header: '头围', dataKey: 'touwei' },
+          { header: '可用余额', dataKey: 'keyongyue' },
+          { header: '经费来源', dataKey: 'jingfeilaiyuan' },
+          { header: '备注', dataKey: 'remarks' }
+        ];
       }
 
       // 将报表数据转换为行数据  
@@ -3157,20 +3421,20 @@ confirmBatchFundsBtn.addEventListener('click', () => {
 
       // 生成PDF表格  
       doc.autoTable({
-        startY: 35,
+        startY: 20,
         head: [columns.map(col => col.header)],
         body: rows.map(row => columns.map(col => row[col.dataKey])),
         theme: 'grid',
         headStyles: {
           fillColor: [41, 128, 185],
           textColor: 255,
-          fontSize: 12,
+          fontSize: 8,
           halign: 'center'
         },
         margin: { top: 30 },
         styles: {
           font: "Simsun",
-          fontSize: 12,
+          fontSize: 8,
           cellPadding: 3,
           valign: 'middle',
           halign: 'center'
@@ -3189,7 +3453,7 @@ confirmBatchFundsBtn.addEventListener('click', () => {
         doc.setFont('Simsun');
         doc.setPage(i);
         doc.setFontSize(10);
-        doc.text(`第${i}页/共${pageCount}页`, 105, doc.internal.pageSize.height - 10, { align: 'center' });
+        doc.text(`第${i}页/共${pageCount}页`, 160, doc.internal.pageSize.height - 10, { align: 'center' });
 
         // 只在最后一页的表格下方添加日期和打印人信息  
         if (i === pageCount) {
@@ -3276,6 +3540,8 @@ confirmBatchFundsBtn.addEventListener('click', () => {
         headers = ['单位', '总人数', '男性', '女性', '平均年龄'];
       } else if (reportType === 'changeHistory') {
         headers = ['编号', '姓名', '性别', '年龄', '原单位', '变更单位', '变更日期'];
+      } else if (reportType === 'shilixinxi') {
+        headers = ['编号', '姓名', '性别', '出生年月', '年龄', '职务', '单位', '工作年限', '帽类号', '服装号', '鞋类号', '身高', '胸围', '腰围', '头围', '可用余额', '经费来源', '备注'];
       }
 
 
@@ -3349,6 +3615,29 @@ confirmBatchFundsBtn.addEventListener('click', () => {
             item.oldTeam || '',
             item.newTeam || '',
             item.changeDate || ''
+          ]);
+        });
+      } else if (reportType === 'shilixinxi') {
+        report.forEach(item => {
+          rows.push([
+          item.number || '',  
+          item.name || '', 
+          item.gender || '',
+          item.birthDate || '',        
+          item.age || '',  
+          item.position || '',  
+          item.team || '',  
+          item.year || '',
+          item.maoleihao || '',  
+          item.fuzhuanghao || '',  
+          item.xieleihao || '',
+          item.shengao || '',        
+          item.xiongwei || '',  
+          item.yaowei || '',  
+          item.touwei || '',  
+          item.keyongyue || '',
+          item.jingfeilaiyuan || '',  
+          item.remarks || '' 
           ]);
         });
       }
