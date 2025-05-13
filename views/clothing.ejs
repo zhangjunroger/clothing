@@ -527,6 +527,29 @@
     background-color: #f49236;
   }
 
+  .btn-button {
+    background-color: #365cf4;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  .btn-button:hover {
+    background-color: #365cf4;
+  }
+
+  /* 搜索表单样式 */
+  .search-form input,
+  .search-form select {
+    margin-right: 10px;
+    width: 100%;
+    min-height: 42px;
+    padding: 8px 12px;
+    box-sizing: border-box;
+    font-size: 16px;  /* 这里指定新的字体大小 */
+  }
 
   /* 报表相关样式 */
   .date-range {
@@ -758,7 +781,7 @@
   
     /* ========== 新增：为表格外层加一个固定高度+滚动条容器 ========== */  
     .table-container {  
-      max-height: 400px; /* 根据实际需求调整表格容器的最大高度*/  
+      max-height: 1200px; /* 根据实际需求调整表格容器的最大高度*/  
       overflow-y: auto;  /* 当内容超过最大高度时出现垂直滚动条*/  
       border: 1px solid #ccc;  
       margin: 16px 0;  
@@ -775,7 +798,25 @@
       padding: 6px 12px;  
       margin-left: 8px;  
       cursor: pointer;  
-    }  
+    }
+    
+.size-quantity-wrapper {
+  position: relative;
+}
+
+.size-details {
+  position: absolute;
+  z-index: 100;
+  width: 200px;
+  background: white;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.hidden {
+  display: none;
+}
+  
+
 </style>
 
 <body>
@@ -787,24 +828,39 @@
 
   <div class="container">
     <h1>被装管理</h1>
-
-    <!-- Excel模板下载 + 导入 -->
-    <section>
-      <h2>模版上传被装信息</h2>
-      <form id="importForm"
-        style="display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 15px; margin-top: 20px; margin-bottom: 20px;">
-        <a href="/template/clothing_template.xlsx" class="button" style="white-space: nowrap;">下载Excel模板</a>
-        <label for="excelFile" style="margin: 0 5px; white-space: nowrap;">上传Excel文件：</label>
-        <input type="file" id="excelFile" name="excelFile" accept=".xlsx" required style="margin: 0 5px;">
-        <button type="submit" class="button" style="white-space: nowrap;">导入</button>
-      </form>
-    </section>
-
-    <hr>
-
     <!-- 服装信息表格展示 -->
     <section>
       <h2>被装信息列表</h2>
+
+      <form id="searchForm" class="search-form">
+        <input type="text" id="searchNumber" placeholder="物品编号">
+        <input type="text" id="searchName" placeholder="物品名称">
+        <input type="number" id="searchPriceMin" placeholder="单价最小值">
+        <input type="number" id="searchPriceMax" placeholder="单价最大值">
+        <input type="text" id="searchCategory" placeholder="类别">        
+        <input type="number" id="searchYearMin" placeholder="起始年份">
+        <input type="number" id="searchYearMax" placeholder="截止年份">        
+      </form>
+      <div style="display: flex; justify-content: center; gap: 15px; margin-top: 15px; margin-bottom: 15px;">
+        <button type="button" onclick="searchClothings()" class="btn-change">搜索</button>
+        <button type="button" onclick="resetSearch()" class="btn-delete">重置</button>
+        <button type="button" onclick="showAddClothingModal()" class="btn-button">添加被装</button>
+        <button type="button" onclick="printnow()" class="btn-button">打印搜索被装</button> 
+        <button type="button" onclick="printall()" class="btn-button">打印所有被装</button> 
+            <label>打印格式：</label>
+            <div class="radio-group">
+              <label>
+                <input type="radio" name="printoutputFormat" value="print" checked> 打印
+              </label>
+              <label>
+                <input type="radio" name="printoutputFormat" value="pdf"> PDF
+              </label>
+              <label>
+                <input type="radio" name="printoutputFormat" value="excel"> Excel
+              </label>
+        </div>       
+      </div>
+
       <div class="table-container">
       <table id="clothingTable" class="users-table">
         <thead>
@@ -826,16 +882,37 @@
         </tbody>
       </table>
     </div>
-    </section>
-  </div>
+
+    <div style="display: flex; justify-content: center; gap: 15px; margin-top: 10px; margin-bottom: 5px;">
+      <button id="firstPage" class="bg-green-500 text-white px-2 py-1 rounded" onclick="changePage1()">首页</button>         
+      <button id="prevPage" class="bg-green-500 text-white px-2 py-1 rounded" onclick="changePage(-1)">前一页</button>  
+      <div id="pageInfo" class="text-center text-lg font-bold text-gray-700"></div>  
+      <button id="nextPage" class="bg-green-500 text-white px-2 py-1 rounded" onclick="changePage(1)">后一页</button>
+      <button id="lastPage" class="bg-green-500 text-white px-2 py-1 rounded" onclick="changePageN()">尾页</button>   
+  </div>  
+
 
   <!-- 在搜索表单下方，按钮区域添加批量删除按钮 -->
-  <div style="display: flex; justify-content: center; gap: 15px; margin-top: -40px; margin-bottom: 5px;">
+  <div style="display: flex; justify-content: center; gap: 15px; margin-top: 40px; margin-bottom: 10px;">
     <button onclick="showAddClothingModal()" class="button">添加被装</button>
     <button id="batchDeleteBtn" class="button">批量删除</button>
     <button onclick="showReportModal()" class="button">打印报表</button>
-  </div>
+  </div>    
+    </section>
 
+    <hr>
+    <!-- Excel模板下载 + 导入 -->
+    <section>
+      <h2>模版上传被装信息</h2>
+      <form id="importForm"
+        style="display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 15px; margin-top: 20px; margin-bottom: 20px;">
+        <a href="/template/clothing_template.xlsx" class="button" style="white-space: nowrap;">下载Excel模板</a>
+        <label for="excelFile" style="margin: 0 5px; white-space: nowrap;">上传Excel文件：</label>
+        <input type="file" id="excelFile" name="excelFile" accept=".xlsx" required style="margin: 0 5px;">
+        <button type="submit" class="button" style="white-space: nowrap;">导入</button>
+      </form>
+    </section>
+  </div>
 
   <!-- 模态窗口（用于展示导入的Excel数据） -->
   <div id="importModal" class="modal">
@@ -1124,6 +1201,12 @@
   </div>
 
   <script>
+
+const pageSize = 5; // 每页显示5条数据  
+let currentPage = 1; 
+let totalPages = 1;  
+
+
     // 页面加载时获取服装列表  
     document.addEventListener('DOMContentLoaded', function () {
       loadClothing();
@@ -1209,39 +1292,223 @@
 
 
     // 加载服装数据并填充表格  
-    function loadClothing() {
-      fetch('/clothing/list')
+    function loadClothing(queryParams = {}) {
+      const queryString = new URLSearchParams(queryParams).toString();      
+      fetch('/clothing/list?' + queryString)
         .then(response => response.json())
         .then(data => {
           const tbody = document.querySelector('#clothingTable tbody');
+
+            const pageInfo = document.getElementById('pageInfo');  
+            const prevPageBtn = document.getElementById('prevPage');  
+            const nextPageBtn = document.getElementById('nextPage');  
+
+            // 计算总页数  
+            totalPages = Math.ceil(data.length / pageSize);  
+
+            // 计算当前页的数据范围  
+            const start = (currentPage - 1) * pageSize;  
+            const end = start + pageSize;  
+            const pageData = data.slice(start, end);
+
+
           tbody.innerHTML = ''; // 清空当前表格内容  
-          data.forEach(item => {
+          pageData.forEach(item => {
             const tr = document.createElement('tr');
             tr.innerHTML = generateTableRow(item);
             tbody.appendChild(tr);
           });
+
+            // 更新页码信息  
+            pageInfo.textContent = `第 ${currentPage} / ${totalPages} 页`;  
+
+            // 控制按钮状态  
+            prevPageBtn.disabled = currentPage === 1;  
+            nextPageBtn.disabled = currentPage === totalPages; 
+
+
         })
         .catch(err => console.error(err));
     }
 
-    // 生成表格行的HTML
-    function generateTableRow(item) {
-      return `
-        <td><input type="checkbox" class="row-checkbox" data-id="${item.objectId}"></td>    
-        <td>${item.itemNumber}</td>  
-        <td>${item.itemName}</td>
-        <td><img src="${item.itemPic || ''}" alt="缩略图" class="thumbnail" onclick="showLargeImage('${item.itemPic || ''}')" />  </td>  
-        <td>${(item.sizes || []).map(sizeObj => `${sizeObj.size}: ${sizeObj.quantity}`).join('<br>')}</td> 
-        <td>${item.price || ''}</td>          
-        <td>${item.category || ''}</td>  
-        <td>${item.warehouseLocation || ''}</td>  
-        <td>${item.remarks || ''}</td>  
-        <td>
-          <button onclick="showEditClothingModal('${item.objectId}')" class="btn-change">修改</button>   
-          <button onclick="deleteClothing('${item.objectId}')" class="btn-delete">删除</button>  
-        </td>  
-      `;
+
+    function changePage(direction) {  
+            currentPage += direction;  
+
+            // 确保页码在合理范围内  
+            currentPage = Math.max(1, Math.min(currentPage, totalPages)); 
+            
+      const queryParams = {
+        itemNumber: document.getElementById('searchNumber').value.trim(),
+        itemName: document.getElementById('searchName').value.trim(),
+        priceMin: document.getElementById('searchPriceMin').value.trim(),
+        priceMax: document.getElementById('searchPriceMax').value.trim(),
+        category: document.getElementById('searchCategory').value.trim(),
+        yearMin: document.getElementById('searchYearMin').value.trim(),
+        yearMax: document.getElementById('searchYearMax').value.trim()
+        // 可以继续添加其他搜索条件  
+      };
+      loadClothing(queryParams);            
+
+        }
+        
+        function changePage1() {  
+            currentPage = 1; 
+            
+      const queryParams = {
+        itemNumber: document.getElementById('searchNumber').value.trim(),
+        itemName: document.getElementById('searchName').value.trim(),
+        priceMin: document.getElementById('searchPriceMin').value.trim(),
+        priceMax: document.getElementById('searchPriceMax').value.trim(),
+        category: document.getElementById('searchCategory').value.trim(),
+        yearMin: document.getElementById('searchYearMin').value.trim(),
+        yearMax: document.getElementById('searchYearMax').value.trim()
+        // 可以继续添加其他搜索条件  
+      };
+      loadClothing(queryParams);            
+        }  
+        
+        
+        function changePageN(direction) {  
+            currentPage = totalPages;  
+      const queryParams = {
+        itemNumber: document.getElementById('searchNumber').value.trim(),
+        itemName: document.getElementById('searchName').value.trim(),
+        priceMin: document.getElementById('searchPriceMin').value.trim(),
+        priceMax: document.getElementById('searchPriceMax').value.trim(),
+        category: document.getElementById('searchCategory').value.trim(),
+        yearMin: document.getElementById('searchYearMin').value.trim(),
+        yearMax: document.getElementById('searchYearMax').value.trim()
+        // 可以继续添加其他搜索条件  
+      };
+      loadClothing(queryParams);
+        }    
+
+
+    // 搜索功能  
+    function searchClothings() {
+      const queryParams = {
+        itemNumber: document.getElementById('searchNumber').value.trim(),
+        itemName: document.getElementById('searchName').value.trim(),
+        priceMin: document.getElementById('searchPriceMin').value.trim(),
+        priceMax: document.getElementById('searchPriceMax').value.trim(),
+        category: document.getElementById('searchCategory').value.trim(),
+        yearMin: document.getElementById('searchYearMin').value.trim(),
+        yearMax: document.getElementById('searchYearMax').value.trim()
+        // 可以继续添加其他搜索条件  
+      };
+      loadClothing(queryParams);
     }
+
+    // 重置搜索条件  
+    function resetSearch() {
+      document.getElementById('searchForm').reset();
+      loadClothing();
+    }
+
+
+
+// 生成表格行的HTML
+function generateTableRow(item) {
+  // 处理尺码与数量的显示
+  let sizesHTML = '';
+  const sizes = item.sizes || [];
+  
+  if (sizes.length === 0) {
+    sizesHTML = '<span class="text-gray-400">无尺码信息</span>';
+  } else {
+    // 计算总数量
+    const totalQuantity = sizes.reduce((sum, sizeObj) => sum + (parseInt(sizeObj.quantity) || 0), 0);
+    const sizesCount = sizes.length;
+    
+    // 创建折叠/展开界面
+    sizesHTML = `
+      <div class="size-quantity-wrapper">
+        <div class="flex items-center gap-2">
+          <span>${sizesCount}种尺码，共${totalQuantity}件</span>
+          <button 
+            onclick="toggleSizeDetails(this, event)" 
+            class="px-2 py-1 text-xs bg-blue-100 hover:bg-blue-200 text-blue-700 rounded"
+            data-sizes='${JSON.stringify(sizes)}'
+          >
+            查看
+          </button>
+        </div>
+        <div class="size-details hidden mt-2 p-2 bg-gray-50 rounded border border-gray-200 max-h-40 overflow-y-auto">
+          <!-- 详细尺码信息将在点击时动态生成 -->
+        </div>
+      </div>
+    `;
+  }
+
+  return `
+    <td><input type="checkbox" class="row-checkbox" data-id="${item.objectId}"></td>    
+    <td>${item.itemNumber}</td>  
+    <td>${item.itemName}</td>
+    <td><img src="${item.itemPic || ''}" alt="缩略图" class="thumbnail" onclick="showLargeImage('${item.itemPic || ''}')" />  </td>  
+    <td>${sizesHTML}</td> 
+    <td>${item.price || ''}</td>          
+    <td>${item.category || ''}</td>  
+    <td>${item.warehouseLocation || ''}</td>  
+    <td>${item.remarks || ''}</td>  
+    <td>
+      <button onclick="showEditClothingModal('${item.objectId}')" class="btn-change">修改</button>   
+      <button onclick="deleteClothing('${item.objectId}')" class="btn-delete">删除</button>  
+    </td>  
+  `;
+}
+
+
+// 切换尺码详情的显示/隐藏
+function toggleSizeDetails(button, event) {
+  event.stopPropagation(); // 阻止事件冒泡
+  
+  // 获取尺码数据
+  const sizesData = JSON.parse(button.getAttribute('data-sizes'));
+  
+  // 获取详情容器
+  const detailsContainer = button.parentNode.nextElementSibling;
+  
+  // 切换显示/隐藏状态
+  if (detailsContainer.classList.contains('hidden')) {
+    // 显示详情
+    detailsContainer.classList.remove('hidden');
+    button.textContent = '收起';
+    
+    // 生成尺码详情表格
+    let tableHTML = `
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="bg-gray-100">
+            <th class="py-1 px-2 text-left">尺码</th>
+            <th class="py-1 px-2 text-right">数量</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+    
+    sizesData.forEach(sizeObj => {
+      tableHTML += `
+        <tr class="border-t border-gray-100">
+          <td class="py-1 px-2">${sizeObj.size}</td>
+          <td class="py-1 px-2 text-right">${sizeObj.quantity}</td>
+        </tr>
+      `;
+    });
+    
+    tableHTML += `
+        </tbody>
+      </table>
+    `;
+    
+    detailsContainer.innerHTML = tableHTML;
+  } else {
+    // 隐藏详情
+    detailsContainer.classList.add('hidden');
+    button.textContent = '查看';
+  }
+}
+
 
 
     // 双击缩略图显示大图  
@@ -1735,6 +2002,89 @@
           });
       }
     }
+
+
+    // 打印当前被装  
+    function printnow() {
+  
+      const printoutputFormatElement = document.querySelector('input[name="printoutputFormat"]:checked').value;
+
+      // 基本参数 - 修改为正确的参数名  
+      const params = {
+        reportType: 'shilixinxi'  // 正确的参数名  
+      };
+
+      params.number = document.getElementById('searchNumber').value;      
+      params.name = document.getElementById('searchName').value;
+      params.gender = document.getElementById('searchGender').value;
+      params.ageMin = document.getElementById('searchAgeMin').value;
+      params.ageMax = document.getElementById('searchAgeMax').value;
+      params.position = document.getElementById('searchPosition').value;
+      params.team = document.getElementById('searchTeam').value;
+      params.yearMinMax = document.getElementById('searchYear').value;
+
+      // 添加排序参数  
+      params.sortField = '';
+      params.sortOrder = '';
+
+      // 请求报表数据  
+      fetch('/reports/generatenow?' + new URLSearchParams(params))
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            if (printoutputFormatElement === 'print') {
+              displayPrintableReport(data.report, params.reportType);
+            } else if (printoutputFormatElement === 'pdf') {
+              downloadReportPDF(data.report, params.reportType);
+            } else if (printoutputFormatElement === 'excel') {
+              downloadReportExcel(data.report, params.reportType);
+            }
+          } else {
+            alert('生成报表失败：' + data.error);
+          }
+        })
+        .catch(err => {
+          console.error('报表生成失败:', err);
+          alert('报表生成失败，请稍后重试');
+        });
+    }
+
+
+// 打印所有被装  
+function printall() {
+  
+  const printoutputFormatElement = document.querySelector('input[name="printoutputFormat"]:checked').value;
+
+  // 基本参数 - 修改为正确的参数名  
+  const params = {
+    reportType: 'shilixinxi'  // 正确的参数名  
+  };
+
+  // 添加排序参数  
+  params.sortField = '';
+  params.sortOrder = '';
+
+  // 请求报表数据  
+  fetch('/reports/generateall?' + new URLSearchParams(params))
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        if (printoutputFormatElement === 'print') {
+          displayPrintableReport(data.report, params.reportType);
+        } else if (printoutputFormatElement === 'pdf') {
+          downloadReportPDF(data.report, params.reportType);
+        } else if (printoutputFormatElement === 'excel') {
+          downloadReportExcel(data.report, params.reportType);
+        }
+      } else {
+        alert('生成报表失败：' + data.error);
+      }
+    })
+    .catch(err => {
+      console.error('报表生成失败:', err);
+      alert('报表生成失败，请稍后重试');
+    });
+}
 
 
     // 显示报表模态窗口  

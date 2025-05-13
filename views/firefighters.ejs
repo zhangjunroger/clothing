@@ -1910,18 +1910,53 @@ confirmBatchFundsBtn.addEventListener('click', () => {
             // 确保页码在合理范围内  
             currentPage = Math.max(1, Math.min(currentPage, totalPages));  
 
-            loadFirefighters();  
+      const queryParams = {
+        number: document.getElementById('searchNumber').value.trim(),
+        name: document.getElementById('searchName').value.trim(),
+        gender: document.getElementById('searchGender').value,
+        ageMin: document.getElementById('searchAgeMin').value,
+        ageMax: document.getElementById('searchAgeMax').value,
+        position: document.getElementById('searchPosition').value.trim(),
+        team: document.getElementById('searchTeam').value.trim(),
+        year: document.getElementById('searchYear').value.trim(),
+        // 可以继续添加其他搜索条件  
+      };
+      loadFirefighters(queryParams);
+
         }
         
         function changePage1() {  
-            currentPage = 1;  
-            loadFirefighters();  
+            currentPage = 1; 
+      const queryParams = {
+        number: document.getElementById('searchNumber').value.trim(),
+        name: document.getElementById('searchName').value.trim(),
+        gender: document.getElementById('searchGender').value,
+        ageMin: document.getElementById('searchAgeMin').value,
+        ageMax: document.getElementById('searchAgeMax').value,
+        position: document.getElementById('searchPosition').value.trim(),
+        team: document.getElementById('searchTeam').value.trim(),
+        year: document.getElementById('searchYear').value.trim(),
+        // 可以继续添加其他搜索条件  
+      };
+      loadFirefighters(queryParams);             
         }  
         
         
         function changePageN(direction) {  
-            currentPage = totalPages;  
-            loadFirefighters();  
+            currentPage = totalPages;
+            
+      const queryParams = {
+        number: document.getElementById('searchNumber').value.trim(),
+        name: document.getElementById('searchName').value.trim(),
+        gender: document.getElementById('searchGender').value,
+        ageMin: document.getElementById('searchAgeMin').value,
+        ageMax: document.getElementById('searchAgeMax').value,
+        position: document.getElementById('searchPosition').value.trim(),
+        team: document.getElementById('searchTeam').value.trim(),
+        year: document.getElementById('searchYear').value.trim(),
+        // 可以继续添加其他搜索条件  
+      };
+      loadFirefighters(queryParams);            
         }          
 
 

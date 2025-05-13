@@ -39,7 +39,46 @@ const upload = multer({ dest: 'uploads/' });
 // 路由：获取服装列表  
 router.get('/clothing/list', async (req, res) => {
   try {
+
+    const {
+      itemNumber,
+      itemName,
+      priceMin,
+      priceMax,
+      category,
+      yearMin,
+      yearMax,
+    } = req.query; // 从查询参数获取搜索条件  
+
     const query = new AV.Query('Clothing1');
+    // 添加搜索条件  
+    if (itemNumber) {
+      query.equalTo('itemNumberNum', parseInt(itemNumber, 10));
+    }
+    if (itemName) {
+      query.contains('itemName', itemName);
+    }
+    if (category) {
+      query.contains('category', category);
+    }
+    if (priceMin || priceMax) {
+      // 需要确保 `price` 字段为数字类型  
+      if (priceMin) {
+        query.greaterThanOrEqualTo('priceNum', parseFloat(priceMin));
+      }
+      if (priceMax) {
+        query.lessThanOrEqualTo('priceNum', parseFloat(priceMax));
+      }
+    }
+    if (yearMin || yearMax) {
+      // 需要确保 `price` 字段为数字类型  
+      if (yearMin) {
+        query.greaterThanOrEqualTo('yearNum', parseInt(yearMin, 10));
+      }
+      if (yearMax) {
+        query.lessThanOrEqualTo('yearNum', parseInt(yearMax, 10));
+      }
+    }    
     query.limit(1000); // 设置最大返回数量  
     const results = await query.find();
     const data = results.map(item => {
@@ -144,7 +183,6 @@ router.get('/clothing/get/:id', async (req, res) => {
   try {
     const query = new AV.Query('Clothing1');
     const clothing = await query.get(req.params.id);
-    console.log('后端获得的服装信息为：', clothing)
     res.json(clothing.toJSON());
   } catch (err) {
     console.error('获取服装信息失败：', err);
