@@ -480,5 +480,99 @@ router.get('/clothing_reports/generate', async (req, res) => {
   }
 });
 
+
+router.get('/reports/generatenow_clothing', async (req, res) => {
+  try {
+
+    const {
+      reportType, itemNumber, itemName, priceMin, priceMax, category, yearMin, yearMax, sortField, sortOrder
+    } = req.query;
+
+    // 查询数据  
+    let report = [];
+
+    // 查询被装  
+    const query = new AV.Query('Clothing1');
+
+    // 添加搜索条件  
+    if (itemNumber) {
+      query.equalTo('itemNumberNum', parseInt(itemNumber, 10));
+    }
+    if (itemName) {
+      query.contains('itemName', itemName);
+    }
+    if (category) {
+      query.contains('category', category);
+    }
+    if (priceMin || priceMax) {
+      // 需要确保 `price` 字段为数字类型  
+      if (priceMin) {
+        query.greaterThanOrEqualTo('priceNum', parseFloat(priceMin));
+      }
+      if (priceMax) {
+        query.lessThanOrEqualTo('priceNum', parseFloat(priceMax));
+      }
+    }
+    if (yearMin || yearMax) {
+      // 需要确保 `price` 字段为数字类型  
+      if (yearMin) {
+        query.greaterThanOrEqualTo('yearNum', parseInt(yearMin, 10));
+      }
+      if (yearMax) {
+        query.lessThanOrEqualTo('yearNum', parseInt(yearMax, 10));
+      }
+    }
+    
+    
+    query.limit(1000); // 设置最大返回数量  
+
+    // 执行查询  
+    const results = await query.find();
+
+
+    report = results.map(item => item.toJSON());
+
+    res.json({
+      success: true,
+      report: report
+    });
+
+  } catch (err) {
+    console.error('打印报表失败:', err);
+    res.status(500).json({ success: false, error: '打印报表失败' });
+  }
+});
+
+
+router.get('/reports/generateall_clothing', async (req, res) => {
+  try {
+
+    const {
+      reportType, itemNumber, itemName, priceMin, priceMax, category, yearMin, yearMax, sortField, sortOrder
+    } = req.query;
+
+    // 查询数据  
+    let report = [];
+    
+    // 查询消防员  
+    const query = new AV.Query('Clothing1');
+
+    // 执行查询  
+    const results = await query.find();
+
+    report = results.map(item => item.toJSON());
+
+    res.json({
+      success: true,
+      report: report
+    });
+
+  } catch (err) {
+    console.error('打印报表失败:', err);
+    res.status(500).json({ success: false, error: '打印报表失败' });
+  }
+});
+
+
 // 导出路由  
 module.exports = router;

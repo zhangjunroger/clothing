@@ -2003,6 +2003,16 @@ function toggleSizeDetails(button, event) {
       }
     }
 
+    // 获取报表标题  
+    function getReportTitle(reportType) {
+      const titles = {
+        'beizhuangxinxi': '被装信息统计表'
+
+      };
+      return titles[reportType] || '报表';
+    }
+
+
 
     // 打印当前被装  
     function printnow() {
@@ -2011,24 +2021,23 @@ function toggleSizeDetails(button, event) {
 
       // 基本参数 - 修改为正确的参数名  
       const params = {
-        reportType: 'shilixinxi'  // 正确的参数名  
+        reportType: 'beizhuangxinxi'  // 正确的参数名  
       };
 
-      params.number = document.getElementById('searchNumber').value;      
-      params.name = document.getElementById('searchName').value;
-      params.gender = document.getElementById('searchGender').value;
-      params.ageMin = document.getElementById('searchAgeMin').value;
-      params.ageMax = document.getElementById('searchAgeMax').value;
-      params.position = document.getElementById('searchPosition').value;
-      params.team = document.getElementById('searchTeam').value;
-      params.yearMinMax = document.getElementById('searchYear').value;
+        params.itemNumber=document.getElementById('searchNumber').value.trim();
+        params.itemName=document.getElementById('searchName').value.trim();
+        params.priceMin=document.getElementById('searchPriceMin').value.trim();
+        params.priceMax=document.getElementById('searchPriceMax').value.trim();
+        params.category=document.getElementById('searchCategory').value.trim();
+        params.yearMin=document.getElementById('searchYearMin').value.trim();
+        params.yearMax=document.getElementById('searchYearMax').value.trim();
 
       // 添加排序参数  
       params.sortField = '';
       params.sortOrder = '';
 
       // 请求报表数据  
-      fetch('/reports/generatenow?' + new URLSearchParams(params))
+      fetch('/reports/generatenow_clothing?' + new URLSearchParams(params))
         .then(response => response.json())
         .then(data => {
           if (data.success) {
@@ -2057,7 +2066,7 @@ function printall() {
 
   // 基本参数 - 修改为正确的参数名  
   const params = {
-    reportType: 'shilixinxi'  // 正确的参数名  
+    reportType: 'beizhuangxinxi'  // 正确的参数名  
   };
 
   // 添加排序参数  
@@ -2065,7 +2074,7 @@ function printall() {
   params.sortOrder = '';
 
   // 请求报表数据  
-  fetch('/reports/generateall?' + new URLSearchParams(params))
+  fetch('/reports/generateall_clothing?' + new URLSearchParams(params))
     .then(response => response.json())
     .then(data => {
       if (data.success) {
@@ -2146,7 +2155,7 @@ function printall() {
     }
 
     // 显示可打印的报表  
-    function displayPrintableReport(report) {
+    function displayPrintableReport(report, reportType) {
       // 创建打印容器  
       const printContainer = document.createElement('div');
       printContainer.className = 'print-container';
@@ -2156,14 +2165,14 @@ function printall() {
       const header = document.createElement('div');
       header.className = 'print-header';
       header.innerHTML = `  
-    <h1>被装信息统计表</h1>  
+    <h1 style="font-size: 40px;">${getReportTitle(reportType)}</h1> 
   `;
       printContainer.appendChild(header);
 
       // 添加报表内容  
       const content = document.createElement('div');
       content.className = 'print-content';
-      content.innerHTML = generateReportTable(report);
+      content.innerHTML = generateReportTable(report, reportType);
       printContainer.appendChild(content);
 
       // 添加打印信息（放在表格下方）  
@@ -2236,102 +2245,181 @@ function printall() {
       // 获取要打印的内容  
       const printContent = document.getElementById('printableReport');
 
+      // 获取标题
+      const reportTitle = printContent.querySelector('.print-header h1')?.textContent || '报表';      
+
       // 创建一个新的iframe  
       const iframe = document.createElement('iframe');
       iframe.style.display = 'none';
       document.body.appendChild(iframe);
+
+
+  // 获取表格和其内容
+  const table = printContent.querySelector('table');
+  if (!table) {
+    console.error('找不到表格元素');
+    return;
+  }
+
+  const thead = table.querySelector('thead');
+  const tbody = table.querySelector('tbody');
+  
+  if (!thead || !tbody) {
+    console.error('表格结构不完整');
+    return;
+  }
+
+  // 获取表头HTML
+  const theadHTML = thead.outerHTML;
+  
+  // 获取所有行
+  const rows = Array.from(tbody.querySelectorAll('tr'));
+  
+  // 每页显示的行数
+  const rowsPerPage = 10; // 可以根据需要调整
+  
+  // 计算总页数
+  const totalPages = Math.ceil(rows.length / rowsPerPage);
+  
+  // 创建分页后的内容
+  let pagedContent = '';
+  
+  // 获取标题和其他信息
+  const headerHTML = printContent.querySelector('.print-header')?.outerHTML || '';
+  const printInfoHTML = printContent.querySelector('.print-info')?.outerHTML || '';
+  
+  // 为每页创建内容
+  for (let page = 0; page < totalPages; page++) {
+    // 当前页的行范围
+    const startRow = page * rowsPerPage;
+    const endRow = Math.min((page + 1) * rowsPerPage, rows.length);
+    
+    // 提取当前页的行
+    const pageRows = rows.slice(startRow, endRow);
+    const pageRowsHTML = pageRows.map(row => row.outerHTML).join('');
+    
+    // 创建当前页的表格
+    const pageTableHTML = `
+      <table>
+        ${theadHTML}
+        <tbody>
+          ${pageRowsHTML}
+        </tbody>
+      </table>
+    `;
+    
+    // 创建当前页的完整内容
+    pagedContent += `
+      <div class="page">
+        ${page === 0 ? headerHTML : `<div class="print-header"><h1>${reportTitle}</h1></div>`}
+        ${pageTableHTML}
+        ${page === totalPages - 1 ? printInfoHTML : ''}
+        <div class="page-number">第 ${page + 1} 页/共 ${totalPages} 页</div>
+        ${page < totalPages - 1 ? '<div class="page-break"></div>' : ''}
+      </div>
+    `;
+  }
+
 
       // 获取iframe的文档  
       const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
 
       // 写入基本HTML结构  
       iframeDoc.write(`  
-    <!DOCTYPE html>  
-    <html>  
-    <head>  
-      <title>被装信息统计表</title>  
-      <style>  
-        /* 重置样式 */  
-        body, html {  
-          margin: 0;  
-          padding: 0;  
-          font-family: Arial, sans-serif;  
-        }  
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>${reportTitle}</title>
+      <style>
+        /* 重置样式 */
+        body, html {
+          margin: 0;
+          padding: 0;
+          font-family: Arial, sans-serif;
+        }
         
-        /* 报表样式 */  
-        .print-content {  
-          padding: 10mm;  
-        }  
+        /* 页面样式 */
+        .page {
+          position: relative;
+          padding: 10mm;
+          min-height: 270mm; /* A4高度减去上下边距 */
+          box-sizing: border-box;
+        }
         
-        .print-header {  
-          text-align: center;  
-          margin-bottom: 15mm;  
-        }  
+        /* 报表样式 */
+        .print-header {
+          text-align: center;
+          margin-bottom: 15mm;
+        }
         
-        /* 打印信息样式 - 新增 */  
-        .print-info {  
-          padding: 0 10mm;  
-          margin-top: 10mm;  
-        }  
+        /* 打印信息样式 */
+        .print-info {
+          padding: 0;
+          margin-top: 10mm;
+        }
         
-        .print-info-container {  
-          display: flex;  
-          justify-content: space-between;  
-          border-top: 1px solid #ddd;  
-          padding-top: 5mm;  
-        }  
+        .print-info-container {
+          display: flex;
+          justify-content: space-between;
+          border-top: 1px solid #ddd;
+          padding-top: 5mm;
+        }
         
-        .print-date, .print-user {  
-          font-size: 10pt;  
-        }  
+        .print-date, .print-user {
+          font-size: 10pt;
+        }
         
-        .print-footer {  
-          text-align: center;  
-          margin-top: 10mm;  
-        }  
+        /* 表格样式 */
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          margin-bottom: 10mm;
+        }
         
-        /* 表格样式 */  
-        table {  
-          width: 100%;  
-          border-collapse: collapse;  
-        }  
+        th, td {
+          border: 1px solid #333;
+          padding: 3mm;
+          text-align: center;
+        }
         
-        th, td {  
-          border: 1px solid #333;  
-          padding: 3mm;  
-          text-align: center;  
-        }  
+        th {
+          background-color: #f2f2f2;
+        }
         
-        th {  
-          background-color: #f2f2f2;  
-        }  
+        /* 页码样式 */
+        .page-number {
+          position: absolute;
+          bottom: 10mm;
+          left: 0;
+          width: 100%;
+          text-align: center;
+          font-size: 10pt;
+        }
         
-        /* 隐藏不打印的元素 */  
-        .no-print {  
-          display: none;  
-        }  
+        /* 分页样式 */
+        .page-break {
+          page-break-after: always;
+          height: 0;
+        }
         
-        /* 页码样式 */  
-        .page-number {  
-          position: absolute;  
-          bottom: 5mm;  
-          width: 100%;  
-          text-align: center;  
-          font-size: 10pt;  
-        }  
-        
-        /* 控制分页 */  
-        .page-break {  
-          page-break-after: always;  
-        }  
-        
-        @page {  
-          margin: 10mm;  
-        }  
+        /* 打印样式 */
+        @media print {
+          @page {
+            margin: 0;
+          }
+          
+          .page {
+            page-break-after: always;
+          }
+          
+          .page:last-child {
+            page-break-after: auto;
+          }
+        }
       </style>  
     </head>  
     <body>  
-      ${printContent.innerHTML.replace(/<div class="no-print">.*?<\/div>/g, '')}  
+      ${pagedContent} 
     </body>  
     </html>  
   `);
@@ -2348,7 +2436,7 @@ function printall() {
         setTimeout(() => {
           document.body.removeChild(iframe);
         }, 1000);
-      }, 500);
+      }, 1000);
     }
 
     // 关闭报表  
@@ -2361,7 +2449,7 @@ function printall() {
 
 
     // 生成报表表格HTML  
-    function generateReportTable(report) {
+    function generateReportTableold(report) {
       let tableHTML = '<table class="print-table">';
 
       // 根据报表生成表头  
@@ -2398,11 +2486,83 @@ function printall() {
       return tableHTML;
     }
 
+
+    // 生成报表表格HTML  
+function generateReportTable(report) {
+
+
+      let tableHTML = '<table class="print-table">';
+
+      // 根据报表生成表头  
+      tableHTML += `  
+      <thead>  
+        <tr> 
+            <th>物品编号</th>
+            <th>物品名称</th>
+            <th>尺码与数量</th>
+            <th>单价</th>
+            <th>类别</th>
+            <th>年份</th>
+            <th>备注</th> 
+        </tr>  
+      </thead>  
+      <tbody>  
+    `;
+
+      report.forEach(item => {
+
+  // 处理尺码与数量的显示
+  let sizesHTML = '';
+  const sizes = item.sizes || [];
+
+  if (sizes.length === 0) {
+    sizesHTML = '<span class="text-gray-400">无尺码信息</span>';
+  } else {
+    // 计算总数量
+    const totalQuantity = sizes.reduce((sum, sizeObj) => sum + (parseInt(sizeObj.quantity) || 0), 0);
+    const sizesCount = sizes.length;
+    
+    // 创建折叠/展开界面
+    sizesHTML = `
+      <div class="size-quantity-wrapper">
+        <div class="flex items-center gap-2">
+          <span>${sizesCount}种尺码，共${totalQuantity}件</span>
+        </div>
+      </div>
+    `;
+  }
+        tableHTML += `  
+        <tr> 
+        <td>${item.itemNumber}</td>  
+        <td>${item.itemName}</td>
+        <td>${sizesHTML}</td> 
+        <td>${item.price || ''}</td>          
+        <td>${item.category || ''}</td>  
+        <td>${item.warehouseLocation || ''}</td>  
+        <td>${item.remarks || ''}</td>  
+        </tr>  
+      `;
+
+      });
+
+      tableHTML += '</tbody></table>';
+      return tableHTML;
+    }
+
+
     // 下载PDF报表  
     async function downloadReportPDF(report) {
       // 创建PDF文档  
       const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
+      const doc = new jsPDF({
+    orientation: 'landscape', // 设置为横向
+    unit: 'mm',
+    format: 'a4'
+  });
+
+
+     // 设置表格线宽度为 0.5mm（默认通常是 0.1mm 左右）
+     doc.setLineWidth(0.5);
 
       // 加载字体  
       const fontPath = '/fonts/Simsun.ttf'; // 确保字体文件路径正确  
@@ -2422,8 +2582,8 @@ function printall() {
 
       // 设置标题  
       const title = '被装信息统计表';
-      doc.setFontSize(18);
-      doc.text(title, 105, 15, { align: 'center' });
+      doc.setFontSize(25);
+      doc.text(title, 140, 15, { align: 'center' });
 
       // 设置表格列  
       let columns = [];
@@ -2460,20 +2620,20 @@ function printall() {
 
       // 生成PDF表格  
       doc.autoTable({
-        startY: 35,
+        startY: 20,
         head: [columns.map(col => col.header)],
         body: rows.map(row => columns.map(col => row[col.dataKey])),
         theme: 'grid',
         headStyles: {
           fillColor: [41, 128, 185],
           textColor: 255,
-          fontSize: 12,
+          fontSize: 8,
           halign: 'center'
         },
         margin: { top: 30 },
         styles: {
           font: "Simsun",
-          fontSize: 12,
+          fontSize: 8,
           cellPadding: 3,
           valign: 'middle',
           halign: 'center'
@@ -2492,7 +2652,7 @@ function printall() {
         doc.setFont('Simsun');
         doc.setPage(i);
         doc.setFontSize(10);
-        doc.text(`第${i}页/共${pageCount}页`, 105, doc.internal.pageSize.height - 10, { align: 'center' });
+        doc.text(`第${i}页/共${pageCount}页`, 140, doc.internal.pageSize.height - 10, { align: 'center' });
 
         // 只在最后一页的表格下方添加日期和打印人信息  
         if (i === pageCount) {
