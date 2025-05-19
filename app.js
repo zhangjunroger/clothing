@@ -42,6 +42,9 @@ app.set('view engine', 'ejs');
 // 配置静态文件服务  
 app.use(express.static(path.join(__dirname, 'public')));  
 
+// 配置Express正确处理URL编码
+app.use(express.urlencoded({ extended: true }));
+
 
 // 启用 masterKey  
 AV.Cloud.useMasterKey();  

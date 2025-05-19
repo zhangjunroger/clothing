@@ -546,6 +546,20 @@
       background-color: #f49236;
     }
 
+  .btn-button {
+    background-color: #365cf4;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  .btn-button:hover {
+    background-color: #365cf4;
+  }
+
+
     /* 报表相关样式 */
     .date-range {
       display: flex;
@@ -852,7 +866,7 @@
 
     /* ========== 新增：为表格外层加一个固定高度+滚动条容器 ========== */
     .table-container {
-      max-height: 400px;
+      max-height: 1200px;
       /* 根据实际需求调整表格容器的最大高度*/
       overflow-y: auto;
       /* 当内容超过最大高度时出现垂直滚动条*/
@@ -879,6 +893,23 @@
       margin-left: 8px;
       cursor: pointer;
     }
+
+.size-quantity-wrapper {
+  position: relative;
+}
+
+.size-details {
+  position: absolute;
+  z-index: 100;
+  width: 200px;
+  background: white;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.hidden {
+  display: none;
+}
+
 
     /* 购物车模态框表格 */
     #cartTable {
@@ -921,6 +952,15 @@
             <%= keyongyue===undefined ? '0.00' : keyongyue %>
           </strong>元</span>
       </div>
+
+      <div id="total-amount-containertop" style="margin-top: 20px; font-size: 30px; text-align: center;">
+        当前购物车选中物品总额：<span id="total-amounttop" style="color: red; font-size: 30px; font-weight: bold;">0.00</span> 元
+      </div>
+      <div style="display: flex; justify-content: center; gap: 15px; margin-top: 20px; margin-bottom: 5px;">
+        <button id="openCartBtntop" class="button" onclick="openCartModal()">查看购物车</button>
+        <button id="checkoutBtntop" class="button">申领</button>
+      </div>      
+
     </section>
 
     <hr>
@@ -934,15 +974,6 @@
         <button id="searchBtn">搜索</button>
         <button id="resetBtn">重置</button>
       </div>
-
-      <div id="total-amount-containertop" style="margin-top: 20px; font-size: 30px; text-align: center;">
-        当前购物车选中物品总额：<span id="total-amounttop" style="color: red; font-size: 30px; font-weight: bold;">0.00</span> 元
-      </div>
-      <div style="display: flex; justify-content: center; gap: 15px; margin-top: 20px; margin-bottom: 5px;">
-        <button id="openCartBtntop" class="button" onclick="openCartModal()">查看购物车</button>
-        <button id="checkoutBtntop" class="button">申领</button>
-      </div>
-
 
       <!-- ========== 新增：外层容器 .table-container，带滚动条 ========== -->
       <div class="table-container">
@@ -965,6 +996,14 @@
           </tbody>
         </table>
       </div>
+
+    <div style="display: flex; justify-content: center; gap: 15px; margin-top: 10px; margin-bottom: 5px;">
+      <button id="firstPage" class="bg-green-500 text-white px-2 py-1 rounded" onclick="changePage1()">首页</button>         
+      <button id="prevPage" class="bg-green-500 text-white px-2 py-1 rounded" onclick="changePage(-1)">前一页</button>  
+      <div id="pageInfo" class="text-center text-lg font-bold text-gray-700"></div>  
+      <button id="nextPage" class="bg-green-500 text-white px-2 py-1 rounded" onclick="changePage(1)">后一页</button>
+      <button id="lastPage" class="bg-green-500 text-white px-2 py-1 rounded" onclick="changePageN()">尾页</button>   
+  </div>  
 
       <div id="total-amount-container" style="margin-top: 20px; font-size: 30px; text-align: center;">
         当前购物车选中物品总额：<span id="total-amount" style="color: red; font-size: 30px; font-weight: bold;">0.00</span> 元
@@ -1048,9 +1087,10 @@
 
   <script>
 
-    // 全局数组：物品数据 & 过滤后数据  
-    let clothingDataAll = [];
-    let clothingDataFiltered = [];
+
+const pageSize = 5; // 每页显示5条数据  
+let currentPage = 1; 
+let totalPages = 1;  
 
     // ========== 新增：购物车数组 ==========   
     let cartItems = [];
@@ -1104,21 +1144,22 @@
 
 
       function handleSearch() {
-        const val = searchInput.value.trim().toLowerCase();
-        // 使用 clothingDataAll 做搜索  
-        clothingDataFiltered = clothingDataAll.filter(item => {
-          const numberMatch = String(item.itemNumber || '').toLowerCase().includes(val);
-          const nameMatch = String(item.itemName || '').toLowerCase().includes(val);
-          const catMatch = String(item.category || '').toLowerCase().includes(val);
-          return numberMatch || nameMatch || catMatch;
-        });
-        renderClothingTable(clothingDataFiltered);
+
+      console.log('进入搜索！');  
+      const queryParams=
+      {
+      keyword: document.getElementById('searchInput').value.trim()
+      };
+
+      console.log('前端：', queryParams);        
+      loadClothing(queryParams);     
       }
 
       function handleReset() {
-        searchInput.value = '';
-        clothingDataFiltered = clothingDataAll;
-        renderClothingTable(clothingDataAll);
+
+      document.getElementById('searchInput').value='';
+
+      loadClothing();     
       }
 
 
@@ -1268,33 +1309,80 @@
     }
 
     // 加载服装数据并填充表格  
-    function loadClothing() {
-      fetch('/clothing/list') // 获取物品数据的 API  
+    function loadClothing(queryParams = {}) {
+      console.log('进入后端！');        
+      const queryString = new URLSearchParams(queryParams).toString(); 
+      console.log('后端：', queryString);               
+      fetch('/clothing/list?'  + queryString) // 获取物品数据的 API  
         .then(response => response.json())
         .then(data => {
-          // 1. 全量数据存到 clothingDataAll  
-          clothingDataAll = data;
-          // 2. 默认情况，搜索前先显示所有  
-          clothingDataFiltered = data;
-          // 3. 调用统一的渲染函数  
-          renderClothingTable(clothingDataAll);
+          const tbody = document.querySelector('#clothingTable tbody');
+
+            const pageInfo = document.getElementById('pageInfo');  
+            const prevPageBtn = document.getElementById('prevPage');  
+            const nextPageBtn = document.getElementById('nextPage');  
+
+            // 计算总页数  
+            totalPages = Math.ceil(data.length / pageSize);  
+
+            // 计算当前页的数据范围  
+            const start = (currentPage - 1) * pageSize;  
+            const end = start + pageSize;  
+            const pageData = data.slice(start, end);
+
+
+          tbody.innerHTML = ''; // 清空当前表格内容
+         // 当前登录用户信息来源：前端变量  
+          const userId = currentUser.username;            
+          pageData.forEach(item => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = generateTableRow(item, userId);
+            tbody.appendChild(tr);
+          });
+
+            // 更新页码信息  
+            pageInfo.textContent = `第 ${currentPage} / ${totalPages} 页`;  
+
+            // 控制按钮状态  
+            prevPageBtn.disabled = currentPage === 1;  
+            nextPageBtn.disabled = currentPage === totalPages; 
+
+
         })
         .catch(err => console.error(err));
     }
 
-    /* ========== 新增函数：渲染指定数组到表格 ========== */
-    function renderClothingTable(dataArray) {
-      const tbody = document.querySelector('#clothingTable tbody');
-      tbody.innerHTML = ''; // 清空当前表格内容  
-      // 当前登录用户信息来源：前端变量  
-      const userId = currentUser.username;
-      // 遍历物品数据，生成每行表格
-      dataArray.forEach(item => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = generateTableRow(item, userId);
-        tbody.appendChild(tr);
-      });
-    }
+    function changePage(direction) {  
+            currentPage += direction;  
+
+            // 确保页码在合理范围内  
+            currentPage = Math.max(1, Math.min(currentPage, totalPages)); 
+
+      const queryParams = {
+      keyword: document.getElementById('searchInput').value.trim()
+      };
+      loadClothing(queryParams);               
+        }
+        
+        function changePage1() {  
+            currentPage = 1; 
+      const queryParams=
+      {
+      keyword:document.getElementById('searchInput').value.trim()
+      };
+      loadClothing(queryParams);       
+        }  
+        
+        
+        function changePageN() {  
+            currentPage = totalPages;  
+      const queryParams=
+      {
+      keyword:document.getElementById('searchInput').value.trim()
+      };
+      loadClothing(queryParams);   
+        }    
+
 
     // 生成表格行的 HTML  
     function generateTableRow(item, userId) {
