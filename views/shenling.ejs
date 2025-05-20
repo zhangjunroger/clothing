@@ -970,7 +970,9 @@
       <h2>被装信息列表</h2>
       <!-- 搜索框 -->
       <div class="search-container" style="text-align: center;">
-        <input type="text" id="searchInput" placeholder="输入物品编号、物品名称、类别关键字搜索..." />
+        <input type="text" id="searchNumber" placeholder="物品编号">
+        <input type="text" id="searchName" placeholder="物品名称">
+        <input type="text" id="searchCategory" placeholder="类别">          
         <button id="searchBtn">搜索</button>
         <button id="resetBtn">重置</button>
       </div>
@@ -1129,7 +1131,6 @@ let totalPages = 1;
 
       const searchBtn = document.getElementById('searchBtn');
       const resetBtn = document.getElementById('resetBtn');
-      const searchInput = document.getElementById('searchInput');
 
       if (searchBtn) {
         searchBtn.addEventListener('click', handleSearch);
@@ -1145,19 +1146,21 @@ let totalPages = 1;
 
       function handleSearch() {
 
-      console.log('进入搜索！');  
-      const queryParams=
-      {
-      keyword: document.getElementById('searchInput').value.trim()
+      const queryParams = {
+        itemNumber: document.getElementById('searchNumber').value.trim(),
+        itemName: document.getElementById('searchName').value.trim(),
+        category: document.getElementById('searchCategory').value.trim()
+        // 可以继续添加其他搜索条件  
       };
-
-      console.log('前端：', queryParams);        
+     
       loadClothing(queryParams);     
       }
 
       function handleReset() {
 
-      document.getElementById('searchInput').value='';
+      document.getElementById('searchNumber').value='';
+      document.getElementById('searchName').value='';
+      document.getElementById('searchCategory').value='';
 
       loadClothing();     
       }
@@ -1309,11 +1312,9 @@ let totalPages = 1;
     }
 
     // 加载服装数据并填充表格  
-    function loadClothing(queryParams = {}) {
-      console.log('进入后端！');        
-      const queryString = new URLSearchParams(queryParams).toString(); 
-      console.log('后端：', queryString);               
-      fetch('/clothing/list?'  + queryString) // 获取物品数据的 API  
+    function loadClothing(queryParams = {}) {    
+      const queryString = new URLSearchParams(queryParams).toString();              
+      fetch('/shenling/listclothing?' + queryString) // 获取物品数据的 API  
         .then(response => response.json())
         .then(data => {
           const tbody = document.querySelector('#clothingTable tbody');
@@ -1359,16 +1360,21 @@ let totalPages = 1;
             currentPage = Math.max(1, Math.min(currentPage, totalPages)); 
 
       const queryParams = {
-      keyword: document.getElementById('searchInput').value.trim()
+        itemNumber: document.getElementById('searchNumber').value.trim(),
+        itemName: document.getElementById('searchName').value.trim(),
+        category: document.getElementById('searchCategory').value.trim()
+        // 可以继续添加其他搜索条件  
       };
       loadClothing(queryParams);               
         }
         
         function changePage1() {  
             currentPage = 1; 
-      const queryParams=
-      {
-      keyword:document.getElementById('searchInput').value.trim()
+      const queryParams = {
+        itemNumber: document.getElementById('searchNumber').value.trim(),
+        itemName: document.getElementById('searchName').value.trim(),
+        category: document.getElementById('searchCategory').value.trim()
+        // 可以继续添加其他搜索条件  
       };
       loadClothing(queryParams);       
         }  
@@ -1376,9 +1382,11 @@ let totalPages = 1;
         
         function changePageN() {  
             currentPage = totalPages;  
-      const queryParams=
-      {
-      keyword:document.getElementById('searchInput').value.trim()
+      const queryParams = {
+        itemNumber: document.getElementById('searchNumber').value.trim(),
+        itemName: document.getElementById('searchName').value.trim(),
+        category: document.getElementById('searchCategory').value.trim()
+        // 可以继续添加其他搜索条件  
       };
       loadClothing(queryParams);   
         }    

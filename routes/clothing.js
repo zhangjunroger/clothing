@@ -39,7 +39,6 @@ const upload = multer({ dest: 'uploads/' });
 // 路由：获取服装列表  
 router.get('/clothing/list', async (req, res) => {
   try {
-
     const {
       itemNumber,
       itemName,

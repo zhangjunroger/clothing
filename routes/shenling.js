@@ -46,27 +46,27 @@ router.get('/shenling', async (req, res) => {
 
 
 // 路由：获取服装列表  
-router.get('/clothing/list', async (req, res) => {
+router.get('/shenling/listclothing', async (req, res) => {
   try {
-    console('进入后端！');
-    const {keyword} = req.query; // 从查询参数获取搜索条件
-    console.log(keyword);
-    const query = new AV.Query('Clothing1');
+    const {
+      itemNumber,
+      itemName,
+      category
+    } = req.query; // 从查询参数获取搜索条件  
 
-    // 如果提供了通用关键字，创建多个子查询进行OR操作
-    if (keyword) {
-      const itemNumberQuery = new AV.Query('Clothing1');
-      itemNumberQuery.contains('itemNumber', keyword);
-      
-      const itemNameQuery = new AV.Query('Clothing1');
-      itemNameQuery.contains('itemName', keyword);
-      
-      const categoryQuery = new AV.Query('Clothing1');
-      categoryQuery.contains('category', keyword);
-      
-      // 使用OR组合多个字段的查询
-      query = AV.Query.or(itemNumberQuery, itemNameQuery, categoryQuery);
+    const query = new AV.Query('Clothing1');
+    // 添加搜索条件  
+    if (itemNumber) {
+      query.equalTo('itemNumberNum', parseInt(itemNumber, 10));
     }
+    if (itemName) {
+      query.contains('itemName', itemName);
+    }
+    if (category) {
+      query.contains('category', category);
+    }
+
+
     query.limit(1000); // 设置最大返回数量  
     const results = await query.find();
     const data = results.map(item => {
