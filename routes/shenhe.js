@@ -35,10 +35,39 @@ router.get('/shenhe', (req, res) => {
 
 // 路由：获取申领列表  
 router.get('/shenhe/list', async (req, res) => {  
-  try {  
-     
-          // 创建 LeanCloud 查询  
-          const query = new AV.Query('Shenling'); // Shenling 为您的 LeanCloud 表名  
+  try {
+    const {
+      userName,
+      userTeam,
+      Number,
+      startTime,
+      endTime
+    } = req.query; // 从查询参数获取搜索条件      
+    
+    // 创建 LeanCloud 查询  
+    const query = new AV.Query('Shenling'); // Shenling 为您的 LeanCloud 表名 
+    
+    
+    // 添加搜索条件  
+    if (userName) {
+      query.equalTo('userName', userName);
+    }
+    if (userTeam) {
+      query.contains('userTeam', userTeam);
+    }
+    if (Number) {
+      query.equalTo('Number', Number);
+    }
+
+    if (startTime || endTime) {
+      // 需要确保 `price` 字段为数字类型  
+      if (startTime) {
+        query.greaterThanOrEqualTo('Time', parseInt(startTime, 10));
+      }
+      if (endTime) {
+        query.lessThanOrEqualTo('Time', parseInt(endTime, 10));
+      }
+    } 
           query.equalTo('shenhezhuangtai', '未审核'); //   
           // 执行查询  
           const results = await query.find();  

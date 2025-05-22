@@ -929,6 +929,49 @@
       background-color: #f1dbb5;
       font-weight: bold;
     }
+
+    /* 订单信息列样式 */
+    .order-info-summary {
+      cursor: pointer;
+      padding: 8px;
+      background-color: #f0f9ff;
+      border-radius: 4px;
+      border: 1px solid #bae6fd;
+      font-weight: bold;
+      text-align: center;
+      transition: background-color 0.2s;
+    }
+    
+    .order-info-summary:hover {
+      background-color: #e0f2fe;
+    }
+    
+    .order-info-details {
+      display: none;
+      padding: 12px;
+      margin-top: 10px;
+      background-color: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 4px;
+      text-align: left;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    
+    .order-info-details.show {
+      display: block;
+    }
+    
+    .item-detail {
+      padding: 8px;
+      margin-bottom: 8px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .item-detail:last-child {
+      border-bottom: none;
+    }
+
   </style>
 </head>
 
@@ -970,11 +1013,11 @@
       <h2>被装信息列表</h2>
       <!-- 搜索框 -->
       <div class="search-container" style="text-align: center;">
-        <input type="text" id="searchNumber" placeholder="物品编号">
-        <input type="text" id="searchName" placeholder="物品名称">
-        <input type="text" id="searchCategory" placeholder="类别">          
-        <button id="searchBtn">搜索</button>
-        <button id="resetBtn">重置</button>
+        <input type="text" id="searchNumber" placeholder="物品编号" style="width: 250px; margin: 0 10px 0 0">
+        <input type="text" id="searchName" placeholder="物品名称" style="width: 250px; margin: 0 10px 0 0">
+        <input type="text" id="searchCategory" placeholder="类别" style="width: 250px; margin: 0 10px 0 0">          
+        <button id="searchBtn" style="margin: 0 5px">搜索</button>
+        <button id="resetBtn" style="margin: 0 5px">重置</button>
       </div>
 
       <!-- ========== 新增：外层容器 .table-container，带滚动条 ========== -->
@@ -1027,6 +1070,7 @@
           <thead>
             <tr>
               <th>用户姓名</th>
+              <th>单位</th>              
               <th>订单编号</th>
               <th>订单信息</th>
               <th>订单金额</th>
@@ -1214,15 +1258,16 @@ let totalPages = 1;
               // 存在记录，自动填充表单  
               const data = result.data;
               user_name = data.name
-
+              user_team = data.team
 
               // 向后端提交数据   
               const shenlingData = {
                 userId: userId,
                 userName: user_name,
+                userTeam: user_team,
                 Number: orderNumber,
                 Info: JSON.stringify(cartItems),
-                Cost: totalCost,
+                Cost: parseFloat(totalCost.toFixed(2)),
                 Time: orderTime.getTime(),
                 ShenheTime: 0,
                 shenhezhuangtai: "未审核"
@@ -1636,15 +1681,22 @@ let totalPages = 1;
 
       // 从字符串解析为对象数组  
       const items = JSON.parse(item.Info);
-      // 使用数组 `map` 构建每个商品的信息，并通过 `join` 连接成一个完整的字符串  
+
+      // 计算物品种数
+      const itemCount = items.length;      
+      // 构建每个商品的详细信息
       const itemsString = items.map((item, index) => {
-        return `第 ${index + 1} 件物品:<br>  
-编号: ${item.itemNumber}<br>  
-名称: ${item.itemName}<br>  
-尺码: ${item.specification}<br>  
-单价: ${item.price.toFixed(2)} 元<br>  
-数量: ${item.quantity}`;
-      }).join('<br><br>'); // 用两个换行符分隔每件物品的信息
+        return `
+          <div class="item-detail">
+            <div><strong>第${index + 1}件物品</strong></div>
+            <div>编号: ${item.itemNumber}</div>
+            <div>名称: ${item.itemName}</div>
+            <div>尺码: ${item.specification}</div>
+            <div>单价: ${item.price.toFixed(2)} 元</div>
+            <div>数量: ${item.quantity}</div>
+          </div>
+        `;
+      }).join(''); // 连接所有物品的信息
 
       // 判断是否需要禁用按钮  
       const isDisabled = item.shenhezhuangtai === '已审核' || item.shenhezhuangtai.startsWith('未通过') ? 'disabled' : '';
@@ -1666,21 +1718,48 @@ let totalPages = 1;
         formattedDate2 = '审核中，请稍后！';
       };
 
-      return `  
-        <td>${item.userName}</td> 
-        <td>${item.Number}</td>  
-        <td>${itemsString}</td>  
-        <td>${item.Cost}</td>  
+      // 订单信息列使用新的折叠式显示
+      const orderInfoColumn = `
+        <div class="order-info-summary" onclick="toggleOrderDetails(this, '${item.Number}')">
+          共 ${itemCount} 种物品 (点击查看详情)
+        </div>
+        <div id="details-${item.Number}" class="order-info-details">
+          ${itemsString}
+        </div>
+      `;
+      
+      return `
+        <td>${item.userName}</td>
+        <td>${item.userTeam}</td>        
+        <td>${item.Number}</td>
+        <td>${orderInfoColumn}</td>
+        <td>${item.Cost.toFixed(2)}</td>
         <td>${formattedDate1}</td>
-        <td>${formattedDate2}</td>          
+        <td>${formattedDate2}</td>
         <td>${item.shenhezhuangtai}</td>
-        <td>  
-        <button class="button2" onclick="cancelOrder('${item.Number}', '${item.Cost}')" ${isDisabled}>  
-        取消订单  
-        </button>  
-        </td>    
-    `;
+        <td>
+          <button class="button2" onclick="cancelOrder('${item.Number}', '${item.Cost}')"
+          ${isDisabled}>
+            取消订单
+          </button>
+        </td>
+      `;
     }
+
+
+    // 添加切换订单详情显示的函数
+    function toggleOrderDetails(element, orderNumber) {
+      const detailsElement = document.getElementById(`details-${orderNumber}`);
+      detailsElement.classList.toggle('show');
+      
+      // 可选：改变摘要区域的提示文字
+      if (detailsElement.classList.contains('show')) {
+        element.innerHTML = element.innerHTML.replace('点击查看详情', '点击隐藏详情');
+      } else {
+        element.innerHTML = element.innerHTML.replace('点击隐藏详情', '点击查看详情');
+      }
+    }
+
 
     function cancelOrder(orderId, price) {
 

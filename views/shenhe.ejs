@@ -525,7 +525,18 @@
       background-color: #f49236;
     }
 
+  .btn-button {
+    background-color: #365cf4;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
 
+  .btn-button:hover {
+    background-color: #365cf4;
+  }
     /* 报表相关样式 */
     .date-range {
       display: flex;
@@ -754,26 +765,78 @@
     }
 
     
-    /* ========== 新增：为表格外层加一个固定高度+滚动条容器 ========== */  
-    .table-container {  
-      max-height: 400px; /* 根据实际需求调整表格容器的最大高度*/  
-      overflow-y: auto;  /* 当内容超过最大高度时出现垂直滚动条*/  
-      border: 1px solid #ccc;  
-      margin: 16px 0;  
-    }  
-    /* 搜索区域 */  
-    .search-container {  
-      margin-bottom: 12px;  
-    }  
-    .search-container input {  
-      width: 200px;  
-      padding: 6px;  
-    }  
-    .search-container button {  
-      padding: 6px 12px;  
-      margin-left: 8px;  
-      cursor: pointer;  
-    }  
+     /* ========== 新增：为表格外层加一个固定高度+滚动条容器 ========== */
+    .table-container {
+      max-height: 1200px;
+      /* 根据实际需求调整表格容器的最大高度*/
+      overflow-y: auto;
+      /* 当内容超过最大高度时出现垂直滚动条*/
+      border: 1px solid #ccc;
+      margin: 16px 0;
+    }
+
+    /* 搜索区域 */
+    .search-container {
+      margin-bottom: 12px;
+    }
+
+    .search-container input {
+      width: 400px;
+      padding: 10px;
+    }
+
+    .search-container button {
+      background-color: #f49236;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 8px 15px;
+      margin-left: 8px;
+      cursor: pointer;
+    }
+
+    /* 订单信息列样式 */
+    .order-info-summary {
+      cursor: pointer;
+      padding: 8px;
+      background-color: #f0f9ff;
+      border-radius: 4px;
+      border: 1px solid #bae6fd;
+      font-weight: bold;
+      text-align: center;
+      transition: background-color 0.2s;
+    }
+    
+    .order-info-summary:hover {
+      background-color: #e0f2fe;
+    }
+    
+    .order-info-details {
+      display: none;
+      padding: 12px;
+      margin-top: 10px;
+      background-color: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 4px;
+      text-align: left;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    
+    .order-info-details.show {
+      display: block;
+    }
+    
+    .item-detail {
+      padding: 8px;
+      margin-bottom: 8px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .item-detail:last-child {
+      border-bottom: none;
+    }    
+    
   </style>
 </head>
 
@@ -790,12 +853,33 @@
     <!-- 服装信息表格展示 -->
     <section>
       <h2>申领信息列表（未审核）</h2>
+
+      <!-- 搜索框 -->
+      <div class="search-container" style="text-align: center">
+        <div style="text-align: center;gap: 20px;padding: 10px;">
+        <input type="text" id="searchName" placeholder="实力姓名" style="width: 250px; margin: 0 10px 0 0;border: 1px solid #262626;">
+        <input type="text" id="searchTeam" placeholder="单位" style="width: 250px; margin: 0 10px 0 0;border: 1px solid #262626;">
+        <input type="text" id="searchNumber" placeholder="订单编号" style="width: 250px; margin: 0 10px 0 0;border: 1px solid #262626;"> 
+        </div>
+        <div style="text-align: center;gap: 20px;padding: 10px;">    
+        <label type="text" id="searchLabel1">开始时间：</label>        
+        <input type="date" id="searchStartTime" style="width: 200px; border: 1px solid #262626;">
+        <label type="text" id="searchLabel2">结束时间：</label>        
+        <input type="date" id="searchEndTime" style="width: 200px; border: 1px solid #262626;"> 
+        </div>
+        <div style="text-align: center;gap: 20px;padding: 10px;">       
+        <button id="searchBtn" style="margin: 0 5px">搜索</button>
+        <button id="resetBtn" style="margin: 0 5px">重置</button>
+        </div> 
+      </div>
+
       <div class="table-container">
       <table id="ShenheTable" class="users-table">
         <thead>
           <tr>
             <th>选择</th>
-            <th>用户姓名</th>
+            <th>实力姓名</th>
+            <th>单位</th>            
             <th>订单编号</th>
             <th>订单信息</th>
             <th>订单金额</th>
@@ -808,10 +892,15 @@
         </tbody>
       </table>
     </div>
-    </section>
 
+    <div style="display: flex; justify-content: center; gap: 15px; margin-top: 10px; margin-bottom: 5px;">
+      <button id="firstPage" class="bg-green-500 text-white px-2 py-1 rounded" onclick="changePage1()">首页</button>         
+      <button id="prevPage" class="bg-green-500 text-white px-2 py-1 rounded" onclick="changePage(-1)">前一页</button>  
+      <div id="pageInfo" class="text-center text-lg font-bold text-gray-700"></div>  
+      <button id="nextPage" class="bg-green-500 text-white px-2 py-1 rounded" onclick="changePage(1)">后一页</button>
+      <button id="lastPage" class="bg-green-500 text-white px-2 py-1 rounded" onclick="changePageN()">尾页</button>   
+  </div>  
 
-    <section>
       <div style="display: flex; justify-content: center; gap: 15px; margin-top: 20px; margin-bottom: 5px;">
         <button id="checkoutBtn" class="button">审核通过已选订单</button>
         <button id="approveAllBtn" class="button">审核通过所有订单</button>
@@ -828,7 +917,8 @@
         <thead>
           <tr>
             <th><input type="checkbox" id="selectAllCheckbox" title="全选/取消全选"></th>
-            <th>用户姓名</th>
+            <th>实力姓名</th>
+            <th>单位</th>            
             <th>订单编号</th>
             <th>订单信息</th>
             <th>订单金额</th>
@@ -988,6 +1078,11 @@
 
   <script>
 
+const pageSize = 10; // 每页显示5条数据  
+let currentPage = 1; 
+let totalPages = 1;  
+
+
     // 页面加载时获取物品列表  
     document.addEventListener('DOMContentLoaded', function () {
       loadShenhe();
@@ -1001,27 +1096,135 @@
         checkbox.checked = this.checked;  
       });  
     });  
-  }  
+  }
+  
+      const searchBtn = document.getElementById('searchBtn');
+      const resetBtn = document.getElementById('resetBtn');
+
+      if (searchBtn) {
+        searchBtn.addEventListener('click', handleSearch);
+      }
+      if (resetBtn) {
+        resetBtn.addEventListener('click', handleReset);
+      }  
+
+      function handleSearch() {
+
+      const queryParams = {
+        userName: document.getElementById('searchName').value.trim(),
+        userTeam: document.getElementById('searchTeam').value.trim(),
+        Number: document.getElementById('searchNumber').value.trim(),
+        startTime: new Date(document.getElementById('searchStartTime').value).getTime(),
+        endTime: new Date(document.getElementById('searchEndTime').value).getTime()
+        // 可以继续添加其他搜索条件  
+      };
+     
+      loadShenhe(queryParams);     
+      }
+
+      function handleReset() {
+
+      document.getElementById('searchName').value='';
+      document.getElementById('searchTeam').value='';
+      document.getElementById('searchNumber').value='';
+      document.getElementById('searchStartTime').value='';
+      document.getElementById('searchEndTime').value='';
+
+      loadShenhe();     
+      }
+
+
+
 });  
 
 
     // 加载未审核申领数据并填充表格  
-    function loadShenhe() {
-      fetch('/shenhe/list') // 获取物品数据的 API  
+    function loadShenhe(queryParams = {}) {
+      const queryString = new URLSearchParams(queryParams).toString();      
+      fetch('/shenhe/list?' + queryString) // 获取物品数据的 API  
         .then(response => response.json())
         .then(data => {
           const tbody = document.querySelector('#ShenheTable tbody');
+
+            const pageInfo = document.getElementById('pageInfo');  
+            const prevPageBtn = document.getElementById('prevPage');  
+            const nextPageBtn = document.getElementById('nextPage');  
+
+            // 计算总页数  
+            totalPages = Math.ceil(data.length / pageSize);  
+
+            // 计算当前页的数据范围  
+            const start = (currentPage - 1) * pageSize;  
+            const end = start + pageSize;  
+            const pageData = data.slice(start, end);
+
           tbody.innerHTML = ''; // 清空当前表格内容 
 
           // 遍历物品数据，生成每行表格  
-          data.forEach(item => {
+          pageData.forEach(item => {
             const tr = document.createElement('tr');
             tr.innerHTML = generateTableRowShenhe(item);
             tbody.appendChild(tr);
           });
+
+            // 更新页码信息  
+            pageInfo.textContent = `第 ${currentPage} / ${totalPages} 页`;  
+
+            // 控制按钮状态  
+            prevPageBtn.disabled = currentPage === 1;  
+            nextPageBtn.disabled = currentPage === totalPages; 
+
         })
         .catch(err => console.error(err));
     }
+
+    function changePage(direction) {  
+            currentPage += direction;  
+
+            // 确保页码在合理范围内  
+            currentPage = Math.max(1, Math.min(currentPage, totalPages)); 
+
+      const queryParams = {
+        userName: document.getElementById('searchName').value.trim(),
+        userTeam: document.getElementById('searchTeam').value.trim(),
+        Number: document.getElementById('searchNumber').value.trim(),
+        startTime: new Date(document.getElementById('searchStartTime').value).getTime(),
+        endTime: new Date(document.getElementById('searchEndTime').value).getTime()
+        // 可以继续添加其他搜索条件  
+      };
+     
+      loadShenhe(queryParams);               
+        }
+        
+    function changePage1() {  
+            currentPage = 1; 
+      const queryParams = {
+        userName: document.getElementById('searchName').value.trim(),
+        userTeam: document.getElementById('searchTeam').value.trim(),
+        Number: document.getElementById('searchNumber').value.trim(),
+        startTime: new Date(document.getElementById('searchStartTime').value).getTime(),
+        endTime: new Date(document.getElementById('searchEndTime').value).getTime()
+        // 可以继续添加其他搜索条件  
+      };
+     
+      loadShenhe(queryParams);        
+        }  
+        
+        
+    function changePageN() {  
+            currentPage = totalPages;  
+      const queryParams = {
+        userName: document.getElementById('searchName').value.trim(),
+        userTeam: document.getElementById('searchTeam').value.trim(),
+        Number: document.getElementById('searchNumber').value.trim(),
+        startTime: new Date(document.getElementById('searchStartTime').value).getTime(),
+        endTime: new Date(document.getElementById('searchEndTime').value).getTime()
+        // 可以继续添加其他搜索条件  
+      };
+     
+      loadShenhe(queryParams);     
+        }   
+
 
 // 格式化日期为常规格式  
 function formatDate(date) {  
@@ -1046,15 +1249,38 @@ function formatDate(date) {
 
       // 从字符串解析为对象数组  
       const items = JSON.parse(item.Info);
-      // 使用数组 `map` 构建每个商品的信息，并通过 `join` 连接成一个完整的字符串  
+
+      // 计算物品种数
+      const itemCount = items.length;      
+      // 构建每个商品的详细信息
       const itemsString = items.map((item, index) => {
-        return `第 ${index + 1} 件物品:<br>  
-编号: ${item.itemNumber}<br>  
-名称: ${item.itemName}<br>  
-尺码: ${item.specification}<br>  
-单价: ${item.price.toFixed(2)} 元<br>  
-数量: ${item.quantity}`;
-      }).join('<br><br>'); // 用两个换行符分隔每件物品的信息  
+        return `
+          <div class="item-detail">
+            <div><strong>第${index + 1}件物品</strong></div>
+            <div>编号: ${item.itemNumber}</div>
+            <div>名称: ${item.itemName}</div>
+            <div>尺码: ${item.specification}</div>
+            <div>单价: ${item.price.toFixed(2)} 元</div>
+            <div>数量: ${item.quantity}</div>
+          </div>
+        `;
+      }).join(''); // 连接所有物品的信息
+
+
+// 存储原始的 item.Info (已经是 JSON 字符串)，而不是格式化后的 HTML
+const infoJSON = JSON.stringify(item.Info).replace(/"/g, '&quot;');      
+
+      // 订单信息列使用新的折叠式显示
+      const orderInfoColumn = `
+        <div class="order-info-summary" onclick="toggleOrderDetails(this, '${item.Number}')">
+          共 ${itemCount} 种物品 (点击查看详情)
+        </div>
+        <div id="details-${item.Number}" class="order-info-details">
+          ${itemsString}
+        </div>
+      `;
+
+
 
       return `  
     <tr>  
@@ -1064,15 +1290,16 @@ function formatDate(date) {
           class="item-checkbox"  
           data-userId="${item.userName}"  
           data-Number="${item.Number}"  
-          data-Info="${itemsString}"   
+          data-Info="${infoJSON}"   
           data-Cost="${item.Cost}"  
           data-Time="${formattedDate1}"
           data-shenhezhuangtai="${item.shenhezhuangtai}"   
         />  
       </td>  
-      <td>${item.userName}</td>  
+      <td>${item.userName}</td>
+      <td>${item.userTeam}</td>        
       <td>${item.Number}</td>  
-      <td>${itemsString}</td>  
+      <td>${orderInfoColumn}</td>  
       <td>${item.Cost}</td>  
       <td>${formattedDate1}</td> 
       <td>${item.shenhezhuangtai}</td>  
@@ -1119,22 +1346,45 @@ function formatDate(date) {
 
       // 从字符串解析为对象数组  
       const items = JSON.parse(item.Info);
-      // 使用数组 `map` 构建每个商品的信息，并通过 `join` 连接成一个完整的字符串  
+
+      // 计算物品种数
+      const itemCount = items.length;      
+      // 构建每个商品的详细信息
       const itemsString = items.map((item, index) => {
-        return `第 ${index + 1} 件物品:<br>  
-编号: ${item.itemNumber}<br>  
-名称: ${item.itemName}<br>  
-尺码: ${item.specification}<br>  
-单价: ${item.price.toFixed(2)} 元<br>  
-数量: ${item.quantity}`;
-      }).join('<br><br>'); // 用两个换行符分隔每件物品的信息  
+        return `
+          <div class="item-detail">
+            <div><strong>第${index + 1}件物品</strong></div>
+            <div>编号: ${item.itemNumber}</div>
+            <div>名称: ${item.itemName}</div>
+            <div>尺码: ${item.specification}</div>
+            <div>单价: ${item.price.toFixed(2)} 元</div>
+            <div>数量: ${item.quantity}</div>
+          </div>
+        `;
+      }).join(''); // 连接所有物品的信息
+
+
+
+
+
+
+      // 订单信息列使用新的折叠式显示
+      const orderInfoColumn = `
+        <div class="order-info-summary" onclick="toggleOrderDetails(this, '${item.Number}')">
+          共 ${itemCount} 种物品 (点击查看详情)
+        </div>
+        <div id="details-${item.Number}" class="order-info-details">
+          ${itemsString}
+        </div>
+      `;
 
       return `
     <tr>
       <td><input type="checkbox" class="record-checkbox" data-id="${item.objectId}"></td>   
-      <td>${item.userName}</td>  
+      <td>${item.userName}</td>
+      <td>${item.userTeam}</td>        
       <td>${item.Number}</td>  
-      <td>${itemsString}</td>  
+      <td>${orderInfoColumn}</td>  
       <td>${item.Cost}</td>  
       <td>${formattedDate1}</td>
       <td>${formattedDate2}</td>  
@@ -1142,6 +1392,19 @@ function formatDate(date) {
       <td><button onclick="SingleReject('${item.objectId}')" class="btn-change">退回</button></td>  
     </tr>
   `;
+    }
+    
+    // 添加切换订单详情显示的函数
+    function toggleOrderDetails(element, orderNumber) {
+      const detailsElement = document.getElementById(`details-${orderNumber}`);
+      detailsElement.classList.toggle('show');
+      
+      // 可选：改变摘要区域的提示文字
+      if (detailsElement.classList.contains('show')) {
+        element.innerHTML = element.innerHTML.replace('点击查看详情', '点击隐藏详情');
+      } else {
+        element.innerHTML = element.innerHTML.replace('点击隐藏详情', '点击查看详情');
+      }
     }
 
 
