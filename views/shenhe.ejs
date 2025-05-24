@@ -877,7 +877,7 @@
       <table id="ShenheTable" class="users-table">
         <thead>
           <tr>
-            <th>选择</th>
+            <th><input type="checkbox" id="selectAllCheckboxtop" title="全选/取消全选"></th>
             <th>实力姓名</th>
             <th>单位</th>            
             <th>订单编号</th>
@@ -912,6 +912,26 @@
     <!-- 服装信息表格展示 -->
     <section>
       <h2>申领信息列表（已审核）</h2>
+
+      <!-- 搜索框 -->
+      <div class="search-container" style="text-align: center">
+        <div style="text-align: center;gap: 20px;padding: 10px;">
+        <input type="text" id="searchNameYi" placeholder="实力姓名" style="width: 250px; margin: 0 10px 0 0;border: 1px solid #262626;">
+        <input type="text" id="searchTeamYi" placeholder="单位" style="width: 250px; margin: 0 10px 0 0;border: 1px solid #262626;">
+        <input type="text" id="searchNumberYi" placeholder="订单编号" style="width: 250px; margin: 0 10px 0 0;border: 1px solid #262626;"> 
+        </div>
+        <div style="text-align: center;gap: 20px;padding: 10px;">    
+        <label type="text" id="searchLabel1Yi">开始时间：</label>        
+        <input type="date" id="searchStartTimeYi" style="width: 200px; border: 1px solid #262626;">
+        <label type="text" id="searchLabel2Yi">结束时间：</label>        
+        <input type="date" id="searchEndTimeYi" style="width: 200px; border: 1px solid #262626;"> 
+        </div>
+        <div style="text-align: center;gap: 20px;padding: 10px;">       
+        <button id="searchBtnYi" style="margin: 0 5px">搜索</button>
+        <button id="resetBtnYi" style="margin: 0 5px">重置</button>
+        </div> 
+      </div>
+
       <div class="table-container">
       <table id="YiShenheTable" class="users-table">
         <thead>
@@ -924,8 +944,7 @@
             <th>订单金额</th>
             <th>订单时间</th>
             <th>审核时间</th>
-            <th>审核状态</th>
-            <th>操作</th>            
+            <th>审核状态</th>          
           </tr>
         </thead>
         <tbody>
@@ -934,9 +953,18 @@
       </table>
     </div>
 
+    <div style="display: flex; justify-content: center; gap: 15px; margin-top: 10px; margin-bottom: 5px;">
+      <button id="firstPageYi" class="bg-green-500 text-white px-2 py-1 rounded" onclick="changePage1Yi()">首页</button>         
+      <button id="prevPageYi" class="bg-green-500 text-white px-2 py-1 rounded" onclick="changePageYi(-1)">前一页</button>  
+      <div id="pageInfoYi" class="text-center text-lg font-bold text-gray-700"></div>  
+      <button id="nextPageYi" class="bg-green-500 text-white px-2 py-1 rounded" onclick="changePageYi(1)">后一页</button>
+      <button id="lastPageYi" class="bg-green-500 text-white px-2 py-1 rounded" onclick="changePageNYi()">尾页</button>   
+  </div>      
+
       <div style="display: flex; justify-content: center; gap: 15px; margin-top: 20px; margin-bottom: 5px;">
         <button onclick="showReportModal()" class="button">打印报表</button>
-        <button onclick="BatchReject()" class="button">批量退回</button>
+        <button onclick="PrintAll()" class="button">打印所有订单信息（已审核）</button>
+        <button onclick="PrintNow()" class="button">打印搜索订单信息（已审核）</button>        
       </div>
 
     </section>
@@ -1080,14 +1108,30 @@
 
 const pageSize = 10; // 每页显示5条数据  
 let currentPage = 1; 
-let totalPages = 1;  
+let totalPages = 1;
+
+const pageSizeYi = 10; // 每页显示5条数据  
+let currentPageYi = 1; 
+let totalPagesYi = 1;  
 
 
     // 页面加载时获取物品列表  
     document.addEventListener('DOMContentLoaded', function () {
       loadShenhe();
       loadYiShenhe();
-  // 全选功能  
+  // 全选功能
+
+  const selectAllCheckboxtop = document.getElementById('selectAllCheckboxtop');  
+  if (selectAllCheckboxtop) {  
+    selectAllCheckboxtop.addEventListener('change', function() {  
+      const checkboxestop = document.querySelectorAll('.item-checkbox');  
+      checkboxestop.forEach(checkboxtop => {  
+        checkboxtop.checked = this.checked;  
+      });  
+    });  
+  }
+
+
   const selectAllCheckbox = document.getElementById('selectAllCheckbox');  
   if (selectAllCheckbox) {  
     selectAllCheckbox.addEventListener('change', function() {  
@@ -1101,23 +1145,48 @@ let totalPages = 1;
       const searchBtn = document.getElementById('searchBtn');
       const resetBtn = document.getElementById('resetBtn');
 
+      const searchBtnYi = document.getElementById('searchBtnYi');
+      const resetBtnYi = document.getElementById('resetBtnYi');
+
       if (searchBtn) {
         searchBtn.addEventListener('click', handleSearch);
       }
       if (resetBtn) {
         resetBtn.addEventListener('click', handleReset);
+      }        
+
+      if (searchBtnYi) {
+        searchBtnYi.addEventListener('click', handleSearchYi);
+      }
+      if (resetBtnYi) {
+        resetBtnYi.addEventListener('click', handleResetYi);
       }  
 
       function handleSearch() {
 
-      const queryParams = {
-        userName: document.getElementById('searchName').value.trim(),
-        userTeam: document.getElementById('searchTeam').value.trim(),
-        Number: document.getElementById('searchNumber').value.trim(),
-        startTime: new Date(document.getElementById('searchStartTime').value).getTime(),
-        endTime: new Date(document.getElementById('searchEndTime').value).getTime()
-        // 可以继续添加其他搜索条件  
-      };
+        const queryParams = {};
+
+        // Add basic text parameters
+        if (document.getElementById('searchName').value.trim()) {
+          queryParams.userName = document.getElementById('searchName').value.trim();
+        }
+        if (document.getElementById('searchTeam').value.trim()) {
+          queryParams.userTeam = document.getElementById('searchTeam').value.trim();
+        }
+        if (document.getElementById('searchNumber').value.trim()) {
+          queryParams.Number = document.getElementById('searchNumber').value.trim();
+        }
+
+        // Handle date fields only if they have values
+        const startTimeEl = document.getElementById('searchStartTime');
+        if (startTimeEl.value) {
+          queryParams.startTime = new Date(startTimeEl.value).getTime();
+        }
+
+        const endTimeEl = document.getElementById('searchEndTime');
+        if (endTimeEl.value) {
+          queryParams.endTime = new Date(endTimeEl.value).getTime();
+        }
      
       loadShenhe(queryParams);     
       }
@@ -1131,6 +1200,46 @@ let totalPages = 1;
       document.getElementById('searchEndTime').value='';
 
       loadShenhe();     
+      }
+
+      function handleSearchYi() {
+
+        const queryParamsYi = {};
+
+        // Add basic text parameters
+        if (document.getElementById('searchNameYi').value.trim()) {
+          queryParamsYi.userName = document.getElementById('searchNameYi').value.trim();
+        }
+        if (document.getElementById('searchTeamYi').value.trim()) {
+          queryParamsYi.userTeam = document.getElementById('searchTeamYi').value.trim();
+        }
+        if (document.getElementById('searchNumberYi').value.trim()) {
+          queryParamsYi.Number = document.getElementById('searchNumberYi').value.trim();
+        }
+
+        // Handle date fields only if they have values
+        const startTimeElYi = document.getElementById('searchStartTimeYi');
+        if (startTimeElYi.value) {
+          queryParamsYi.startTime = new Date(startTimeElYi.value).getTime();
+        }
+
+        const endTimeElYi = document.getElementById('searchEndTimeYi');
+        if (endTimeElYi.value) {
+          queryParamsYi.endTime = new Date(endTimeElYi.value).getTime();
+        }
+     
+      loadYiShenhe(queryParamsYi);     
+      }
+
+      function handleResetYi() {
+
+      document.getElementById('searchNameYi').value='';
+      document.getElementById('searchTeamYi').value='';
+      document.getElementById('searchNumberYi').value='';
+      document.getElementById('searchStartTimeYi').value='';
+      document.getElementById('searchEndTimeYi').value='';
+
+      loadYiShenhe();     
       }
 
 
@@ -1148,10 +1257,12 @@ let totalPages = 1;
 
             const pageInfo = document.getElementById('pageInfo');  
             const prevPageBtn = document.getElementById('prevPage');  
-            const nextPageBtn = document.getElementById('nextPage');  
+            const nextPageBtn = document.getElementById('nextPage'); 
+            const firstPageBtn = document.getElementById('firstPage');  
+            const lastPageBtn = document.getElementById('lastPage');   
 
             // 计算总页数  
-            totalPages = Math.ceil(data.length / pageSize);  
+            totalPages = Math.max(Math.ceil(data.length / pageSize), 1);
 
             // 计算当前页的数据范围  
             const start = (currentPage - 1) * pageSize;  
@@ -1173,6 +1284,8 @@ let totalPages = 1;
             // 控制按钮状态  
             prevPageBtn.disabled = currentPage === 1;  
             nextPageBtn.disabled = currentPage === totalPages; 
+            firstPageBtn.disabled = currentPage === 1;
+            lastPageBtn.disabled = currentPage === totalPages;
 
         })
         .catch(err => console.error(err));
@@ -1184,46 +1297,186 @@ let totalPages = 1;
             // 确保页码在合理范围内  
             currentPage = Math.max(1, Math.min(currentPage, totalPages)); 
 
-      const queryParams = {
-        userName: document.getElementById('searchName').value.trim(),
-        userTeam: document.getElementById('searchTeam').value.trim(),
-        Number: document.getElementById('searchNumber').value.trim(),
-        startTime: new Date(document.getElementById('searchStartTime').value).getTime(),
-        endTime: new Date(document.getElementById('searchEndTime').value).getTime()
-        // 可以继续添加其他搜索条件  
-      };
+        const queryParams = {};
+
+        // Add basic text parameters
+        if (document.getElementById('searchName').value.trim()) {
+          queryParams.userName = document.getElementById('searchName').value.trim();
+        }
+        if (document.getElementById('searchTeam').value.trim()) {
+          queryParams.userTeam = document.getElementById('searchTeam').value.trim();
+        }
+        if (document.getElementById('searchNumber').value.trim()) {
+          queryParams.Number = document.getElementById('searchNumber').value.trim();
+        }
+
+        // Handle date fields only if they have values
+        const startTimeEl = document.getElementById('searchStartTime');
+        if (startTimeEl.value) {
+          queryParams.startTime = new Date(startTimeEl.value).getTime();
+        }
+
+        const endTimeEl = document.getElementById('searchEndTime');
+        if (endTimeEl.value) {
+          queryParams.endTime = new Date(endTimeEl.value).getTime();
+        }
      
       loadShenhe(queryParams);               
         }
         
     function changePage1() {  
             currentPage = 1; 
-      const queryParams = {
-        userName: document.getElementById('searchName').value.trim(),
-        userTeam: document.getElementById('searchTeam').value.trim(),
-        Number: document.getElementById('searchNumber').value.trim(),
-        startTime: new Date(document.getElementById('searchStartTime').value).getTime(),
-        endTime: new Date(document.getElementById('searchEndTime').value).getTime()
-        // 可以继续添加其他搜索条件  
-      };
+        const queryParams = {};
+
+        // Add basic text parameters
+        if (document.getElementById('searchName').value.trim()) {
+          queryParams.userName = document.getElementById('searchName').value.trim();
+        }
+        if (document.getElementById('searchTeam').value.trim()) {
+          queryParams.userTeam = document.getElementById('searchTeam').value.trim();
+        }
+        if (document.getElementById('searchNumber').value.trim()) {
+          queryParams.Number = document.getElementById('searchNumber').value.trim();
+        }
+
+        // Handle date fields only if they have values
+        const startTimeEl = document.getElementById('searchStartTime');
+        if (startTimeEl.value) {
+          queryParams.startTime = new Date(startTimeEl.value).getTime();
+        }
+
+        const endTimeEl = document.getElementById('searchEndTime');
+        if (endTimeEl.value) {
+          queryParams.endTime = new Date(endTimeEl.value).getTime();
+        }
      
       loadShenhe(queryParams);        
         }  
         
         
     function changePageN() {  
-            currentPage = totalPages;  
-      const queryParams = {
-        userName: document.getElementById('searchName').value.trim(),
-        userTeam: document.getElementById('searchTeam').value.trim(),
-        Number: document.getElementById('searchNumber').value.trim(),
-        startTime: new Date(document.getElementById('searchStartTime').value).getTime(),
-        endTime: new Date(document.getElementById('searchEndTime').value).getTime()
-        // 可以继续添加其他搜索条件  
-      };
+        currentPage = totalPages;
+          
+        const queryParams = {};
+
+        // Add basic text parameters
+        if (document.getElementById('searchName').value.trim()) {
+          queryParams.userName = document.getElementById('searchName').value.trim();
+        }
+        if (document.getElementById('searchTeam').value.trim()) {
+          queryParams.userTeam = document.getElementById('searchTeam').value.trim();
+        }
+        if (document.getElementById('searchNumber').value.trim()) {
+          queryParams.Number = document.getElementById('searchNumber').value.trim();
+        }
+
+        // Handle date fields only if they have values
+        const startTimeEl = document.getElementById('searchStartTime');
+        if (startTimeEl.value) {
+          queryParams.startTime = new Date(startTimeEl.value).getTime();
+        }
+
+        const endTimeEl = document.getElementById('searchEndTime');
+        if (endTimeEl.value) {
+          queryParams.endTime = new Date(endTimeEl.value).getTime();
+        }
+      
+        loadShenhe(queryParams);     
+    }   
+
+
+    function changePageYi(direction) {  
+            currentPageYi += direction;  
+
+            // 确保页码在合理范围内  
+            currentPageYi = Math.max(1, Math.min(currentPageYi, totalPagesYi)); 
+
+        const queryParamsYi = {};
+
+        // Add basic text parameters
+        if (document.getElementById('searchNameYi').value.trim()) {
+          queryParamsYi.userName = document.getElementById('searchNameYi').value.trim();
+        }
+        if (document.getElementById('searchTeamYi').value.trim()) {
+          queryParamsYi.userTeam = document.getElementById('searchTeamYi').value.trim();
+        }
+        if (document.getElementById('searchNumberYi').value.trim()) {
+          queryParamsYi.Number = document.getElementById('searchNumberYi').value.trim();
+        }
+
+        // Handle date fields only if they have values
+        const startTimeElYi = document.getElementById('searchStartTimeYi');
+        if (startTimeElYi.value) {
+          queryParamsYi.startTime = new Date(startTimeElYi.value).getTime();
+        }
+
+        const endTimeElYi = document.getElementById('searchEndTimeYi');
+        if (endTimeElYi.value) {
+          queryParamsYi.endTime = new Date(endTimeElYi.value).getTime();
+        }
      
-      loadShenhe(queryParams);     
-        }   
+      loadYiShenhe(queryParamsYi);               
+        }
+        
+    function changePage1Yi() {  
+            currentPageYi = 1; 
+        const queryParamsYi = {};
+
+        // Add basic text parameters
+        if (document.getElementById('searchNameYi').value.trim()) {
+          queryParamsYi.userName = document.getElementById('searchNameYi').value.trim();
+        }
+        if (document.getElementById('searchTeamYi').value.trim()) {
+          queryParamsYi.userTeam = document.getElementById('searchTeamYi').value.trim();
+        }
+        if (document.getElementById('searchNumberYi').value.trim()) {
+          queryParamsYi.Number = document.getElementById('searchNumberYi').value.trim();
+        }
+
+        // Handle date fields only if they have values
+        const startTimeElYi = document.getElementById('searchStartTimeYi');
+        if (startTimeElYi.value) {
+          queryParamsYi.startTime = new Date(startTimeElYi.value).getTime();
+        }
+
+        const endTimeElYi = document.getElementById('searchEndTimeYi');
+        if (endTimeElYi.value) {
+          queryParamsYi.endTime = new Date(endTimeElYi.value).getTime();
+        }
+     
+      loadYiShenhe(queryParamsYi);       
+        }  
+        
+        
+    function changePageNYi() {  
+        currentPageYi = totalPagesYi;
+          
+        const queryParamsYi = {};
+
+        // Add basic text parameters
+        if (document.getElementById('searchNameYi').value.trim()) {
+          queryParamsYi.userName = document.getElementById('searchNameYi').value.trim();
+        }
+        if (document.getElementById('searchTeamYi').value.trim()) {
+          queryParamsYi.userTeam = document.getElementById('searchTeamYi').value.trim();
+        }
+        if (document.getElementById('searchNumberYi').value.trim()) {
+          queryParamsYi.Number = document.getElementById('searchNumberYi').value.trim();
+        }
+
+        // Handle date fields only if they have values
+        const startTimeElYi = document.getElementById('searchStartTimeYi');
+        if (startTimeElYi.value) {
+          queryParamsYi.startTime = new Date(startTimeElYi.value).getTime();
+        }
+
+        const endTimeElYi = document.getElementById('searchEndTimeYi');
+        if (endTimeElYi.value) {
+          queryParamsYi.endTime = new Date(endTimeElYi.value).getTime();
+        }
+     
+      loadYiShenhe(queryParamsYi);      
+    }   
 
 
 // 格式化日期为常规格式  
@@ -1310,19 +1563,45 @@ const infoJSON = JSON.stringify(item.Info).replace(/"/g, '&quot;');
 
 
     // 加载已审核申领数据并填充表格  
-    function loadYiShenhe() {
-      fetch('/shenhe/Yilist') // 获取物品数据的 API  
+    function loadYiShenhe(queryParamsYi = {}) {
+      const queryString = new URLSearchParams(queryParamsYi).toString();        
+      fetch('/shenhe/Yilist?' + queryString) // 获取物品数据的 API  
         .then(response => response.json())
         .then(data => {
-          const tbody = document.querySelector('#YiShenheTable tbody');
-          tbody.innerHTML = ''; // 清空当前表格内容 
+          const tbodyYi = document.querySelector('#YiShenheTable tbody');
+
+            const pageInfoYi = document.getElementById('pageInfoYi');  
+            const prevPageBtnYi = document.getElementById('prevPageYi');  
+            const nextPageBtnYi = document.getElementById('nextPageYi'); 
+            const firstPageBtnYi = document.getElementById('firstPageYi');  
+            const lastPageBtnYi = document.getElementById('lastPageYi');   
+
+            // 计算总页数  
+            totalPagesYi = Math.max(Math.ceil(data.length / pageSizeYi), 1);
+
+            // 计算当前页的数据范围  
+            const startYi = (currentPageYi - 1) * pageSizeYi;  
+            const endYi = startYi + pageSizeYi;  
+            const pageDataYi = data.slice(startYi, endYi);
+
+          tbodyYi.innerHTML = ''; // 清空当前表格内容 
 
           // 遍历物品数据，生成每行表格  
-          data.forEach(item => {
+          pageDataYi.forEach(item => {
             const tr = document.createElement('tr');
             tr.innerHTML = generateTableRowYiShenhe(item);
-            tbody.appendChild(tr);
+            tbodyYi.appendChild(tr);
           });
+
+            // 更新页码信息  
+            pageInfoYi.textContent = `第 ${currentPageYi} / ${totalPagesYi} 页`;  
+
+            // 控制按钮状态  
+            prevPageBtnYi.disabled = currentPageYi === 1;  
+            nextPageBtnYi.disabled = currentPageYi === totalPagesYi; 
+            firstPageBtnYi.disabled = currentPageYi === 1; 
+            lastPageBtnYi.disabled = currentPageYi === totalPagesYi; 
+
         })
         .catch(err => console.error(err));
     }
@@ -1364,10 +1643,6 @@ const infoJSON = JSON.stringify(item.Info).replace(/"/g, '&quot;');
       }).join(''); // 连接所有物品的信息
 
 
-
-
-
-
       // 订单信息列使用新的折叠式显示
       const orderInfoColumn = `
         <div class="order-info-summary" onclick="toggleOrderDetails(this, '${item.Number}')">
@@ -1388,8 +1663,7 @@ const infoJSON = JSON.stringify(item.Info).replace(/"/g, '&quot;');
       <td>${item.Cost}</td>  
       <td>${formattedDate1}</td>
       <td>${formattedDate2}</td>  
-      <td>${item.shenhezhuangtai}</td>
-      <td><button onclick="SingleReject('${item.objectId}')" class="btn-change">退回</button></td>  
+      <td>${item.shenhezhuangtai}</td> 
     </tr>
   `;
     }
@@ -1406,86 +1680,6 @@ const infoJSON = JSON.stringify(item.Info).replace(/"/g, '&quot;');
         element.innerHTML = element.innerHTML.replace('点击隐藏详情', '点击查看详情');
       }
     }
-
-
-// 删除服装信息  
-async function SingleReject(id) {
-
-      // 获取当前行的记录ID  
-      const recordId = id;  
-      
-      // 确认对话框  
-      const confirmReject = confirm('确定要退回此订单记录吗？');  
-      if (!confirmReject) return;  
-
-      try {  
-        const response = await fetch('/shenhe/singleReject', {  
-          method: 'POST',  
-          headers: {  
-            'Content-Type': 'application/json'  
-          },  
-          body: JSON.stringify({ recordId: recordId })  
-        });  
-
-        const result = await response.json();  
-        
-        if (result.success) {  
-          loadShenhe();
-          loadYiShenhe();           
-          alert('订单已退回！');  
-        } else {  
-          alert(result.error);  
-        }  
-      } catch (error) {  
-        console.error('订单退回失败:', error);  
-        alert('订单退回失败！');  
-      }  
-    };   
-
-
-function BatchReject() {
-
-      const checkboxes = document.querySelectorAll('.record-checkbox:checked');  
-      
-      // 收集选中的记录ID  
-      const selectedIds = Array.from(checkboxes).map(checkbox => checkbox.dataset.id); 
-      
-      console.log(selectedIds);
-
-      // 检查是否选择了记录  
-      if (selectedIds.length === 0) {  
-        alert('请选择要退回的订单记录');  
-        return;  
-      }  
-
-      // 确认对话框  
-      const confirmBatchReject = confirm(`确定要退回选中的 ${selectedIds.length} 条订单记录吗？`);  
-      if (!confirmBatchReject) return;  
-
-      // 发送批量退回请求  
-      fetch('/shenhe/batchReject', {  
-        method: 'POST',  
-        headers: {  
-          'Content-Type': 'application/json'  
-        },  
-        body: JSON.stringify({ recordIds: selectedIds })  
-      })  
-      .then(response => response.json())  
-      .then(result => {  
-        if (result.success) {  
-          loadShenhe();
-          loadYiShenhe();  
-          alert(`成功退回 ${result.total} 条订单！`);  
-        } else {  
-          alert(result.error);  
-        }  
-      })  
-      .catch(error => {  
-        console.error('订单批量退回失败:', error);  
-        alert('订单批量退回失败');  
-      });  
-    };  
-
 
     // 点击模态窗口外部关闭模态窗口  
     window.onclick = function (event) {
