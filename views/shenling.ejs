@@ -1085,6 +1085,15 @@
           </tbody>
         </table>
       </div>
+
+      <div style="display: flex; justify-content: center; gap: 15px; margin-top: 10px; margin-bottom: 5px;">
+        <button id="firstPageYiShenling" class="bg-green-500 text-white px-2 py-1 rounded" onclick="changePage1YiShenling()">首页</button>         
+        <button id="prevPageYiShenling" class="bg-green-500 text-white px-2 py-1 rounded" onclick="changePageYiShenling(-1)">前一页</button>  
+        <div id="pageInfoYiShenling" class="text-center text-lg font-bold text-gray-700"></div>  
+        <button id="nextPageYiShenling" class="bg-green-500 text-white px-2 py-1 rounded" onclick="changePageYiShenling(1)">后一页</button>
+        <button id="lastPageYiShenling" class="bg-green-500 text-white px-2 py-1 rounded" onclick="changePageNYiShenling()">尾页</button>   
+    </div>  
+
     </section>
   </div>
 
@@ -1137,6 +1146,12 @@
 const pageSize = 5; // 每页显示5条数据  
 let currentPage = 1; 
 let totalPages = 1;  
+
+
+const pageSizeYiShenling = 5; // 每页显示5条数据  
+let currentPageYiShenling = 1; 
+let totalPagesYiShenling= 1; 
+
 
     // ========== 新增：购物车数组 ==========   
     let cartItems = [];
@@ -1437,6 +1452,30 @@ let totalPages = 1;
         }    
 
 
+        function changePageYiShenling(direction) {  
+            currentPageYiShenling += direction;  
+
+            // 确保页码在合理范围内  
+            currentPageYiShenling = Math.max(1, Math.min(currentPageYiShenling, totalPagesYiShenling)); 
+
+      loadShenling();               
+        }
+        
+        function changePage1YiShenling() {  
+            currentPageYiShenling = 1; 
+      loadShenling();       
+        }  
+        
+        
+        function changePageNYiShenling() {  
+            currentPageYiShenling = totalPagesYiShenling;  
+
+      loadShenling();   
+        }    
+
+
+
+
     // 生成表格行的 HTML  
     function generateTableRow(item, userId) {
       return `  
@@ -1664,14 +1703,36 @@ let totalPages = 1;
         .then(response => response.json())
         .then(data => {
           const tbody = document.querySelector('#ShenlingTable tbody');
+
+          const pageInfoYiShenling = document.getElementById('pageInfoYiShenling');  
+          const prevPageBtnYiShenling = document.getElementById('prevPageYiShenling');  
+          const nextPageBtnYiShenling = document.getElementById('nextPageYiShenling');  
+
+          // 计算总页数  
+          totalPagesYiShenling = Math.ceil(data.length / pageSizeYiShenling);  
+
+          // 计算当前页的数据范围  
+          const startYiShenling = (currentPageYiShenling - 1) * pageSizeYiShenling;  
+          const endYiShenling = startYiShenling + pageSizeYiShenling;  
+          const pageDataYiShenling = data.slice(startYiShenling, endYiShenling);
+
           tbody.innerHTML = ''; // 清空当前表格内容  
 
           // 遍历物品数据，生成每行表格  
-          data.forEach(item => {
+          pageDataYiShenling.forEach(item => {
             const tr = document.createElement('tr');
             tr.innerHTML = generateTableRowShenling(item);
             tbody.appendChild(tr);
           });
+
+
+            // 更新页码信息  
+            pageInfoYiShenling.textContent = `第 ${currentPageYiShenling} / ${totalPagesYiShenling} 页`;  
+
+            // 控制按钮状态  
+            prevPageBtnYiShenling.disabled = currentPageYiShenling === 1;  
+            nextPageBtnYiShenling.disabled = currentPageYiShenling === totalPagesYiShenling; 
+
         })
         .catch(err => console.error(err));
     }

@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <title>库存管理</title>
+  <style>
+    /* 基本样式 */
+    .container {
+      width: 90%;
+      margin: 0 auto;
+    }
+
+    h1 {
+      text-align: center;
+    }
+
+    .search-bar {
+      margin-bottom: 20px;
+    }
+
+    .search-bar input {
+      margin-right: 10px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    table,
+    th,
+    td {
+      border: 1px solid #ccc;
+    }
+
+    th,
+    td {
+      padding: 8px;
+      text-align: center;
+    }
+
+    .button {
+      padding: 6px 12px;
+      margin: 5px;
+    }
+
+    /* 模态窗口样式 */
+    .modal {
+      display: none;
+      /* 隐藏模态窗口 */
+      position: fixed;
+      z-index: 1;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0, 0, 0, 0.5);
+      /* 半透明背景 */
+    }
+
+    .modal-content {
+      background-color: #fff;
+      margin: 10% auto;
+      padding: 20px;
+      width: 50%;
+    }
+
+    .modal-header,
+    .modal-footer {
+      text-align: right;
+    }
+
+    .modal-body {
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    /* 错误消息样式 */
+    .error {
+      border-color: red;
+    }
+
+    .error-message {
+      color: red;
+      font-size: 12px;
+    }
+
+    /* 缩略图样式 */
+    .thumbnail {
+      width: 80px !important;
+      /* 固定宽度 */
+      height: 80px !important;
+      /* 固定高度 */
+      object-fit: cover;
+      /* 自动裁剪，保持比例 */
+      border-radius: 5px;
+      /* 圆角 */
+      border: 1px solid #ccc;
+      /* 添加边框 */
+      cursor: pointer;
+      /* 鼠标悬浮变成手型 */
+      transition: transform 0.2s ease;
+      /* 悬浮动画 */
+    }
+
+    .thumbnail:hover {
+      transform: scale(1.05);
+      /* 悬浮时稍微放大 */
+    }
+
+    /* 响应式样式 */
+    @media screen and (max-width: 768px) {
+      .thumbnail {
+        width: 60px;
+        height: 60px;
+      }
+    }
+
+    @media screen and (max-width: 480px) {
+      .thumbnail {
+        width: 50px;
+        height: 50px;
+      }
+    }
+
+    /* 大图模态框图片样式 */
+    .large-image {
+      max-width: 90vw;
+      /* 最大宽度：视口宽度的 90% */
+      max-height: 90vh;
+      /* 最大高度：视口高度的 90% */
+      margin: auto;
+      display: block;
+    }
+
+    /* 模态框背景 */
+    .modal-background {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(0, 0, 0, 0.8);
+      /* 半透明黑色背景 */
+      z-index: 1000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-background-hidden {
+      display: none;
+      /* 隐藏模态框 */
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>库存管理</h1>
+
+    <!-- 搜索栏 -->
+    <section class="search-bar">
+      <input type="text" id="itemNumber" placeholder="物品编号">
+      <input type="text" id="itemName" placeholder="物品名称">
+      <input type="number" id="price" placeholder="单价">
+      <input type="text" id="category" placeholder="类别">
+      <input type="text" id="warehouseLocation" placeholder="仓库位置">
+      <button id="searchButton">搜索</button>
+      <button id="resetButton">重置</button>
+    </section>
+
+    <!-- 库存信息表格展示 -->
+    <section>
+      <table id="inventoryTable">
+        <thead>
+          <tr>
+            <th>物品编号</th>
+            <th>物品名称</th>
+            <th>缩略图</th> <!-- 新增缩略图列 -->
+            <th>尺码与数量</th>
+            <th>单价</th>
+            <th>类别</th>
+            <th>仓库位置</th>
+            <th>备注</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- 数据将通过AJAX动态加载 -->
+        </tbody>
+      </table>
+    </section>
+  </div>
+
+  <!-- 修改模态窗口 -->
+  <div id="editModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <span id="closeEditModal" style="cursor:pointer;">&times;</span>
+      </div>
+      <div class="modal-body">
+        <h2>修改库存信息</h2>
+        <form id="editForm">
+          <!-- 表单字段 -->
+          <div>
+            <label for="editItemNumber">物品编号：</label>
+            <input type="text" id="editItemNumber" name="editItemNumber" required>
+          </div>
+          <div>
+            <label for="editItemName">物品名称：</label>
+            <input type="text" id="editItemName" name="editItemName" required>
+          </div>
+
+          <!-- 缩略图 -->
+          <div class="form-group">
+            <label>缩略图</label>
+            <img id="editItemPic" class="thumbnail" src="" alt="缩略图" />
+            <input type="file" id="editItemPicFile" name="editItemPicFile" accept="image/*" />
+          </div>
+
+          <!-- 在模态框内，物品名称等字段下面，添加多尺码的编辑区域 -->
+          <div>
+            <label for="editItemSize">尺码与数量：</label>
+            <button type="button" id="editItemSizeButton">添加尺码</button>
+            <div id="editItemsizesContainer"><!-- 动态生成 --></div>
+          </div>
+          <div>
+            <label for="editPrice">单价：</label>
+            <input type="number" id="editItemPrice" name="editItemPrice" required>
+          </div>
+          <div>
+            <label for="editCategory">类别：</label>
+            <input type="text" id="editItemCategory" name="editItemCategory">
+          </div>
+          <div>
+            <label for="editWarehouseLocation">仓库位置：</label>
+            <input type="text" id="editItemWarehouseLocation" name="editItemWarehouseLocation">
+          </div>
+          <div>
+            <label for="editRemarks">备注：</label>
+            <input type="text" id="editItemRemarks" name="editItemRemarks">
+          </div>
+          <div>
+            <button type="submit">确认修改</button>
+            <button type="button" id="cancelEdit">取消</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- 模态框大图容器（默认隐藏） -->
+  <div id="editItemlargeImageModal" class="modal-background modal-background-hidden" onclick="closeLargeImage()">
+    <img id="editItemlargeImage" class="large-image" src="" alt="大图">
+  </div>
+
+
+  <script>
+    // 页面加载时获取服装列表  
+    document.addEventListener('DOMContentLoaded', function () {
+      loadInventory();
+      const largeImage = document.getElementById('editItemlargeImage');
+      const largeImageContainer = document.querySelector('#editItemlargeImageModal');
+      // 如果 largeImage.src 为空字符串或是当前网页地址，则隐藏大图  
+      if (!largeImage.src || largeImage.src === window.location.href) {
+        largeImageContainer.style.display = 'none';
+        return;
+      }
+    });
+
+    let editingItemId = null; // 当前正在编辑的项目ID
+
+    document.getElementById('editItemSizeButton').addEventListener('click', () => {
+      const sizesContainer = document.getElementById('editItemsizesContainer');
+
+      const row = document.createElement('div');
+      row.innerHTML = `  
+    <input type="text" class="size-input" placeholder="尺码" />  
+    <input type="number" class="quantity-input" placeholder="数量" />  
+    <button type="button" class="remove-size-btn">删除</button>  
+  `;
+      sizesContainer.appendChild(row);
+
+      // 删除行事件  
+      row.querySelector('.remove-size-btn').addEventListener('click', () => {
+        row.remove();
+      });
+    });
+
+    // 加载库存数据并填充表格
+    function loadInventory(filters = {}) {
+
+      console.log(filters)
+
+      fetch('/inventory/list', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(filters)
+      })
+        .then(response => response.json())
+        .then(data => {
+          const tbody = document.querySelector('#inventoryTable tbody');
+          tbody.innerHTML = ''; // 清空当前表格内容
+          data.forEach(item => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = generateTableRow(item);
+            tbody.appendChild(tr);
+          });
+        })
+        .catch(err => console.error(err));
+    }
+
+    // 生成表格行的HTML
+    function generateTableRow(item) {
+      return `
+        <td>${item.itemNumber}</td>
+        <td>${item.itemName}</td>
+        <td><img src="${item.itemPic || ''}" alt="缩略图" class="thumbnail" onclick="showLargeImage('${item.itemPic || ''}')" />  </td>  
+        <td>${(item.sizes || []).map(sizeObj => `${sizeObj.size}: ${sizeObj.quantity}`).join('<br>')}</td> 
+        <td>${item.price || ''}</td>        
+        <td>${item.category || ''}</td>
+        <td>${item.warehouseLocation || ''}</td>
+        <td>${item.remarks || ''}</td>
+        <td>
+          <button onclick="showEditModal('${item.id}')">修改</button>
+          <button onclick="deleteItem('${item.id}')">删除</button>
+        </td>
+      `;
+    }
+
+    // 双击缩略图显示大图  
+    function showLargeImage(src) {
+      const modal = document.getElementById('editItemlargeImageModal'); // 获取模态框  
+      const largeImage = document.getElementById('editItemlargeImage'); // 获取大图显示区域  
+
+      // 如果 src 为空字符串或是当前网页地址，则隐藏大图  
+      if (!src || src === window.location.href) {
+        largeImage.style.display = 'none';
+        return;
+      }
+
+      // 设置大图的 src  
+      largeImage.src = src;
+      // 显示模态框
+      // 动态显示模态框  
+      modal.style.display = 'flex'; // 确保模态框显示
+    }
+
+    // 点击模态框关闭大图  
+    function closeLargeImage() {
+      const modal = document.getElementById('editItemlargeImageModal'); // 获取模态框  
+
+      // 隐藏模态框  
+      modal.style.display = 'none'; // 确保模态框显示
+    }
+
+
+    // 删除库存信息
+    function deleteItem(id) {
+      if (!confirm('确定要删除该库存信息吗？')) return;
+
+      fetch(`/inventory/delete/${id}`, { method: 'DELETE' })
+        .then(response => response.json())
+        .then(result => {
+          if (result.success) {
+            alert('删除成功');
+            loadInventory(); // 刷新表格
+          } else {
+            alert('删除失败：' + result.error);
+          }
+        })
+        .catch(err => console.error(err));
+    }
+
+    // 显示修改模态窗口并填充数据
+    function showEditModal(id) {
+      editingItemId = id;
+
+      fetch(`/inventory/get/${id}`)
+        .then(response => response.json())
+        .then(item => {
+          // 填充表单数据
+          document.getElementById('editItemNumber').value = item.itemNumber;
+          document.getElementById('editItemName').value = item.itemName;
+
+
+          // =========== 多尺码部分 ===========  
+          const sizesContainer = document.getElementById('editItemsizesContainer');
+          sizesContainer.innerHTML = ''; // 先清空  
+
+          if (item.sizes && Array.isArray(item.sizes)) {
+            item.sizes.forEach(sizeObj => {
+              // 每个尺码生成一行  
+              const row = document.createElement('div');
+              row.innerHTML = `  
+            <input type="text" class="size-input" placeholder="尺码" value="${sizeObj.size || ''}" />  
+            <input type="number" class="quantity-input" placeholder="数量" value="${sizeObj.quantity || 0}" />  
+            <button type="button" class="remove-size-btn">删除</button>  
+          `;
+              sizesContainer.appendChild(row);
+
+              // 删除行事件  
+              row.querySelector('.remove-size-btn').addEventListener('click', () => {
+                row.remove();
+              });
+            });
+          }
+          document.getElementById('editItemPrice').value = item.price || '';
+          document.getElementById('editItemCategory').value = item.category || '';
+          document.getElementById('editItemWarehouseLocation').value = item.warehouseLocation || '';
+          document.getElementById('editItemRemarks').value = item.remarks || '';
+
+          // 处理缩略图预览（展示当前图片或默认占位符）  
+          const previewImg = document.getElementById('editItemPic');
+          if (item.itemPic) {
+            previewImg.src = item.itemPic; // 如果有图片，显示图片
+            previewImg.style.cursor = 'pointer'; // 设置为点击可用的样式  
+
+            // 添加点击事件，用于显示大图  
+            previewImg.onclick = () => {
+              showLargeImage(item.itemPic);
+            };
+          } else {
+            previewImg.src = ''; // 显示默认占位符
+            previewImg.onclick = null; // 如果没有图片，移除点击事件              
+          }
+
+          // 重置文件上传输入框  
+          document.getElementById('editItemPicFile').value = '';
+
+          // 显示模态窗口
+          document.getElementById('editModal').style.display = 'block';
+        })
+        .catch(err => console.error(err));
+    }
+
+    // 关闭修改模态窗口
+    function closeEditModal() {
+      document.getElementById('editModal').style.display = 'none';
+      editingItemId = null;
+      document.getElementById('editForm').reset();
+      clearErrorMessages();
+    }
+
+    // 提交修改表单
+    document.getElementById('editForm').addEventListener('submit', function (event) {
+      event.preventDefault(); // 阻止默认提交行为
+
+      if (!editingItemId) return;
+
+      // 创建 FormData 对象  
+      const formData = new FormData();
+      formData.append('itemNumber', document.getElementById('editItemNumber').value);
+      formData.append('itemName', document.getElementById('editItemName').value);
+      formData.append('price', document.getElementById('editItemPrice').value);
+      formData.append('category', document.getElementById('editItemCategory').value);
+      formData.append('warehouseLocation', document.getElementById('editItemWarehouseLocation').value);
+      formData.append('remarks', document.getElementById('editItemRemarks').value);
+
+      // 单独处理 'sizes' 字段  
+      const sizesContainer = document.getElementById('editItemsizesContainer'); // 获取尺码集合容器  
+      const sizeRows = sizesContainer.querySelectorAll('div'); // 获取所有动态生成的尺码行  
+      const sizes = [];
+
+      sizeRows.forEach(row => {
+        const size = row.querySelector('.size-input').value.trim(); // 获取尺码值  
+        const quantity = parseInt(row.querySelector('.quantity-input').value, 10) || 0; // 获取库存值，默认 0  
+
+        if (size) {
+          sizes.push({ size, quantity }); // 将尺码和库存值作为对象添加到数组中  
+        }
+      });
+
+      // 以字符串形式传递  
+      formData.append('sizes', JSON.stringify(sizes));
+
+      // 如果用户选择了新图片，追加文件  
+      const newItemPic = document.getElementById('editItemPicFile').files[0];
+      if (newItemPic) {
+        formData.append('itemPic', newItemPic); // 文件附加到 formData  
+      }
+
+      // 提交数据到后端
+      fetch(`/inventory/update/${editingItemId}`, {
+        method: 'PUT',
+        body: formData, // 使用 FormData 传递文件和普通字段 
+      })
+        .then(response => response.json())
+        .then(result => {
+          if (result.success) {
+            alert('修改成功！');
+            closeEditModal();
+            loadInventory(); // 刷新表格
+          } else {
+            if (result.error.includes("物品编号已存在")) {
+              const numberInput = form.querySelector('[name="itemNumber"]');
+              displayErrorMessage(numberInput, result.error);
+            } else {
+              alert('修改失败：' + result.error);
+            }
+          }
+        })
+        .catch(err => console.error(err));
+    });
+
+    // 取消修改
+    document.getElementById('cancelEdit').addEventListener('click', closeEditModal);
+    document.getElementById('closeEditModal').addEventListener('click', closeEditModal);
+
+    // 显示字段错误信息
+    function displayErrorMessage(input, message) {
+      input.classList.add('error'); // 给输入框加错误样式
+      const errorSpan = document.createElement('span');
+      errorSpan.className = 'error-message';
+      errorSpan.textContent = message;
+      input.parentNode.appendChild(errorSpan); // 在输入框父容器中添加错误提示
+    }
+
+    // 清理所有错误提示
+    function clearErrorMessages() {
+      const errorMessages = document.querySelectorAll('.error-message');
+      errorMessages.forEach(msg => msg.remove()); // 删除错误信息
+      const errorInputs = document.querySelectorAll('.error');
+      errorInputs.forEach(input => input.classList.remove('error')); // 移除错误标识
+    }
+
+    // 搜索功能
+    document.getElementById('searchButton').addEventListener('click', function () {
+      const filters = {
+        itemNumber: document.getElementById('itemNumber').value.trim(),
+        itemName: document.getElementById('itemName').value.trim(),
+        price: document.getElementById('price').value.trim(),
+        category: document.getElementById('category').value.trim(),
+        warehouseLocation: document.getElementById('warehouseLocation').value.trim()
+      };
+      loadInventory(filters);
+    });
+
+    // 重置搜索
+    document.getElementById('resetButton').addEventListener('click', function () {
+      document.getElementById('itemNumber').value = '';
+      document.getElementById('itemName').value = '';
+      document.getElementById('price').value = '';
+      document.getElementById('category').value = '';
+      document.getElementById('warehouseLocation').value = '';
+      loadInventory();
+    });
+
+    // 页面加载时获取库存列表
+    document.addEventListener('DOMContentLoaded', function () {
+      loadInventory();
+    });
+
+    // 点击模态窗口外部关闭模态窗口
+    window.onclick = function (event) {
+      const modal = document.getElementById('editModal');
+      if (event.target == modal) {
+        closeEditModal();
+      }
+    };
+  </script>
+</body>
+
+</html>

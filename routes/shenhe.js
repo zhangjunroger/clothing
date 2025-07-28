@@ -86,7 +86,18 @@ router.get('/shenhe/list', async (req, res) => {
 
 // 路由：获取申领列表  
 router.get('/shenhe/Yilist', async (req, res) => {  
-  try {  
+  try {
+    
+    const {
+      userNameYi,
+      userTeamYi,
+      NumberYi,
+      startTimeYi,
+      endTimeYi,
+      startTimeYishenhe,
+      endTimeYishenhe      
+    } = req.query; // 从查询参数获取搜索条件     
+
      
           // 创建 LeanCloud 查询  
           const query1 = new AV.Query('Shenling');  
@@ -94,7 +105,40 @@ router.get('/shenhe/Yilist', async (req, res) => {
           query1.equalTo('shenhezhuangtai', '已审核'); // 查询已审核  
           query2.startsWith('shenhezhuangtai', '未通过'); // 查询所有未通过状态
           // 合并查询（OR）  
-          const query = AV.Query.or(query1, query2);   
+          const query = AV.Query.or(query1, query2);
+          
+    // 添加搜索条件  
+    if (userNameYi) {
+      query.equalTo('userName', userNameYi);
+    }
+    if (userTeamYi) {
+      query.contains('userTeam', userTeamYi);
+    }
+    if (NumberYi) {
+      query.equalTo('Number', NumberYi);
+    }
+
+    if (startTimeYi || endTimeYi) {
+      // 需要确保 `price` 字段为数字类型  
+      if (startTimeYi) {
+        query.greaterThanOrEqualTo('Time', parseInt(startTimeYi, 10));
+      }
+      if (endTimeYi) {
+        query.lessThanOrEqualTo('Time', parseInt(endTimeYi, 10));
+      }
+    } 
+    
+    if (startTimeYishenhe || endTimeYishenhe) {
+      // 需要确保 `price` 字段为数字类型  
+      if (startTimeYishenhe) {
+        query.greaterThanOrEqualTo('ShenheTime', parseInt(startTimeYishenhe, 10));
+      }
+      if (endTimeYishenhe) {
+        query.lessThanOrEqualTo('ShenheTime', parseInt(endTimeYishenhe, 10));
+      }
+    }      
+
+
           // 执行查询  
           const results = await query.find();  
           const data = results.map(item => {  

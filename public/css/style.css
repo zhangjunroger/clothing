@@ -1,6 +1,6 @@
 /* 背景图片样式 */  
 body {  
-  background-image: url('/images/background.jpg'); /* 背景图片路径 */  
+  /*background-image: url('/images/background.jpg'); /* 背景图片路径 */  
   background-size: cover; /* 图片适应屏幕大小 */  
   background-repeat: no-repeat; /* 不重复平铺 */  
   background-position: center; /* 居中显示 */  
@@ -11,7 +11,22 @@ body {
   display: flex;  
   flex-direction: column;  
   justify-content: center;  
-  align-items: center;  
+  align-items: center;
+  position: relative;  
+} 
+
+body::before {  
+  content: "";  
+  position: fixed;  
+  top: 0; left: 0; right: 0; bottom: 0;  
+  z-index: -1;  
+  background-image: url('/images/background.jpg');  
+  background-size: cover;  
+  background-position: center;  
+  background-repeat: no-repeat;  
+  width: 100vw;  
+  height: 100vh;  
+  opacity: 1; /* 需要时可调透明度 */  
 }  
 
 /* 登录表单的容器样式 */  

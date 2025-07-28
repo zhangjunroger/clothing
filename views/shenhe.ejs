@@ -921,11 +921,17 @@
         <input type="text" id="searchNumberYi" placeholder="订单编号" style="width: 250px; margin: 0 10px 0 0;border: 1px solid #262626;"> 
         </div>
         <div style="text-align: center;gap: 20px;padding: 10px;">    
-        <label type="text" id="searchLabel1Yi">开始时间：</label>        
+        <label type="text" id="searchLabel1Yi">订单开始时间：</label>        
         <input type="date" id="searchStartTimeYi" style="width: 200px; border: 1px solid #262626;">
-        <label type="text" id="searchLabel2Yi">结束时间：</label>        
+        <label type="text" id="searchLabel2Yi">订单结束时间：</label>        
         <input type="date" id="searchEndTimeYi" style="width: 200px; border: 1px solid #262626;"> 
         </div>
+        <div style="text-align: center;gap: 20px;padding: 10px;">    
+        <label type="text" id="searchLabel1Yishenhe">审核开始时间：</label>        
+        <input type="date" id="searchStartTimeYishenhe" style="width: 200px; border: 1px solid #262626;">
+        <label type="text" id="searchLabel2Yishenhe">审核结束时间：</label>        
+        <input type="date" id="searchEndTimeYishenhe" style="width: 200px; border: 1px solid #262626;"> 
+        </div>        
         <div style="text-align: center;gap: 20px;padding: 10px;">       
         <button id="searchBtnYi" style="margin: 0 5px">搜索</button>
         <button id="resetBtnYi" style="margin: 0 5px">重置</button>
@@ -936,7 +942,6 @@
       <table id="YiShenheTable" class="users-table">
         <thead>
           <tr>
-            <th><input type="checkbox" id="selectAllCheckbox" title="全选/取消全选"></th>
             <th>实力姓名</th>
             <th>单位</th>            
             <th>订单编号</th>
@@ -1106,11 +1111,11 @@
 
   <script>
 
-const pageSize = 10; // 每页显示5条数据  
+const pageSize = 5; // 每页显示5条数据  
 let currentPage = 1; 
 let totalPages = 1;
 
-const pageSizeYi = 10; // 每页显示5条数据  
+const pageSizeYi = 5; // 每页显示5条数据  
 let currentPageYi = 1; 
 let totalPagesYi = 1;  
 
@@ -1208,25 +1213,36 @@ let totalPagesYi = 1;
 
         // Add basic text parameters
         if (document.getElementById('searchNameYi').value.trim()) {
-          queryParamsYi.userName = document.getElementById('searchNameYi').value.trim();
+          queryParamsYi.userNameYi = document.getElementById('searchNameYi').value.trim();
         }
         if (document.getElementById('searchTeamYi').value.trim()) {
-          queryParamsYi.userTeam = document.getElementById('searchTeamYi').value.trim();
+          queryParamsYi.userTeamYi = document.getElementById('searchTeamYi').value.trim();
         }
         if (document.getElementById('searchNumberYi').value.trim()) {
-          queryParamsYi.Number = document.getElementById('searchNumberYi').value.trim();
+          queryParamsYi.NumberYi = document.getElementById('searchNumberYi').value.trim();
         }
 
         // Handle date fields only if they have values
         const startTimeElYi = document.getElementById('searchStartTimeYi');
         if (startTimeElYi.value) {
-          queryParamsYi.startTime = new Date(startTimeElYi.value).getTime();
+          queryParamsYi.startTimeYi = new Date(startTimeElYi.value).getTime();
         }
 
         const endTimeElYi = document.getElementById('searchEndTimeYi');
         if (endTimeElYi.value) {
-          queryParamsYi.endTime = new Date(endTimeElYi.value).getTime();
+          queryParamsYi.endTimeYi = new Date(endTimeElYi.value).getTime();
         }
+
+        // Handle date fields only if they have values
+        const startTimeElYishenhe = document.getElementById('searchStartTimeYishenhe');
+        if (startTimeElYishenhe.value) {
+          queryParamsYi.startTimeYishenhe = new Date(startTimeElYishenhe.value).getTime();
+        }
+
+        const endTimeElYishenhe = document.getElementById('searchEndTimeYishenhe');
+        if (endTimeElYishenhe.value) {
+          queryParamsYi.endTimeYishenhe = new Date(endTimeElYishenhe.value).getTime();
+        }             
      
       loadYiShenhe(queryParamsYi);     
       }
@@ -1238,6 +1254,8 @@ let totalPagesYi = 1;
       document.getElementById('searchNumberYi').value='';
       document.getElementById('searchStartTimeYi').value='';
       document.getElementById('searchEndTimeYi').value='';
+      document.getElementById('searchStartTimeYishenhe').value='';
+      document.getElementById('searchEndTimeYishenhe').value='';
 
       loadYiShenhe();     
       }
@@ -1414,6 +1432,17 @@ let totalPagesYi = 1;
         if (endTimeElYi.value) {
           queryParamsYi.endTime = new Date(endTimeElYi.value).getTime();
         }
+
+        // Handle date fields only if they have values
+        const startTimeElYishenhe = document.getElementById('searchStartTimeYishenhe');
+        if (startTimeElYishenhe.value) {
+          queryParamsYi.startTimeYishenhe = new Date(startTimeElYishenhe.value).getTime();
+        }
+
+        const endTimeElYishenhe = document.getElementById('searchEndTimeYishenhe');
+        if (endTimeElYishenhe.value) {
+          queryParamsYi.endTimeYishenhe = new Date(endTimeElYishenhe.value).getTime();
+        }             
      
       loadYiShenhe(queryParamsYi);               
         }
@@ -1443,6 +1472,17 @@ let totalPagesYi = 1;
         if (endTimeElYi.value) {
           queryParamsYi.endTime = new Date(endTimeElYi.value).getTime();
         }
+
+        // Handle date fields only if they have values
+        const startTimeElYishenhe = document.getElementById('searchStartTimeYishenhe');
+        if (startTimeElYishenhe.value) {
+          queryParamsYi.startTimeYishenhe = new Date(startTimeElYishenhe.value).getTime();
+        }
+
+        const endTimeElYishenhe = document.getElementById('searchEndTimeYishenhe');
+        if (endTimeElYishenhe.value) {
+          queryParamsYi.endTimeYishenhe = new Date(endTimeElYishenhe.value).getTime();
+        }           
      
       loadYiShenhe(queryParamsYi);       
         }  
@@ -1474,6 +1514,17 @@ let totalPagesYi = 1;
         if (endTimeElYi.value) {
           queryParamsYi.endTime = new Date(endTimeElYi.value).getTime();
         }
+
+        // Handle date fields only if they have values
+        const startTimeElYishenhe = document.getElementById('searchStartTimeYishenhe');
+        if (startTimeElYishenhe.value) {
+          queryParamsYi.startTimeYishenhe = new Date(startTimeElYishenhe.value).getTime();
+        }
+
+        const endTimeElYishenhe = document.getElementById('searchEndTimeYishenhe');
+        if (endTimeElYishenhe.value) {
+          queryParamsYi.endTimeYishenhe = new Date(endTimeElYishenhe.value).getTime();
+        }        
      
       loadYiShenhe(queryParamsYi);      
     }   
@@ -1654,8 +1705,7 @@ const infoJSON = JSON.stringify(item.Info).replace(/"/g, '&quot;');
       `;
 
       return `
-    <tr>
-      <td><input type="checkbox" class="record-checkbox" data-id="${item.objectId}"></td>   
+    <tr>  
       <td>${item.userName}</td>
       <td>${item.userTeam}</td>        
       <td>${item.Number}</td>  
