@@ -4,10 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>登录-被装管理系统</title>
-<!-- 引入 Bootstrap 样式 -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-<!-- 引入字体图标 -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+<!-- Bootstrap CSS -->  
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">  
+
+<!-- Bootstrap Icons -->  
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.0/font/bootstrap-icons.min.css">  
+
+<!-- Bootstrap JS -->  
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+
 <style>
 /* 现代化背景渐变 */
 /* 背景图片样式 */  
@@ -98,14 +103,19 @@ body::before {
     color: white;
     text-align: center;
     padding: 2rem;
-    margin: -1.25rem -1.25rem 1.25rem -1.25rem;
+    margin: 0 !important;  /* 重置 margin */ 
 }
 
 .card-header h1 {
     margin: 0;
+    padding: 0;
     font-size: 1.8rem;
     font-weight: 600;
     text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    /* 添加 flexbox 居中 */  
+    display: flex;  
+    align-items: center;      /* 垂直居中 */  
+    justify-content: center;  /* 水平居中 */     
 }
 
 /* 输入组现代化 */
