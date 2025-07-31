@@ -725,6 +725,12 @@
         width: 60px;
         height: 60px;
       }
+
+      .radio-group {
+          flex-direction: column;
+          align-items: stretch;
+          gap: 1rem;
+      }
     }
 
     @media screen and (max-width: 480px) {
@@ -835,7 +841,67 @@
     
     .item-detail:last-child {
       border-bottom: none;
-    }    
+    } 
+    
+/* ==================== 单选框组样式 ==================== */  
+.radio-group {  
+    display: flex;  
+    gap: 1.5rem;  
+    align-items: center;
+    justify-content: center;
+    margin-top: 0.1rem; 
+    margin-bottom: 0.1rem; 
+    padding: 0.1rem;  
+    background: rgba(102, 126, 234, 0.08);  
+    border-radius: 15px;  
+    border: 2px solid rgba(102, 126, 234, 0.2);  
+}
+
+.radio-group1 {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .radio-group1 label {  
+    display: flex;  
+    align-items: center;
+    justify-content: center; 
+    cursor: pointer;  
+    border-radius: 10px; 
+} 
+
+
+.radio-group label {  
+    display: flex;  
+    align-items: center;  
+    gap: 0.1rem;  
+    cursor: pointer;  
+    font-weight: 600;  
+    color: #4a5568;  
+    padding: 0.75rem 1.25rem;  
+    border-radius: 10px;  
+    transition: all 0.3s ease;  
+    background: rgba(255, 255, 255, 0.7);  
+    border: 1px solid rgba(102, 126, 234, 0.2);  
+}  
+
+.radio-group label:hover {  
+    background: rgba(102, 126, 234, 0.15);  
+    transform: translateY(-2px);  
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);  
+}  
+
+input[type="radio"], input[type="checkbox"] {  
+    width: 20px;  
+    height: 20px;  
+    accent-color: #667eea;  
+    cursor: pointer;  
+}  
+
+
+
     
   </style>
 </head>
@@ -968,9 +1034,22 @@
 
       <div style="display: flex; justify-content: center; gap: 15px; margin-top: 20px; margin-bottom: 5px;">
         <button onclick="showReportModal()" class="button">打印报表</button>
-        <button onclick="PrintAll()" class="button">打印所有订单信息（已审核）</button>
-        <button onclick="PrintNow()" class="button">打印搜索订单信息（已审核）</button>        
+        <button onclick="printall()" class="button">打印所有订单信息（已审核）</button>
+        <button onclick="printnow()" class="button">打印搜索订单信息（已审核）</button>        
       </div>
+
+      <div class="radio-group">
+        <label style="font-style: solid; font-size: 20px;">打印格式：</label>
+        <label>
+          <input type="radio" name="printoutputFormat" value="print" checked> 打印
+        </label>
+        <label>
+          <input type="radio" name="printoutputFormat" value="pdf"> PDF
+        </label>
+        <label>
+          <input type="radio" name="printoutputFormat" value="excel"> Excel
+        </label>
+    </div>
 
     </section>
 
@@ -1085,7 +1164,7 @@
 
                 <div class="col-md-5 mb-3">
                   <label>输出格式：</label>
-                  <div class="radio-group">
+                  <div class="radio-group1">
                     <label>
                       <input type="radio" name="outputFormat" value="print" checked> 打印
                     </label>
@@ -1111,11 +1190,12 @@
 
   <script>
 
-const pageSize = 5; // 每页显示5条数据  
+let pageSize = 5; // 每页显示5条数据  
 let currentPage = 1; 
 let totalPages = 1;
 
-const pageSizeYi = 5; // 每页显示5条数据  
+let pageSizeYi = 5; // 每页显示5条数据 
+let pageSizeYi_print = 5; // 每页显示5条数据
 let currentPageYi = 1; 
 let totalPagesYi = 1;  
 
@@ -1891,7 +1971,84 @@ const infoJSON = JSON.stringify(item.Info).replace(/"/g, '&quot;');
       document.getElementById('modalBackdrop').style.display = 'block';
     }
 
+    // 打印当前实力  
+    function printnow() {
+  
+  const printoutputFormatElement = document.querySelector('input[name="printoutputFormat"]:checked').value;
 
+      // 基本参数 - 修改为正确的参数名  
+      const params = {
+      };
+
+  params.userName = document.getElementById('searchNameYi').value;      
+  params.userTeam = document.getElementById('searchTeamYi').value;
+  params.Number = document.getElementById('searchNumberYi').value;
+  params.formattedDate1min = document.getElementById('searchStartTimeYi').value;
+  params.formattedDate1max = document.getElementById('searchEndTimeYi').value;
+  params.formattedDate2min = document.getElementById('searchStartTimeYishenhe').value;
+  params.formattedDate2max = document.getElementById('searchEndTimeYishenhe').value;
+
+  // 添加排序参数  
+  params.sortField = '';
+  params.sortOrder = '';
+
+  // 请求报表数据  
+  fetch('/shenhe/generatenow?' + new URLSearchParams(params))
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        if (printoutputFormatElement === 'print') {
+          displayPrintableReport(data.report);
+        } else if (printoutputFormatElement === 'pdf') {
+          downloadReportPDF(data.report);
+        } else if (printoutputFormatElement === 'excel') {
+          downloadReportExcel(data.report);
+        }
+      } else {
+        alert('生成报表失败：' + data.error);
+      }
+    })
+    .catch(err => {
+      console.error('报表生成失败:', err);
+      alert('报表生成失败，请稍后重试');
+    });
+}
+
+
+// 打印所有实力  
+function printall() {
+
+const printoutputFormatElement = document.querySelector('input[name="printoutputFormat"]:checked').value;
+
+      // 基本参数 - 修改为正确的参数名  
+      const params = {
+      };
+
+// 添加排序参数  
+params.sortField = '';
+params.sortOrder = '';
+
+// 请求报表数据  
+fetch('/shenhe/generateall?' + new URLSearchParams(params))
+.then(response => response.json())
+.then(data => {
+  if (data.success) {
+    if (printoutputFormatElement === 'print') {
+      displayPrintableReport(data.report);
+    } else if (printoutputFormatElement === 'pdf') {
+      downloadReportPDF(data.report);
+    } else if (printoutputFormatElement === 'excel') {
+      downloadReportExcel(data.report);
+    }
+  } else {
+    alert('生成报表失败：' + data.error);
+  }
+})
+.catch(err => {
+  console.error('报表生成失败:', err);
+  alert('报表生成失败，请稍后重试');
+});
+}
 
     // 关闭报表模态窗口  
     function closeReportModal() {
@@ -1964,7 +2121,7 @@ const infoJSON = JSON.stringify(item.Info).replace(/"/g, '&quot;');
       const header = document.createElement('div');
       header.className = 'print-header';
       header.innerHTML = `  
-    <h1>订单审核信息统计表</h1>  
+    <h1 style="font-size: 20pt";>订单审核信息统计表</h1>  
   `;
       printContainer.appendChild(header);
 
@@ -2040,124 +2197,184 @@ const infoJSON = JSON.stringify(item.Info).replace(/"/g, '&quot;');
     }
 
     // 使用iframe打印  
-    function printReportIframe() {
-      // 获取要打印的内容  
-      const printContent = document.getElementById('printableReport');
+// 使用iframe打印并强制插入页码
+function printReportIframe() {
+  // 获取要打印的内容  
+  const printContent = document.getElementById('printableReport');
+  
+  // 获取标题
+  const reportTitle = printContent.querySelector('.print-header h1')?.textContent || '报表';
 
-      // 创建一个新的iframe  
-      const iframe = document.createElement('iframe');
-      iframe.style.display = 'none';
-      document.body.appendChild(iframe);
+  // 创建一个新的iframe  
+  const iframe = document.createElement('iframe');
+  iframe.style.display = 'none';
+  document.body.appendChild(iframe);
 
-      // 获取iframe的文档  
-      const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+  // 获取表格和其内容
+  const table = printContent.querySelector('table');
+  if (!table) {
+    console.error('找不到表格元素');
+    return;
+  }
 
-      // 写入基本HTML结构  
-      iframeDoc.write(`  
-    <!DOCTYPE html>  
-    <html>  
-    <head>  
-      <title>订单审核信息统计表</title>  
-      <style>  
-        /* 重置样式 */  
-        body, html {  
-          margin: 0;  
-          padding: 0;  
-          font-family: Arial, sans-serif;  
-        }  
+  const thead = table.querySelector('thead');
+  const tbody = table.querySelector('tbody');
+  
+  if (!thead || !tbody) {
+    console.error('表格结构不完整');
+    return;
+  }
+
+  // 获取表头HTML
+  const theadHTML = thead.outerHTML;
+  
+  // 获取所有行
+  const rows = Array.from(tbody.querySelectorAll('tr'));
+   
+  // 获取标题和其他信息
+  const headerHTML = printContent.querySelector('.print-header')?.outerHTML || '';
+  const printInfoHTML = printContent.querySelector('.print-info')?.outerHTML || '';
+  
+ let rowsPerPage = 3;
+  
+  // 计算总页数
+  const totalPages = Math.ceil(rows.length / rowsPerPage);
+  
+  // 创建分页后的内容
+  let pagedContent = '';
+ 
+  // 为每页创建内容
+  for (let page = 0; page < totalPages; page++) {
+    // 当前页的行范围
+    const startRow = page * rowsPerPage;
+    const endRow = Math.min((page + 1) * rowsPerPage, rows.length);
+    
+    // 提取当前页的行
+    const pageRows = rows.slice(startRow, endRow);
+    const pageRowsHTML = pageRows.map(row => row.outerHTML).join('');
+    
+    // 创建当前页的表格
+    const pageTableHTML = `
+      <table>
+        ${theadHTML}
+        <tbody>
+          ${pageRowsHTML}
+        </tbody>
+      </table>
+    `;
+    
+    // 创建当前页的完整内容
+    pagedContent += `
+      <div class="page">
+        ${headerHTML}
+        ${pageTableHTML}
+        ${page === totalPages - 1 ? printInfoHTML : ''}
+        <div class="page-number">第 ${page + 1} 页/共 ${totalPages} 页</div>
+      </div>
+    `;
+  }
+  
+  // 获取iframe的文档  
+  const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+  
+  // 写入基本HTML结构，包括分页后的内容
+  iframeDoc.write(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>${reportTitle}</title>
+      <style>
+        /* 重置样式 */
+        body, html {
+          margin: 0;
+          padding: 0;
+          font-family: Arial, sans-serif;
+        }
         
-        /* 报表样式 */  
-        .print-content {  
+        /* 页面样式 */
+        .page {  
+          position: relative;  
           padding: 10mm;  
+          box-sizing: border-box;  
+        }  
+        @media print {  
+          @page { margin: 0; }  
+          .page { page-break-after: always; }  
+          .page:last-child { page-break-after: avoid; }  
         }  
         
-        .print-header {  
-          text-align: center;  
-          margin-bottom: 15mm;  
-        }  
+        /* 报表样式 */
+        .print-header {
+          text-align: center;
+          margin-bottom: 15mm;
+        }
         
-        /* 打印信息样式 - 新增 */  
-        .print-info {  
-          padding: 0 10mm;  
-          margin-top: 10mm;  
-        }  
+        /* 打印信息样式 */
+        .print-info {
+          padding: 0;
+          margin-top: 10mm;
+        }
         
-        .print-info-container {  
-          display: flex;  
-          justify-content: space-between;  
-          border-top: 1px solid #ddd;  
-          padding-top: 5mm;  
-        }  
+        .print-info-container {
+          display: flex;
+          justify-content: space-between;
+          border-top: 1px solid #ddd;
+          padding-top: 5mm;
+        }
         
-        .print-date, .print-user {  
-          font-size: 10pt;  
-        }  
+        .print-date, .print-user {
+          font-size: 10pt;
+        }
         
-        .print-footer {  
-          text-align: center;  
-          margin-top: 10mm;  
-        }  
+        /* 表格样式 */
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          margin-bottom: 10mm;
+        }
         
-        /* 表格样式 */  
-        table {  
-          width: 100%;  
-          border-collapse: collapse;  
-        }  
+        th, td {
+          border: 1px solid #333;
+          padding: 3mm;
+          text-align: center;
+        }
         
-        th, td {  
-          border: 1px solid #333;  
-          padding: 3mm;  
-          text-align: center;  
-        }  
+        th {
+          background-color: #f2f2f2;
+        }
         
-        th {  
-          background-color: #f2f2f2;  
-        }  
+        /* 页码样式 */
+        .page-number {
+          position: absolute;
+          bottom: 10mm;
+          left: 0;
+          width: 100%;
+          text-align: center;
+          font-size: 10pt;
+        }
         
-        /* 隐藏不打印的元素 */  
-        .no-print {  
-          display: none;  
-        }  
-        
-        /* 页码样式 */  
-        .page-number {  
-          position: absolute;  
-          bottom: 5mm;  
-          width: 100%;  
-          text-align: center;  
-          font-size: 10pt;  
-        }  
-        
-        /* 控制分页 */  
-        .page-break {  
-          page-break-after: always;  
-        }  
-        
-        @page {  
-          margin: 10mm;  
-        }  
-      </style>  
-    </head>  
-    <body>  
-      ${printContent.innerHTML.replace(/<div class="no-print">.*?<\/div>/g, '')}  
-    </body>  
-    </html>  
+      </style>
+    </head>
+    <body>
+      ${pagedContent}
+    </body>
+    </html>
   `);
-
-      iframeDoc.close();
-
-      // 等待图片加载完成  
-      setTimeout(() => {
-        // 打印iframe内容  
-        iframe.contentWindow.focus();
-        iframe.contentWindow.print();
-
-        // 打印后删除iframe  
-        setTimeout(() => {
-          document.body.removeChild(iframe);
-        }, 1000);
-      }, 500);
-    }
+  
+  iframeDoc.close();
+  
+  // 等待内容加载完成  
+  setTimeout(() => {
+    // 打印iframe内容  
+    iframe.contentWindow.focus();
+    iframe.contentWindow.print();
+    
+    // 打印后删除iframe  
+    setTimeout(() => {
+      document.body.removeChild(iframe);
+    }, 1000);
+  }, 1000);
+}
 
     // 关闭报表  
     function closeReport() {
@@ -2177,7 +2394,7 @@ const infoJSON = JSON.stringify(item.Info).replace(/"/g, '&quot;');
       tableHTML += `  
       <thead>  
         <tr> 
-            <th>用户姓名</th>
+            <th>实力姓名</th>
             <th>订单编号</th>
             <th>订单信息</th>
             <th>订单金额</th>
@@ -2268,7 +2485,7 @@ const infoJSON = JSON.stringify(item.Info).replace(/"/g, '&quot;');
       let formattedDate2=[];
 
       columns = [
-        { header: '用户姓名', dataKey: 'userName' },
+        { header: '实力姓名', dataKey: 'userName' },
         { header: '订单编号', dataKey: 'Number' },
         { header: '订单信息', dataKey: 'Info' },
         { header: '订单金额', dataKey: 'Cost' },
@@ -2457,7 +2674,7 @@ const infoJSON = JSON.stringify(item.Info).replace(/"/g, '&quot;');
       let headers = [];
       const title = '订单审核信息统计表';
 
-      headers = ['用户姓名', '订单编号', '订单信息', '订单金额', '订单时间', '审核时间', '审核状态'];
+      headers = ['实力姓名', '订单编号', '订单信息', '订单金额', '订单时间', '审核时间', '审核状态'];
 
       // 准备数据行，添加标题行  
       const rows = [];

@@ -565,7 +565,7 @@
 
   .print-container {
     width: 100%;
-    max-width: 1000px;
+    max-width: 1500px;
     margin: 0 auto;
     padding: 20px;
     background: #fff;
@@ -578,7 +578,13 @@
 
   .print-header h1 {
     margin-bottom: 10px;
+  }  
+  
+  .print-header h11 {
+    margin-bottom: 10px;
   }
+
+
 
   .print-table {
     width: 100%;
@@ -703,10 +709,56 @@
       width: 100%;
     }
 
+
     /* 避免元素产生无意义的分页 */
     * {
       overflow: visible !important;
     }
+
+  /* 确保filter-group不会影响栅格布局 */  
+  .filter-group {  
+    width: 100%;  
+    padding: 0;  
+    margin: 0;  
+  }  
+  
+  /* 确保每个row是flex布局并且填充整个宽度 */  
+  .filter-group .row {  
+    display: flex;  
+    width: 100%;  
+    margin-left: 0;  
+    margin-right: 0;  
+  }  
+  
+  /* 关键修复：确保col-md-4实际占用33.33%的宽度 */  
+  .filter-group .col-md-4 {  
+    width: 33.33%;  
+    flex: 0 0 33.33%;  
+    max-width: 33.33%;  
+    box-sizing: border-box;  
+  }  
+  
+  /* 确保表单元素填充整个列宽 */  
+  .filter-group .form-control {  
+    width: 100%;  
+    box-sizing: border-box;  
+  }  
+  
+  /* 确保标签不会影响布局 */  
+  .filter-group label {  
+    display: block;  
+    width: 100%;  
+    box-sizing: border-box;  
+  }  
+  
+  /* 如果需要，可以添加媒体查询以确保在小屏幕上正确显示 */  
+  @media (max-width: 768px) {  
+    .filter-group .col-md-4 {  
+      width: 100%;  
+      flex: 0 0 100%;  
+      max-width: 100%;  
+    }  
+  }  
 
   }
 
@@ -2276,7 +2328,7 @@ function printall() {
   const rows = Array.from(tbody.querySelectorAll('tr'));
   
   // 每页显示的行数
-  const rowsPerPage = 10; // 可以根据需要调整
+  const rowsPerPage = 15; // 可以根据需要调整
   
   // 计算总页数
   const totalPages = Math.ceil(rows.length / rowsPerPage);
@@ -2339,12 +2391,16 @@ function printall() {
         }
         
         /* 页面样式 */
-        .page {
-          position: relative;
-          padding: 10mm;
-          min-height: 270mm; /* A4高度减去上下边距 */
-          box-sizing: border-box;
-        }
+        .page {  
+          position: relative;  
+          padding: 10mm;  
+          box-sizing: border-box;  
+        }  
+        @media print {  
+          @page { margin: 0; }  
+          .page { page-break-after: always; }  
+          .page:last-child { page-break-after: avoid; }  
+        }  
         
         /* 报表样式 */
         .print-header {
@@ -2396,27 +2452,7 @@ function printall() {
           font-size: 10pt;
         }
         
-        /* 分页样式 */
-        .page-break {
-          page-break-after: always;
-          height: 0;
-        }
-        
-        /* 打印样式 */
-        @media print {
-          @page {
-            margin: 0;
-          }
-          
-          .page {
-            page-break-after: always;
-          }
-          
-          .page:last-child {
-            page-break-after: auto;
-          }
-        }
-      </style>  
+      </style>
     </head>  
     <body>  
       ${pagedContent} 

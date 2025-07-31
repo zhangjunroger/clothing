@@ -1,465 +1,1204 @@
-<!-- views/users.ejs -->
-
 <!DOCTYPE html>
 <html lang="zh-CN">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- 引入Tailwind CSS（仅开发环境示例） -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <title>用户管理-被装管理系统</title>
+    <title>用户管理 - 被装管理系统</title>
     <link rel="stylesheet" href="/css/style.css">
-</head>
+    
+    <!-- 引入 Font Awesome 图标 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- 引入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>    
+    
+    <style>
+        /* 全局样式重置和基础配置 */
+        body {  
+            background-image: url('/images/background.jpg');  
+            background-size: cover;  
+            background-repeat: no-repeat;   /* 或 repeat, 看你需求 */  
+            background-position: center;  
+            background-attachment: fixed;   /* 背景固定不随内容滚动，可选项，移动端部分无效 */  
+            margin: 0;  
+            padding: 0;  
+            min-height: 100vh;  
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;  
+            }
 
-<style>
-      /* 全局容器 */
-  .container {
-    width: 100%;
-    max-width: 400px;
-    margin: 20px auto;
-    padding: 10px 0;
-    /* 可以根据需要添加背景或阴影 */
-  }
+        /* 主容器样式 */
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+            min-height: 100vh;
+        }
 
-  .container h1 {
-    text-align: center;
-    color: #333;
-    margin-bottom: 2.0rem;
-    font-size: 50px;
-  }
+        /* 页面标题样式 */
+        .page-title {
+            text-align: center;
+            color: white;
+            font-size: clamp(1.8rem, 4vw, 3rem);
+            font-weight: 700;
+            margin-bottom: 2rem;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            background: rgba(246, 3, 3, 0.6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
 
-  .container h2 {
-    text-align: center;
-    color: #333;
-    margin-bottom: 1.5rem;
-    font-size: 30px;
-  }
+        /* 卡片容器基础样式 */
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
 
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+        }
 
-  /* 三个 section 的通用样式 */
-  section {
-    background-color: #fff;
-    padding: 1.5rem;
-    margin-bottom: 2rem;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-  }
+        /* 卡片标题样式 */
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 3px solid #667eea;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
 
-  /* Excel模板上传表单 & 搜索表单基础样式 */
-  form {
-    display: flex;
-    flex-wrap: wrap;
-    /* 当屏幕宽度较小，自动换行 */
-    justify-content: center;  /* 水平居中 */  
-    align-items: center;
-    gap: 0.5rem;
-    /* 表单元素之间的间距 */
-  }
+        .card-title i {
+            color: #667eea;
+            font-size: 1.25rem;
+        }
 
-  label {
-    font-weight: 600;
-    margin-right: 0.5rem;
-  }
+        /* 搜索表单样式 */
+        .search-form {
+            background: linear-gradient(135deg, #f7fafc, #edf2f7);
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            border: 1px solid #e2e8f0;
+            display: flex;  
+            align-items: center;  
+            justify-content: center; 
+        }
 
-  input[type="text"],
-  input[type="password"],
-  input[type="number"],
-  input[type="file"],
-  select {
-    padding: 0.5rem;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 0.9rem;
-    flex: 1;
-    /* 让输入框或选择框能够灵活扩展宽度 */
-    min-width: 100px;
-    /* 避免过小 */
-  }
+        .search-inputs {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            display: flex;  
+            align-items: center;  
+            justify-content: center; 
+        }
 
-  input[type="file"] {
-    flex: none;
-    /* 上传按钮大小通常固定 */
-  }
-
-  /* 分割线美化 */
-  hr {
-    border: none;
-    border-top: 1px solid #ddd;
-    margin: 2rem 0;
-  }
-    /* 模态窗口基础样式 */
-    .modal {
-        display: none;
-        /* 默认隐藏 */
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        z-index: 1000;
-        width: 50%;
-        max-width: 600px;
-        /* 增大最大宽度，让大屏幕显示更多内容 */
-        max-height: 90vh;
-        overflow-y: auto;
-    }
-
-    /* 模态内容样式 */
-    .modal-content {
-        width: 90%;
-        padding: 20px;
-        background-color: #fff;
-        border-radius: 8px;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-    }
-
-    .modal-content input {  
-    width: 50%;  
-    padding: 8px;  
-    border: 1px solid #ddd;  
-    border-radius: 4px;  
+        .input-group {  
+    margin-bottom: 1.2rem;  
+    display: flex;  
+    flex-direction: column;  
+    gap: 0.35rem;  
+}  
+.input-label {  
+    font-size: 1rem;  
+    font-weight: 500;  
+    margin-bottom: 0.2rem;  
+}  
+.form-input {  
+    width: 100%;  
+    height: 2.6rem;  
+    padding: 0.5rem 1rem;  
+    border: 1px solid #cfcfcf;  
+    border-radius: 6px;  
+    font-size: 1rem;  
+    background: #f8fafc;  
     box-sizing: border-box;  
+    outline: none;  
+    transition: border-color 0.2s;  
+}  
+.form-input:focus {  
+    border-color: #3182ce;  
+    background: #fff;  
+}
+
+        .form-input::placeholder {
+            color: #a0aec0;
+        }
+
+        /* 按钮基础样式 */
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 0.875rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+            white-space: nowrap;
+            justify-content: center; 
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            display: flex;  
+            align-items: center;  
+            justify-content: center; 
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #718096, #4a5568);
+            color: white;
+            display: flex;  
+            align-items: center;  
+            justify-content: center; 
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(113, 128, 150, 0.3);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #48bb78, #38a169);
+            color: white;
+            display: flex;  
+            align-items: center;  
+            justify-content: center; 
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(72, 187, 120, 0.3);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #ed8936, #dd6b20);
+            color: white;
+            display: flex;  
+            align-items: center;  
+            justify-content: center; 
+        }
+
+        .btn-warning:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(237, 137, 54, 0.3);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #f56565, #e53e3e);
+            color: white;
+            display: flex;  
+            align-items: center;  
+            justify-content: center; 
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(245, 101, 101, 0.3);
+        }
+
+        .btn-sm {
+            padding: 0.5rem 1rem;
+            font-size: 0.8rem;
+            display: flex !important;  
+            justify-content: center !important;  
+            align-items: center !important; 
+        }
+
+        .btn-sm i {  
+            font-size: 14px;  
+            line-height: 1;          /* 重要：重置行高 */  
+            margin: 0;               /* 清除默认边距 */
+            display: flex;  
+            align-items: center;  
+            justify-content: center;
+            vertical-align: baseline !important;  /* 重置Font Awesome的默认对齐 */  
+        }  
+        
+
+        /* 表格容器样式 */
+        .table-container {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+            border: 1px solid #e2e8f0;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        /* 表格样式 */
+        .users-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+        }
+
+        .users-table thead {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .users-table th {
+            padding: 1rem;
+            text-align: center;
+            font-weight: 600;
+            color: white;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            font-size: 0.875rem;
+        }
+
+        .users-table td {
+            padding: 1rem;
+            text-align: center;
+            border-bottom: 1px solid #e2e8f0;
+            vertical-align: middle;
+        }
+
+        .users-table tbody tr {
+            transition: all 0.2s ease;
+        }
+
+        .users-table tbody tr:hover {
+            background-color: #f7fafc;
+            transform: scale(1.01);
+        }
+
+        .users-table tbody tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        /* 分页控件样式 */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            margin: 1.5rem 0;
+            flex-wrap: wrap;
+        }
+
+        .pagination button {
+            min-width: 80px;
+        }
+
+        .page-info {
+            font-weight: 600;
+            color: #4a5568;
+            background: rgba(102, 126, 234, 0.1);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            margin: 0 1rem;
+        }
+
+        /* 操作按钮组样式 */
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 1.5rem;
+            flex-wrap: wrap; 
+            align-items: center;  
+        }
+
+        .action-buttons .btn {
+            min-width: 120px;
+        }
+
+        /* 注册表单样式 */
+        .register-form {
+            background: linear-gradient(135deg, #f7fafc, #edf2f7);
+            padding: 2rem;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .form-row {
+            display: flex;
+            align-items: end;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .form-row .input-group {
+            flex: 1;
+            min-width: 150px;
+            max-width: 200px;
+        }
+
+        .form-select {
+            width: 100%;  
+            height: 2.6rem;  
+            padding: 0.5rem 1rem;  
+            border: 1px solid #cfcfcf;  
+            border-radius: 6px;  
+            font-size: 1rem;  
+            background: #f8fafc;  
+            box-sizing: border-box;  
+            outline: none;  
+            transition: border-color 0.2s;  
+            appearance: none;           /* 隐藏原生样式，适配所有浏览器 */  
+            -webkit-appearance: none;  
+            -moz-appearance: none; 
+        }
+
+        .form-select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        /* 模态窗口遮罩层 */  
+        .modal {   
+            position: fixed;  
+            top: 50vh;  
+            left: 50vw;  
+            width: 50vw;   
+            height: 80vh;  
+            background: rgba(0,0,0,0.38);   
+            display: flex;  
+            align-items: center;  
+            justify-content: center;  
+            z-index: 9999;  
+            visibility: hidden;  
+            opacity: 0;  
+            transition: opacity .18s;  
+        }  
+
+        /* 模态框内容 */  
+        .modal-content {
+            position: fixed;  
+            top: 40vh;  
+            left: 25vw;    
+            width: 50vw;   
+            height: 80vh;  
+            max-width: 50vw;                 /* 设置最大宽度 */  
+            max-height: 80vh;                 /* 设置最大高度 */  
+            background: #fff;  
+            border-radius: 10px;  
+            padding: 20px;  
+            overflow: auto;  
+            box-shadow: 0 10px 36px rgba(0,0,0,.19);  
+            box-sizing: border-box;  
+        }  
+
+        /* 显示状态 */  
+        .modal.show {  
+            visibility: visible;  
+            opacity: 1;  
+        }
+
+        .close-modal {  
+            position: absolute;  
+            top: 12px;  
+            right: 18px;  
+            font-size: 2rem;  
+            color: #aaa;  
+            cursor: pointer;  
+            z-index: 10;  
+        }  
+        .close:hover { color: #f44336; }  
+
+        .modal.show .modal-content {
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 1rem 1rem;
+            border-radius: 16px 16px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .close-modal:hover {
+            opacity: 1;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .modal-body {
+            padding: 0.5rem;
+        }
+
+        .modal-footer {
+            background: #f8fafc;
+            padding: 0.5rem 0.5rem;
+            border-radius: 0 0 16px 16px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.5rem;
+            border-top: 0.5rem solid #e2e8f0;
+        }
+
+        .form-group {
+            margin-bottom: 0.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 500;
+            color: #4a5568;
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.5rem 0.5rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .password-error {
+            color: #e53e3e;
+            font-size: 1rem;
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background: rgba(245, 101, 101, 0.1);
+            border-radius: 6px;
+            border-left: 4px solid #e53e3e;
+        }
+
+        /* 加载状态样式 */
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            color: #718096;
+        }
+
+        .loading i {
+            animation: spin 1s linear infinite;
+            margin-right: 0.5rem;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* 空状态样式 */
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #718096;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .empty-state h3 {
+            font-size: 1.25rem;
+            margin-bottom: 0.5rem;
+            color: #4a5568;
+        }
+
+        .empty-state p {
+            font-size: 0.875rem;
+        }
+
+/* 通知样式 - 浏览器视口正中央显示 */  
+.notification {  
+    position: fixed;  
+    top: 50%;  
+    left: 50%;  
+    transform: translate(-50%, -50%);  
+    z-index: 10000; /* 确保在最顶层 */  
+    
+    /* 样式设计 */  
+    min-width: 320px;  
+    max-width: 80vw;  
+    padding: 1.5rem 2rem;  
+    border-radius: 12px;  
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);  
+    text-align: center;  
+    font-size: 1.1rem;  
+    font-weight: 500;  
+    color: white;  
+    
+    /* 动画效果 */  
+    animation: popIn 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);  
+    opacity: 0.98;  
+    backdrop-filter: blur(10px);  
 }  
 
-    /* 其余样式保持不变 */
-    .close-modal {
-        color: #aaa !important;
-        float: right !important;
-        font-size: 28px !important;
-        font-weight: bold !important;
-        cursor: pointer !important;
-    }
+/* 不同类型的通知颜色 */  
+.notification.success {  
+    background: linear-gradient(135deg, #48bb78, #38a169);  
+    border: 1px solid rgba(255, 255, 255, 0.2);  
+}  
 
-    .close-modal:hover {
-        color: #000 !important;
-    }
+.notification.error {  
+    background: linear-gradient(135deg, #f56565, #e53e3e);  
+    border: 1px solid rgba(255, 255, 255, 0.2);  
+}  
 
-    .form-group {
-        margin-bottom: 15px !important;
-    }
+.notification.info {  
+    background: linear-gradient(135deg, #4299e1, #3182ce);  
+    border: 1px solid rgba(255, 255, 255, 0.2);  
+}  
 
-    .form-group label {
-        display: block !important;
-        margin-bottom: 5px !important;
-    }
+.notification.warning {  
+    background: linear-gradient(135deg, #ed8936, #dd6b20);  
+    border: 1px solid rgba(255, 255, 255, 0.2);  
+}  
 
-    .form-group input {
-        width: 100% !important;
-        padding: 8px !important;
-        border: 1px solid #ddd !important;
-        border-radius: 4px !important;
-        box-sizing: border-box !important;
-        /* 确保padding不会增加宽度 */
-    }
-
-    .form-buttons {
-        display: flex !important;
-        justify-content: flex-end !important;
-        gap: 10px !important;
-        margin-top: 15px !important;
-    }
-
-    .password-error {
-        color: #e74c3c !important;
-        font-size: 14px !important;
-        margin-top: 10px !important;
-        min-height: 20px !important;
-    }
-
-    /* 按钮样式 */
-    .btn-edit-password {
-        background-color: #3498db !important;
-        color: white !important;
-        border: none !important;
-        padding: 5px 10px !important;
-        border-radius: 3px !important;
-        cursor: pointer !important;
-        margin-right: 5px !important;
-    }
-
-    .btn-edit-password:hover {
-        background-color: #2980b9 !important;
-    }
-
-    #cancelPasswordBtn {
-        background-color: #95a5a6 !important;
-        color: white !important;
-        border: none !important;
-        padding: 8px 15px !important;
-        border-radius: 3px !important;
-        cursor: pointer !important;
-    }
-
-    #savePasswordBtn {
-        background-color: #2ecc71 !important;
-        color: white !important;
-        border: none !important;
-        padding: 8px 15px !important;
-        border-radius: 3px !important;
-        cursor: pointer !important;
-    }
-
-    .btn-change {
-        background-color: #f49236;
-        color: white;
-        border: none;
-        padding: 6px 12px;
-        border-radius: 4px;
-        cursor: pointer;
-    }
-
-    .btn-change:hover {
-        background-color: #f49236;
-    }
+.notification1 {  
+    position: fixed;  
+    top: 80%;  
+    left: 50%;  
+    transform: translate(-50%, -50%);  
+    z-index: 10000; /* 确保在最顶层 */  
     
-    /* ========== 新增：为表格外层加一个固定高度+滚动条容器 ========== */  
-    .table-container {  
-      max-height: 1000px; /* 根据实际需求调整表格容器的最大高度*/  
-      overflow-y: auto;  /* 当内容超过最大高度时出现垂直滚动条*/  
-      border: 1px solid #ccc;  
-      margin: 16px 0;  
-    }  
-    /* 搜索区域 */  
-    .search-container {  
-      margin-bottom: 12px;  
-    }  
-    .search-container input {  
-      width: 200px;  
-      padding: 6px;  
-    }  
-    .search-container button {  
-      padding: 6px 12px;  
-      margin-left: 8px;  
-      cursor: pointer;  
-    }  
-</style>
+    /* 样式设计 */  
+    min-width: 320px;  
+    max-width: 80vw;  
+    padding: 1.5rem 2rem;  
+    border-radius: 12px;  
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);  
+    text-align: center;  
+    font-size: 1.1rem;  
+    font-weight: 500;  
+    color: white;  
+    
+    /* 动画效果 */  
+    animation: popIn 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);  
+    opacity: 0.98;  
+    backdrop-filter: blur(10px);  
+}  
 
-<body>
-    <div class="container" style="width: 100%; max-width: 1200px;">
-        <h1>用户管理（管理员 Admin 权限）</h1>
-        <section>
-        <h2>已注册用户信息列表</h2>
-        
-        <form id="searchForm" class="search-form">
-            <div style="display: flex; justify-content: center; gap: 15px; margin-top: 10px; margin-bottom: 5px; width: 100%; max-width: 600px;">
-            <input type="text" id="searchNumber" placeholder="用户名" style="width: 60%;">
-            <input type="text" id="searchName" placeholder="姓名" style=" width: 20%;">
-            <button type="button" onclick="searchFirefighters()" class="btn-change">搜索</button>
-            <button type="button" onclick="resetSearch()" class="btn-delete">重置</button>
-            <!-- 可以继续添加搜索条件 -->
+/* 不同类型的通知颜色 */  
+.notification1.success {  
+    background: linear-gradient(135deg, #48bb78, #38a169);  
+    border: 1px solid rgba(255, 255, 255, 0.2);  
+}  
+
+.notification1.error {  
+    background: linear-gradient(135deg, #f56565, #e53e3e);  
+    border: 1px solid rgba(255, 255, 255, 0.2);  
+}  
+
+.notification1.info {  
+    background: linear-gradient(135deg, #4299e1, #3182ce);  
+    border: 1px solid rgba(255, 255, 255, 0.2);  
+}  
+
+.notification1.warning {  
+    background: linear-gradient(135deg, #ed8936, #dd6b20);  
+    border: 1px solid rgba(255, 255, 255, 0.2);  
+}  
+
+/* 弹入动画 */  
+@keyframes popIn {  
+    from {  
+        opacity: 0;  
+        transform: translate(-50%, -50%) scale(0.8);  
+    }  
+    to {  
+        opacity: 0.98;  
+        transform: translate(-50%, -50%) scale(1);  
+    }  
+}  
+
+/* 淡出动画 */  
+@keyframes popOut {  
+    from {  
+        opacity: 0.98;  
+        transform: translate(-50%, -50%) scale(1);  
+    }  
+    to {  
+        opacity: 0;  
+        transform: translate(-50%, -50%) scale(0.9);  
+    }  
+}  
+
+.notification.fade-out {  
+    animation: popOut 0.3s ease-in forwards;  
+}  
+
+/* 响应式适配 */  
+@media (max-width: 480px) {  
+    .notification {  
+        min-width: 90vw;  
+        max-width: 90vw;  
+        padding: 1rem 1.5rem;  
+        font-size: 1rem;  
+    }  
+}  
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .main-container {
+                padding: 1rem;
+            }
+            
+            .card {
+                padding: 1.5rem;
+                border-radius: 12px;
+            }
+            
+            .search-inputs {
+                flex-direction: column;
+            }
+            
+            .input-group {
+                min-width: 100%;
+            }
+            
+            .form-row {
+                flex-direction: column;
+            }
+            
+            .form-row .input-group {
+                max-width: 100%;
+            }
+            
+            .pagination {
+                gap: 0.5rem;
+            }
+            
+            .pagination button {
+                min-width: 60px;
+                padding: 0.5rem 0.75rem;
+                font-size: 0.8rem;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .users-table {
+                font-size: 0.8rem;
+            }
+            
+            .users-table th,
+            .users-table td {
+                padding: 0.75rem 0.5rem;
+            }
+            
+            .modal-content {
+                width: 95%;
+                margin: 1rem;
+            }
+            
+            .modal-body {
+                padding: 1.5rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .users-table th,
+            .users-table td {
+                padding: 0.5rem 0.25rem;
+                font-size: 0.75rem;
+            }
+            
+            .btn-sm {
+                padding: 0.25rem 0.5rem;
+                font-size: 0.7rem;
+            }
+        }
+
+        /* 动画增强 */
+        .fade-in {
+            animation: fadeIn 0.5s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 隐藏元素 */
+        .hidden {
+            display: none !important;
+        }
+
+        /* 禁用状态 */
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+    </style>
+</head>
+
+
+<body class="fade-in">
+    <div class="main-container">
+        <!-- 页面标题 -->
+        <h1 class="page-title">
+            <i class="fas fa-users-cog"></i>
+            用户管理系统
+        </h1>
+
+        <!-- 用户列表管理卡片 -->
+        <div class="card">
+            <div class="card-title">
+                <i class="fas fa-list"></i>
+                已注册用户信息列表
             </div>
-        </form>
-    
-        <div class="table-container">
 
-        <!-- 用户列表 -->
-        <div id="usersList">
-            <p>正在加载用户列表...</p>
+            <!-- 搜索表单 -->
+            <div class="search-form">
+                <form id="searchForm" class="search-inputs">
+                    <div class="input-group">
+                        <label for="searchNumber" class="input-label">用户名</label>
+                        <input type="text" id="searchNumber" class="form-input" placeholder="请输入用户名">
+                    </div>
+                    <div class="input-group">
+                        <label for="searchName" class="input-label">姓名</label>
+                        <input type="text" id="searchName" class="form-input" placeholder="请输入姓名">
+                    </div>
+                    <div class="input-group" style="min-width: auto;">
+                        <label class="input-label" style="opacity: 0;">操作</label>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button type="button" onclick="searchFirefighters()" class="btn btn-primary btn-sm">
+                                <i class="fas fa-search"></i>
+                                搜索
+                            </button>
+                            <button type="button" onclick="resetSearch()" class="btn btn-secondary btn-sm">
+                                <i class="fas fa-undo"></i>
+                                重置
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- 表格容器 -->
+            <div class="table-container">
+                <div id="usersList" class="loading">
+                    <i class="fas fa-spinner"></i>
+                    正在加载用户列表...
+                </div>
+            </div>
+
+            <!-- 分页控件 -->
+            <div class="pagination">
+                <button id="firstPage" class="btn btn-primary btn-sm" onclick="changePage1()">
+                    <i class="fas fa-angle-double-left"></i>
+                    首页
+                </button>
+                <button id="prevPage" class="btn btn-primary btn-sm" onclick="changePage(-1)">
+                    <i class="fas fa-angle-left"></i>
+                    前一页
+                </button>
+                <div id="pageInfo" class="page-info">第 1 / 1 页</div>
+                <button id="nextPage" class="btn btn-primary btn-sm" onclick="changePage(1)">
+                    后一页
+                    <i class="fas fa-angle-right"></i>
+                </button>
+                <button id="lastPage" class="btn btn-primary btn-sm" onclick="changePageN()">
+                    尾页
+                    <i class="fas fa-angle-double-right"></i>
+                </button>
+            </div>
+
+            <!-- 导出和打印按钮 -->
+            <div class="action-buttons">
+                <button id="exportExcelBtn" class="btn btn-success">
+                    <i class="fas fa-file-excel"></i>
+                    导出 Excel
+                </button>
+                <button id="printPdfBtn" class="btn btn-warning">
+                    <i class="fas fa-file-pdf"></i>
+                    打印 PDF
+                </button>
+            </div>
         </div>
-    </div>        
 
-    <div style="display: flex; justify-content: center; gap: 15px; margin-top: 10px; margin-bottom: 5px;">
-        <button id="firstPage" class="bg-green-500 text-white px-2 py-1 rounded" onclick="changePage1()">首页</button>         
-        <button id="prevPage" class="bg-green-500 text-white px-2 py-1 rounded" onclick="changePage(-1)">前一页</button>  
-        <div id="pageInfo" class="text-center text-lg font-bold text-gray-700"></div>  
-        <button id="nextPage" class="bg-green-500 text-white px-2 py-1 rounded" onclick="changePage(1)">后一页</button>
-        <button id="lastPage" class="bg-green-500 text-white px-2 py-1 rounded" onclick="changePageN()">尾页</button>   
-    </div>    
-    
-        <!-- 导出和打印按钮 -->
-        <div class="action-buttons">
-            <button id="exportExcelBtn" class="btn-action">导出Excel</button>
-            <button id="printPdfBtn" class="btn-action">打印PDF</button>
-        </div>
-    </section>
+        <!-- 注册新用户卡片 -->
+        <div class="card">
+            <div class="card-title">
+                <i class="fas fa-user-plus"></i>
+                注册新用户
+            </div>
 
-    <hr>
-
-        <!-- 注册新用户 -->
-        <section>
-        <div class="register-form">
-            <h2>注册新用户</h2>
-            <form id="registerForm">
-                <div class="row" style="display: flex; justify-content: center; gap: 15px; margin-top: 10px; margin-bottom: 5px; width: 100%; max-width: 400px;">
-                <label for="registername">用户名：</label>
-                <input type="text" id="username" placeholder="用户名" required>
-                </div>
-                <div class="row" style="display: flex; justify-content: center; gap: 15px; margin-top: 10px; margin-bottom: 5px; width: 100%; max-width: 400px;">
-                <label for="registerpassword">密码：</label>
-                <input type="password" id="password" placeholder="密码" required>
-                </div>
-                <input type="email" id="email" placeholder="邮箱" hidden>
-                <div class="row" style="display: flex; justify-content: center; gap: 15px; margin-top: 10px; margin-bottom: 5px; width: 100%; max-width: 400px;">
-                <label for="role">角色：</label>
-                <select id="role" name="role" required>
-                    <option value="user">普通用户</option>
-                    <option value="admin">管理员</option>
-                </select>
-                </div>
-                <div class="row" style="display: flex; justify-content: center; gap: 15px; margin-top: 10px; margin-bottom: 5px; width: 100%; max-width: 400px;">
-                <button class="btn-regist" type="submit">注册</button>
-                </div>
-            </form>
+            <div class="register-form">
+                <form id="registerForm">
+                    <div class="form-row">
+                        <div class="input-group">
+                            <label for="username" class="input-label">用户名</label>
+                            <input type="text" id="username" class="form-input" placeholder="请输入用户名" required>
+                        </div>
+                        <div class="input-group">
+                            <label for="password" class="input-label">密码</label>
+                            <input type="password" id="password" class="form-input" placeholder="请输入密码" required>
+                        </div>
+                        <div class="input-group">
+                            <label for="role" class="input-label">角色</label>
+                            <select id="role" name="role" class="form-select" required>
+                                <option value="user">普通用户</option>
+                                <option value="admin">管理员</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="action-buttons">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-user-plus"></i>
+                            注册用户
+                        </button>
+                    </div>
+                </form>
+                <input type="email" id="email" placeholder="邮箱" style="display: none;">
+            </div>
         </div>
     </div>
-</section>
 
-    <!-- 密码修改模态框 -->
+    <!-- 密码修改模态窗口 -->
     <div id="passwordModal" class="modal">
         <div class="modal-content">
-            <span class="close-modal">&times;</span>
-            <h2>修改用户密码</h2>
-            <p id="modalUserInfo">正在修改账户: <span id="modalUsername" style="font-weight: bold; color: red;"></span>密码!</p>
-            <form id="passwordForm">
-                <input type="hidden" id="modalUserId">
-                <div class="form-group">
-                    <label for="newPassword">新密码:</label>
-                    <input type="password" id="newPassword" required>
-                </div>
-                <div class="form-group">
-                    <label for="confirmPassword">确认密码:</label>
-                    <input type="password" id="confirmPassword" required>
-                </div>
-                <div class="password-error" id="passwordError"></div>
-                <div class="form-buttons">
-                    <button type="button" id="cancelPasswordBtn">取消</button>
-                    <button type="submit" id="savePasswordBtn">保存</button>
-                </div>
-            </form>
+            <div class="modal-header">
+                <h2>
+                    <i class="fas fa-key"></i>
+                    修改用户密码
+                </h2>
+                <button class="close-modal" onclick="closePasswordModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="modal-body">
+                <p id="modalUserInfo" style="margin-bottom: 1.5rem; padding: 1rem; background: #f8fafc; border-radius: 8px; border-left: 4px solid #667eea;">
+                    正在修改账户: <span id="modalUsername" style="font-weight: bold; color: #667eea;"></span> 的密码
+                </p>
+                
+                <form id="passwordForm">
+                    <input type="hidden" id="modalUserId">
+                    <div class="form-group">
+                        <label for="newPassword">
+                            <i class="fas fa-lock"></i>
+                            新密码
+                        </label>
+                        <input type="password" id="newPassword" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="confirmPassword">
+                            <i class="fas fa-lock"></i>
+                            确认密码
+                        </label>
+                        <input type="password" id="confirmPassword" required>
+                    </div>
+                    <div class="password-error" id="passwordError"></div>
+                </form>
+            </div>
+            
+            <div class="modal-footer">
+                <button type="button" id="cancelPasswordBtn" class="btn btn-secondary">
+                    <i class="fas fa-times"></i>
+                    取消
+                </button>
+                <button type="submit" id="savePasswordBtn" class="btn btn-primary" form="passwordForm">
+                    <i class="fas fa-save"></i>
+                    保存
+                </button>
+            </div>
         </div>
     </div>
 
-
+    <!-- 引入外部库 -->
     <script src="https://unpkg.com/xlsx-js-style@1.2.0/dist/xlsx.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.15/jspdf.plugin.autotable.min.js"></script>
 
     <script>
-        console.log('EJS 模板已正确渲染');  
-    </script>
-    <script>
+        console.log('用户管理页面已加载');
+        
+        // 分页相关变量
+        const pageSize = 5;
+        let currentPage = 1;
+        let totalPages = 1;
+        
+        // 通知函数
+        function showNotification(message, type = 'info', duration = 3000) {  
+    // 移除已存在的通知  
+    const existingNotification = document.querySelector('.notification');  
+    if (existingNotification) {  
+        existingNotification.remove();  
+    }  
+    
+    // 创建新通知  
+    const notification = document.createElement('div');  
+    notification.className = `notification ${type}`;  
+    notification.innerHTML = `  
+        <div style="display: flex; align-items: center; justify-content: center; gap: 0.5rem;">  
+            <i class="fas fa-${getIcon(type)}"></i>  
+            <span>${message}</span>  
+        </div>  
+    `;  
+    
+    // 添加到页面  
+    document.body.appendChild(notification);  
+    
+    // 自动移除  
+    setTimeout(() => {  
+        if (notification.parentNode) {  
+            notification.classList.add('fade-out');  
+            setTimeout(() => {  
+                if (notification.parentNode) {  
+                    notification.remove();  
+                }  
+            }, 300);  
+        }  
+    }, duration);  
+}  
 
-const pageSize = 10; // 每页显示5条数据  
-let currentPage = 1; 
-let totalPages = 1;  
+function showNotification1(message, type = 'info', duration = 3000) {  
+    // 移除已存在的通知  
+    const existingNotification = document.querySelector('.notification1');  
+    if (existingNotification) {  
+        existingNotification.remove();  
+    }  
+    
+    // 创建新通知  
+    const notification = document.createElement('div');  
+    notification.className = `notification1 ${type}`;  
+    notification.innerHTML = `  
+        <div style="display: flex; align-items: center; justify-content: center; gap: 0.5rem;">  
+            <i class="fas fa-${getIcon(type)}"></i>  
+            <span>${message}</span>  
+        </div>  
+    `;  
+    
+    // 添加到页面  
+    document.body.appendChild(notification);  
+    
+    // 自动移除  
+    setTimeout(() => {  
+        if (notification.parentNode) {  
+            notification.classList.add('fade-out');  
+            setTimeout(() => {  
+                if (notification.parentNode) {  
+                    notification.remove();  
+                }  
+            }, 300);  
+        }  
+    }, duration);  
+}  
 
 
+// 获取图标  
+function getIcon(type) {  
+    switch (type) {  
+        case 'success': return 'check-circle';  
+        case 'error': return 'exclamation-circle';  
+        case 'warning': return 'exclamation-triangle';  
+        case 'info': return 'info-circle';  
+        default: return 'info-circle';  
+    }  
+}  
+
+
+        // 加载用户列表
         async function loadUsers(queryParams = {}) {
             try {
                 const queryString = new URLSearchParams(queryParams).toString();
                 const response = await fetch('/admin/users-list?' + queryString);
-
+                
                 if (!response.ok) {
                     const errorData = await response.json();
                     throw new Error(errorData.error || 'Failed to load users');
                 }
-
+                
                 const users = await response.json();
                 displayUsers(users);
             } catch (error) {
                 console.error('加载用户列表失败:', error);
                 const usersListDiv = document.getElementById('usersList');
-                usersListDiv.innerHTML = `<p>加载用户列表失败: ${error.message}</p>`;
+                usersListDiv.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <h3>加载失败</h3>
+                        <p>加载用户列表失败: ${error.message}</p>
+                    </div>
+                `;
             }
         }
 
-        // 动态展示用户列表  
+        // 显示用户列表
         function displayUsers(users) {
-
             const usersListDiv = document.getElementById('usersList');
-
+            
             if (users.length === 0) {
-                usersListDiv.innerHTML = '<p>目前没有用户。</p>';
+                usersListDiv.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-users"></i>
+                        <h3>暂无用户</h3>
+                        <p>目前没有注册用户</p>
+                    </div>
+                `;
                 return;
             }
 
-            const pageInfo = document.getElementById('pageInfo');  
-            const prevPageBtn = document.getElementById('prevPage');  
-            const nextPageBtn = document.getElementById('nextPage');  
+            const pageInfo = document.getElementById('pageInfo');
+            const prevPageBtn = document.getElementById('prevPage');
+            const nextPageBtn = document.getElementById('nextPage');
+            const firstPageBtn = document.getElementById('firstPage');
+            const lastPageBtn = document.getElementById('lastPage');
 
-            // 计算总页数  
-            totalPages = Math.ceil(users.length / pageSize);  
-
-            // 计算当前页的数据范围  
-            const start = (currentPage - 1) * pageSize;  
-            const end = start + pageSize;  
+            // 计算总页数
+            totalPages = Math.ceil(users.length / pageSize);
+            
+            // 计算当前页的数据范围
+            const start = (currentPage - 1) * pageSize;
+            const end = start + pageSize;
             const pageData = users.slice(start, end);
 
-            usersListDiv.innerHTML = '';
-
+            // 创建表格
             const table = document.createElement('table');
             table.className = 'users-table';
-            table.style = "width: 100%; table-layout: fixed; border-collapse: collapse; justify-content: center;"
 
             const thead = document.createElement('thead');
-            thead.innerHTML = `  
-            <tr>  
-                <th style="width: 20%;">用户名</th>  
-                <th style="width: 20%;">姓名</th> 
-                <th style="width: 10%;">权限</th>
-                <th style="width: 25%;">注册时间</th>  
-                <th style="width: 25%;">操作</th>  
-            </tr>  
-        `;
+            thead.innerHTML = `
+                <tr>
+                    <th>用户名</th>
+                    <th>姓名</th>
+                    <th>权限</th>
+                    <th>注册时间</th>
+                    <th>操作</th>
+                </tr>
+            `;
             table.appendChild(thead);
 
             const tbody = document.createElement('tbody');
-
             pageData.forEach(user => {
                 const tr = document.createElement('tr');
-                tr.innerHTML = `  
-                <td>${user.username}</td>  
-                <td>${user.name}</td>
-                <td>${user.role}</td>  
-                <td>${new Date(user.createdAt).toLocaleString()}</td>  
-                <td>  
-                    <button class="btn-delete" onclick="deleteUser('${user.id}')">删除</button>
-                    <button class="btn-edit-password" onclick="showPasswordModal('${user.id}', '${user.username}')">修改密码</button>
-                    <button class="btn-change" onclick="resetPassword('${user.id}')">重置密码</button>    
-                </td>  
-            `;
+                tr.innerHTML = `
+                    <td style="font-weight: 600;">${user.username}</td>
+                    <td>${user.name || '未设置'}</td>
+                    <td>
+                        <span class="badge ${user.role === 'admin' ? 'badge-danger' : 'badge-primary'}">
+                            ${user.role === 'admin' ? '管理员' : '普通用户'}
+                        </span>
+                    </td>
+                    <td>${new Date(user.createdAt).toLocaleString('zh-CN')}</td>
+                    <td>
+                        <div style="display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap;">
+                            <button class="btn btn-danger btn-sm" onclick="deleteUser('${user.id}')" title="删除用户">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                            <button class="btn btn-primary btn-sm" onclick="showPasswordModal('${user.id}', '${user.username}')" title="修改密码">
+                                <i class="fas fa-key"></i>
+                            </button>
+                            <button class="btn btn-warning btn-sm" onclick="resetPassword('${user.id}')" title="重置密码">
+                                <i class="fas fa-undo"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
                 tbody.appendChild(tr);
             });
             table.appendChild(tbody);
 
+            usersListDiv.innerHTML = '';
             usersListDiv.appendChild(table);
 
-            // 更新页码信息  
-            pageInfo.textContent = `第 ${currentPage} / ${totalPages} 页`;  
+            // 更新页码信息
+            pageInfo.textContent = `第 ${currentPage} / ${totalPages} 页`;
 
-            // 控制按钮状态  
-            prevPageBtn.disabled = currentPage === 1;  
-            nextPageBtn.disabled = currentPage === totalPages; 
-
+            // 控制按钮状态
+            prevPageBtn.disabled = currentPage === 1;
+            nextPageBtn.disabled = currentPage === totalPages;
+            firstPageBtn.disabled = currentPage === 1;
+            lastPageBtn.disabled = currentPage === totalPages;
         }
 
-        function changePage(direction) {  
-            currentPage += direction;  
-
-            // 确保页码在合理范围内  
-            currentPage = Math.max(1, Math.min(currentPage, totalPages));  
-
-            loadUsers();  
+        // 分页功能
+        function changePage(direction) {
+            currentPage += direction;
+            currentPage = Math.max(1, Math.min(currentPage, totalPages));
+            
+            const searchNumber = document.getElementById('searchNumber').value;
+            const searchName = document.getElementById('searchName').value;
+            
+            if (searchNumber || searchName) {
+                searchFirefighters();
+            } else {
+                loadUsers();
+            }
         }
-        
-        function changePage1() {  
+
+        function changePage1() {
             currentPage = 1;
-            if (document.getElementById('searchNumber').value=='' && document.getElementById('searchName').value==''){
-            loadUsers();
-            }  
-        }  
-               
-        function changePageN(direction) {  
-            currentPage = totalPages;
-            if (document.getElementById('searchNumber').value=='' && document.getElementById('searchName').value==''){
-            loadUsers();
-            }  
-        }     
+            const searchNumber = document.getElementById('searchNumber').value;
+            const searchName = document.getElementById('searchName').value;
+            
+            if (searchNumber || searchName) {
+                searchFirefighters();
+            } else {
+                loadUsers();
+            }
+        }
 
-        // 删除用户功能  
+        function changePageN() {
+            currentPage = totalPages;
+            const searchNumber = document.getElementById('searchNumber').value;
+            const searchName = document.getElementById('searchName').value;
+            
+            if (searchNumber || searchName) {
+                searchFirefighters();
+            } else {
+                loadUsers();
+            }
+        }
+
+        // 删除用户
         async function deleteUser(userId) {
-            if (!confirm('确定要删除这个用户吗？')) return;
+            if (!confirm('确定要删除这个用户吗？此操作无法撤销！')) return;
 
             try {
                 const response = await fetch(`/admin/users/${userId}`, {
@@ -467,7 +1206,7 @@ let totalPages = 1;
                 });
 
                 if (response.ok) {
-                    alert('用户删除成功');
+                    showNotification('用户删除成功', 'success');
                     loadUsers();
                 } else {
                     const error = await response.json();
@@ -475,38 +1214,35 @@ let totalPages = 1;
                 }
             } catch (error) {
                 console.error('删除用户失败:', error);
-                alert(`删除用户失败: ${error.message}`);
+                showNotification(`删除用户失败: ${error.message}`, 'error');
             }
         }
 
-        // 修正重置密码的前端请求  
+        // 重置密码
         async function resetPassword(userId) {
             if (!confirm('确定要重置这个用户的密码吗？')) return;
 
             try {
-                // 生成随机密码  
                 const newPassword = generateRandomPassword();
-
                 const response = await fetch(`/admin/users/${userId}/reset-password`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ newPassword }) // 确保这里是有效的JSON  
+                    body: JSON.stringify({ newPassword })
                 });
 
                 if (response.ok) {
-                    const result = await response.json();
-                    alert(`密码已重置成功！新密码为: ${newPassword}`);
+                    showNotification(`密码已重置成功！新密码为: ${newPassword}`, 'success');
                 } else {
                     const error = await response.json();
                     throw new Error(error.error || '重置密码失败');
                 }
             } catch (error) {
                 console.error('重置密码失败:', error);
-                alert(`重置密码失败: ${error.message}`);
+                showNotification(`重置密码失败: ${error.message}`, 'error');
             }
         }
 
-        // 生成随机密码的函数  
+        // 生成随机密码
         function generateRandomPassword() {
             const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
             let password = '';
@@ -516,36 +1252,36 @@ let totalPages = 1;
             return password;
         }
 
-        // 显示密码修改模态框  
+        // 显示密码修改模态窗口
         function showPasswordModal(userId, username) {
-            // 设置模态框内容  
             document.getElementById('modalUserId').value = userId;
             document.getElementById('modalUsername').textContent = username;
             document.getElementById('newPassword').value = '';
             document.getElementById('confirmPassword').value = '';
             document.getElementById('passwordError').textContent = '';
-
-            // 显示模态框  
-            document.getElementById('passwordModal').style.display = 'block';
+            
+            const modal = document.getElementById('passwordModal');
+            modal.classList.add('show');
         }
 
-        // 关闭模态框  
+        // 关闭密码修改模态窗口
         function closePasswordModal() {
-            document.getElementById('passwordModal').style.display = 'none';
+            const modal = document.getElementById('passwordModal');
+            modal.classList.remove('show');
         }
 
-        // 保存新密码  
+        // 保存新密码
         async function savePassword(event) {
             event.preventDefault();
-
+            
             const userId = document.getElementById('modalUserId').value;
             const newPassword = document.getElementById('newPassword').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
             const errorElement = document.getElementById('passwordError');
 
-            // 验证密码  
+            // 验证密码
             if (newPassword.length < 6) {
-                errorElement.textContent = '密码长度必须至少为6个字符';
+                errorElement.textContent = '密码长度必须至少为 6 个字符';
                 return;
             }
 
@@ -554,7 +1290,6 @@ let totalPages = 1;
                 return;
             }
 
-            // 清除错误信息  
             errorElement.textContent = '';
 
             try {
@@ -565,7 +1300,7 @@ let totalPages = 1;
                 });
 
                 if (response.ok) {
-                    alert('密码修改成功');
+                    showNotification('密码修改成功', 'success');
                     closePasswordModal();
                 } else {
                     const error = await response.json();
@@ -577,15 +1312,37 @@ let totalPages = 1;
             }
         }
 
+        // 搜索功能
+        function searchFirefighters() {
+            currentPage = 1; // 重置到第一页
+            const queryParams = {
+                number: document.getElementById('searchNumber').value.trim(),
+                name: document.getElementById('searchName').value.trim(),
+            };
+            loadUsers(queryParams);
+        }
 
-        // 注册新用户功能  
+        // 重置搜索
+        function resetSearch() {
+            document.getElementById('searchForm').reset();
+            currentPage = 1;
+            loadUsers();
+        }
+
+        // 注册新用户
         document.getElementById('registerForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-
-            const username = document.getElementById('username').value;
+            
+            const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
             const email = generateEmail();
             const role = document.getElementById('role').value;
+
+            if (!username || !password) {
+                showNotification1('请填写完整的用户信息', 'error');
+                return;
+            }
+
             try {
                 const response = await fetch('/admin/users', {
                     method: 'POST',
@@ -594,7 +1351,7 @@ let totalPages = 1;
                 });
 
                 if (response.ok) {
-                    alert('用户注册成功');
+                    showNotification1('用户注册成功', 'success');
                     document.getElementById('registerForm').reset();
                     loadUsers();
                 } else {
@@ -603,104 +1360,62 @@ let totalPages = 1;
                 }
             } catch (error) {
                 console.error('注册用户失败:', error);
-                alert(`注册用户失败: ${error.message}`);
+                showNotification1(`注册用户失败: ${error.message}`, 'error');
             }
         });
-        // 生成随机邮箱号  
+
+        // 生成随机邮箱
         function generateEmail() {
-        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-        let randomString = '';
-        for (let i = 0; i < 12; i++) {
-          randomString += chars.charAt(Math.floor(Math.random() * chars.length));
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            let randomString = '';
+            for (let i = 0; i < 12; i++) {
+                randomString += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return `${randomString}@163.com`;
         }
-        return `${randomString}@163.com`;
-      }
 
-        // 在DOM加载完成后设置事件监听器  
-        document.addEventListener('DOMContentLoaded', () => {
-            // 加载用户列表（原有代码）  
-            loadUsers();
-
-            // 设置密码模态框事件监听器  
-            document.querySelector('.close-modal').addEventListener('click', closePasswordModal);
-            document.getElementById('cancelPasswordBtn').addEventListener('click', closePasswordModal);
-            document.getElementById('passwordForm').addEventListener('submit', savePassword);
-
-            // 点击模态框外部关闭模态框  
-            window.addEventListener('click', (event) => {
-                const modal = document.getElementById('passwordModal');
-                if (event.target === modal) {
-                    closePasswordModal();
-                }
-            });
-        });
-
-    // 搜索功能  
-    function searchFirefighters() {
-      const queryParams = {
-        number: document.getElementById('searchNumber').value.trim(),
-        name: document.getElementById('searchName').value.trim(),
-        // 可以继续添加其他搜索条件  
-      };
-      loadUsers(queryParams);
-    }
-
-    // 重置搜索条件  
-    function resetSearch() {
-      document.getElementById('searchForm').reset();
-      loadUsers();
-    }
-
+        // 导出Excel功能
         document.getElementById('exportExcelBtn').addEventListener('click', async () => {
             try {
                 const response = await fetch('/admin/users-list');
                 if (!response.ok) throw new Error('网络错误');
+                
                 const users = await response.json();
 
-                // 准备数据  
+                // 准备数据
                 const data = [
                     ["已注册用户信息", "", "", ""],
                     ["用户名", "姓名", "权限", "注册日期"],
                     ...users.map(user => [
                         user.username,
-                        user.name,
-                        user.role,
-                        new Date(user.createdAt).toLocaleString()
+                        user.name || '未设置',
+                        user.role === 'admin' ? '管理员' : '普通用户',
+                        new Date(user.createdAt).toLocaleString('zh-CN')
                     ])
                 ];
 
-                // 创建工作表  
+                // 创建工作表
                 const worksheet = XLSX.utils.aoa_to_sheet(data);
 
-                // 设置列宽  
+                // 设置列宽
                 worksheet['!cols'] = [
-                    { wch: 20 }, // 用户名  
-                    { wch: 20 }, // 姓名  
-                    { wch: 10 }, // 权限  
-                    { wch: 20 }  // 注册日期  
+                    { wch: 20 }, // 用户名
+                    { wch: 20 }, // 姓名
+                    { wch: 12 }, // 权限
+                    { wch: 20 }  // 注册日期
                 ];
 
-                // 合并第一行单元格  
+                // 合并第一行单元格
                 worksheet['!merges'] = [
                     { s: { r: 0, c: 0 }, e: { r: 0, c: 3 } }
                 ];
 
-                // 详细的样式定义  
+                // 样式定义
                 const styles = {
                     title: {
-                        font: {
-                            name: '宋体',
-                            sz: 16,
-                            color: { rgb: "FFFFFF" },
-                            bold: true
-                        },
-                        fill: {
-                            fgColor: { rgb: "0070C0" }
-                        },
-                        alignment: {
-                            horizontal: "center",
-                            vertical: "center"
-                        },
+                        font: { name: '宋体', sz: 16, color: { rgb: "FFFFFF" }, bold: true },
+                        fill: { fgColor: { rgb: "667eea" } },
+                        alignment: { horizontal: "center", vertical: "center" },
                         border: {
                             top: { style: "thin", color: { rgb: "000000" } },
                             bottom: { style: "thin", color: { rgb: "000000" } },
@@ -709,18 +1424,9 @@ let totalPages = 1;
                         }
                     },
                     header: {
-                        font: {
-                            name: '宋体',
-                            sz: 12,
-                            bold: true
-                        },
-                        fill: {
-                            fgColor: { rgb: "DDDDDD" }
-                        },
-                        alignment: {
-                            horizontal: "center",
-                            vertical: "center"
-                        },
+                        font: { name: '宋体', sz: 12, bold: true },
+                        fill: { fgColor: { rgb: "f8fafc" } },
+                        alignment: { horizontal: "center", vertical: "center" },
                         border: {
                             top: { style: "thin", color: { rgb: "000000" } },
                             bottom: { style: "thin", color: { rgb: "000000" } },
@@ -729,10 +1435,7 @@ let totalPages = 1;
                         }
                     },
                     cell: {
-                        alignment: {
-                            horizontal: "center",
-                            vertical: "center"
-                        },
+                        alignment: { horizontal: "center", vertical: "center" },
                         border: {
                             top: { style: "thin", color: { rgb: "000000" } },
                             bottom: { style: "thin", color: { rgb: "000000" } },
@@ -742,15 +1445,14 @@ let totalPages = 1;
                     }
                 };
 
-                // 应用样式到单元格  
-                worksheet['A1'].s = styles.title;
-                worksheet['A2'].s = styles.header;
-                worksheet['B2'].s = styles.header;
-                worksheet['C2'].s = styles.header;
-                worksheet['D2'].s = styles.header;
+                // 应用样式
+                if (worksheet['A1']) worksheet['A1'].s = styles.title;
+                ['A2', 'B2', 'C2', 'D2'].forEach(cell => {
+                    if (worksheet[cell]) worksheet[cell].s = styles.header;
+                });
 
-                // 为数据行应用样式  
-                for (let row = 3; row < data.length + 2; row++) {
+                // 为数据行应用样式
+                for (let row = 3; row <= data.length; row++) {
                     for (let col = 0; col < 4; col++) {
                         const cellAddress = XLSX.utils.encode_cell({ r: row - 1, c: col });
                         if (worksheet[cellAddress]) {
@@ -759,27 +1461,27 @@ let totalPages = 1;
                     }
                 }
 
-                // 创建工作簿  
+                // 创建工作簿并导出
                 const workbook = XLSX.utils.book_new();
                 XLSX.utils.book_append_sheet(workbook, worksheet, '已注册用户信息');
-
-                // 导出文件  
-                XLSX.writeFile(workbook, '已注册用户信息.xlsx');
-
+                XLSX.writeFile(workbook, `已注册用户信息_${new Date().toLocaleDateString('zh-CN')}.xlsx`);
+                
+                showNotification('Excel文件导出成功', 'success');
             } catch (error) {
-                console.error('导出已注册用户信息失败:', error);
-                alert(`导出已注册用户信息失败: ${error.message}`);
+                console.error('导出Excel失败:', error);
+                showNotification(`导出Excel失败: ${error.message}`, 'error');
             }
         });
 
-        // 打印用户信息为 PDF  
+        // 打印PDF功能
         document.getElementById('printPdfBtn').addEventListener('click', async () => {
             try {
                 const response = await fetch('/admin/users-list');
                 if (!response.ok) throw new Error('网络错误');
+                
                 const users = await response.json();
-
                 const { jsPDF } = window.jspdf;
+                
                 const doc = new jsPDF({
                     orientation: 'portrait',
                     unit: 'mm',
@@ -817,15 +1519,14 @@ let totalPages = 1;
                     return `${year}-${month}-${day}/${hours}:${minutes}:${seconds}`;
                 }
 
-                // 创建表格内容  
-                const formattedUsers = users.map(user => {
-                    return [
-                        user.username,
-                        user.name,
-                        user.role,
-                        formatDateTime(user.createdAt) // 使用格式化函数获取注册时间  
-                    ];
-                });
+                // 创建表格内容
+                const formattedUsers = users.map(user => [
+                    user.username,
+                    user.name || '未设置',
+                    user.role === 'admin' ? '管理员' : '普通用户',
+                    formatDateTime(user.createdAt)
+                ]);
+
 
                 // 调用 autoTable 创建表格  
                 doc.autoTable({
@@ -863,11 +1564,10 @@ let totalPages = 1;
                     }
                 });
                 // 保存PDF  
-                doc.save('已注册用户信息.pdf');
-
+                doc.save(`已注册用户信息_${new Date().toLocaleDateString('zh-CN')}.pdf`);
+                showNotification('PDF文件生成成功', 'success');
             } catch (error) {
-                console.error('打印已注册用户信息失败:', error);
-                alert(`打印已注册用户信息失败: ${error.message}`);
+                showNotification(`打印PDF失败: ${error.message}`, 'error');
             }
         });
 
@@ -880,7 +1580,72 @@ let totalPages = 1;
                 binary += String.fromCharCode(bytes[i]);
             }
             return window.btoa(binary); // 使用 window.btoa 将字符串转为 Base64  
-        }  
+        }
+        
+        
+                // 添加badge样式
+                const badgeStyle = document.createElement('style');
+        badgeStyle.textContent = `
+            .badge {
+                display: inline-block;
+                padding: 0.25rem 0.5rem;
+                font-size: 0.75rem;
+                font-weight: 600;
+                border-radius: 0.375rem;
+                text-align: center;
+                white-space: nowrap;
+            }
+            .badge-primary {
+                background-color: #667eea;
+                color: white;
+            }
+            .badge-danger {
+                background-color: #f56565;
+                color: white;
+            }
+        `;
+        document.head.appendChild(badgeStyle);
+
+        // DOM加载完成后的初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            // 加载用户列表
+            loadUsers();
+
+            // 设置密码模态框事件监听器
+            document.getElementById('cancelPasswordBtn').addEventListener('click', closePasswordModal);
+            document.getElementById('passwordForm').addEventListener('submit', savePassword);
+
+            // 点击模态框外部关闭
+            document.getElementById('passwordModal').addEventListener('click', (event) => {
+                if (event.target === event.currentTarget) {
+                    closePasswordModal();
+                }
+            });
+
+            // 键盘快捷键支持
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    const modal = document.getElementById('passwordModal');
+                    if (modal.classList.contains('show')) {
+                        closePasswordModal();
+                    }
+                }
+            });
+
+            // 搜索框回车键支持
+            ['searchNumber', 'searchName'].forEach(id => {
+                document.getElementById(id).addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        searchFirefighters();
+                    }
+                });
+            });
+        });
+
+        console.log('用户管理系统初始化完成');
+
+
     </script>
 </body>
 

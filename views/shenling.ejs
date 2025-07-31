@@ -1237,7 +1237,7 @@ let totalPagesYiShenling= 1;
       function handleCheckout() {
         // 读取当前余额  
         const balanceSpan = document.getElementById('currentBalance');
-        let currentBalance = parseFloat(balanceSpan.textContent.trim()) || 0;
+        let currentBalance = parseFloat(parseFloat(balanceSpan.textContent.trim()).toFixed(2)) || 0;
         const userId = currentUser.username;
 
   // 2. 读取购物车数组中的所有选中物品（这里假设你在全局定义了 cartItems）  

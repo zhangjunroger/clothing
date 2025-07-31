@@ -345,5 +345,132 @@ router.get('/shenhe_reports/generate', async (req, res) => {
   }
 });
 
+
+router.get('/shenhe/generatenow', async (req, res) => {
+  try {
+
+    const {userName, userTeam, Number, formattedDate1min, formattedDate1max, formattedDate2min,formattedDate2max, sortField, sortOrder} = req.query;
+
+    // 查询数据  
+    let report = [];
+
+    // 查询消防员  
+    const query = new AV.Query('Shenling');
+
+    // 编号过滤  
+    if (userName) {
+      query.equalTo('userName', userName);
+    }
+
+    // 姓名过滤  
+    if (userTeam) {
+      query.equalTo('userTeam', userTeam);
+    }
+
+    // 应用性别过滤  
+    if (Number) {
+      query.equalTo('Number', String(Number));
+    }    
+      
+    if (formattedDate1min) {  
+      // 创建 Date 对象，并获取开始时间的时间戳  
+      const startDate = new Date(formattedDate1min + 'T00:00:00'); // 使用 T 连接符，以确保兼容 ISO 格式  
+      const startOfDay = startDate.getTime(); // 获取时间戳  
+      query.greaterThanOrEqualTo('Time', startOfDay);  
+    }  
+  
+    if (formattedDate1max) {  
+      // 创建 Date 对象，并获取结束时间的时间戳  
+      const endDate = new Date(formattedDate1max + 'T23:59:59'); // 使用 T 连接符，以确保兼容 ISO 格式  
+      const endOfDay = endDate.getTime(); // 获取时间戳  
+      query.lessThanOrEqualTo('Time', endOfDay);  
+    }  
+
+    if (formattedDate2min) {  
+      // 创建 Date 对象，并获取开始时间的时间戳  
+      const shenhestartDate = new Date(formattedDate2min + 'T00:00:00'); // 使用 T 连接符，以确保兼容 ISO 格式  
+      const shenhestartOfDay = shenhestartDate.getTime(); // 获取时间戳  
+      query.greaterThanOrEqualTo('ShenheTime', shenhestartOfDay);  
+  }  
+  
+  if (formattedDate2max) {  
+      // 创建 Date 对象，并获取结束时间的时间戳  
+      const shenheendDate = new Date(formattedDate2max + 'T23:59:59'); // 使用 T 连接符，以确保兼容 ISO 格式  
+      const shenheendOfDay = shenheendDate.getTime(); // 获取时间戳  
+      query.lessThanOrEqualTo('ShenheTime', shenheendOfDay);  
+  }  
+
+    // 应用排序  
+    if (sortField) {
+      if (sortOrder === 'desc') {
+        query.descending(sortField);
+      } else {
+        query.ascending(sortField);
+      }
+    } else {
+      query.descending('Time');
+    }
+
+
+    // 执行查询  
+    const results = await query.find();
+
+
+    report = results.map(item => item.toJSON());
+
+    res.json({
+      success: true,
+      report: report
+    });
+
+  } catch (err) {
+    console.error('打印报表失败:', err);
+    res.status(500).json({ success: false, error: '打印报表失败' });
+  }
+});
+
+
+router.get('/shenhe/generateall', async (req, res) => {
+  try {
+
+    const {userName, userTeam, Number, formattedDate1min, formattedDate1max, formattedDate2min,formattedDate2max, sortField, sortOrder} = req.query;
+
+
+    // 查询数据  
+    let report = [];
+    
+    // 查询消防员  
+    const query = new AV.Query('Shenling');
+
+    // 应用排序  
+    if (sortField) {
+      if (sortOrder === 'desc') {
+        query.descending(sortField);
+      } else {
+        query.ascending(sortField);
+      }
+    } else {
+      query.descending('Time');
+    }
+
+
+    // 执行查询  
+    const results = await query.find();
+
+    report = results.map(item => item.toJSON());
+
+    res.json({
+      success: true,
+      report: report
+    });
+
+  } catch (err) {
+    console.error('打印报表失败:', err);
+    res.status(500).json({ success: false, error: '打印报表失败' });
+  }
+});
+
+
+
 // 导出路由  
 module.exports = router;
